@@ -7,7 +7,9 @@
 # be verbose
 set -x
 
-TAG=1.003
+exit 0
+
+TAG=1.004
 
 VERSION=`date '+%y-%j'`
 echo $VERSION > VERSION

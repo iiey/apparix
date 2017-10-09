@@ -15,6 +15,7 @@
 
 #include <unistd.h>
 #include <stdlib.h>
+#include <signal.h>
 
 #include "alloc.h"
 #include "err.h"
@@ -44,6 +45,7 @@ void* mcxRealloc
 )
    {  void*          mblock   =  NULL
    ;  mcxstatus      status   =  STATUS_OK
+   ;  const char*    me       =  "mcxRealloc"
 
    ;  if (!new_size)
       {  if (object)
@@ -62,17 +64,24 @@ void* mcxRealloc
    ;  }
 
       if (new_size && (!mblock))
-         mcxMemDenied(stderr, "mcxRealloc", "byte", new_size)
+         mcxMemDenied(stderr, me, "byte", new_size)
       ,  status   =  1
    ;
       if (status)
-      {  if (ON_FAIL == SLEEP_ON_FAIL)
-         {  mcxTell("mcxRealloc", "pid %ld, entering sleep mode", (long) getpid())
+      {  const char* tin = getenv("TINGEA_MEM_SIGNAL")
+      ;  if (tin)
+         {  unsigned tintin = atoi(tin)
+         ;  raise(tintin ? tintin : SIGSEGV)
+      ;  }
+         if (ON_FAIL == SLEEP_ON_FAIL)
+         {  mcxTell(me, "pid %ld, entering sleep mode", (long) getpid())
          ;  while(1)
             sleep(1000)
       ;  }
-         if (ON_FAIL == EXIT_ON_FAIL)
-         {  mcxTell("mcxRealloc", "going down")
+         if (ON_FAIL == EXIT_ON_FAIL || ON_FAIL == ENQUIRE_ON_FAIL)
+         {  mcxTell(me, "going down")
+         ;  if (ON_FAIL == ENQUIRE_ON_FAIL)
+            mcxTell(me, "ENQUIRE fail mode ignored")
          ;  exit(1)
       ;  }
       }

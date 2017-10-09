@@ -4,8 +4,8 @@
 ## stuff in shtest should get distributed but not installed
 SUBDIRS = . util src doc
 
-VERSION: ChangeLog NEWS
-	./setversion
+#VERSION: ChangeLog NEWS
+#	./setversion
 
 VERSION = @VERSION@
 

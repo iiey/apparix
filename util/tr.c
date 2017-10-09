@@ -759,9 +759,9 @@ fprintf(stdout, "star count/fill/flood %d %d %d\n", star_count, star_fill, flood
    ;  }
 
       if (!src_end)
-      mcxErr(us, "trailing spunk in src")
+      mcxErr(us, "trailing fluff in src")
    ;  if (!dst_end && !((star_fill || flood_fill) && dstenc[d] >> 8 == C_EOF))
-      mcxErr(us, "trailing spunk in dst")
+      mcxErr(us, "trailing fluff in dst")
 
    ;  return STATUS_OK        /* specs parsed alright, just ignore spurious stuff */
 ;  }

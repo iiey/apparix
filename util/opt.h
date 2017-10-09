@@ -9,7 +9,7 @@
 
 
 /* TODO
- *    support Giraffe options for non-dispatching programs as well.
+ *    recode dispatch case 'no arguments supplied'. now ugly.
 */
 
 #ifndef tingea_opt_h
@@ -33,7 +33,7 @@
  *
  *    Tentatively, this interface treats -I 3 and --I=3 as equivalent
  *    syntax. It is possible to define -I and --I= as separate options.
- *    (by defining -I with MCX_OPT_HASARG and --I with MCX_OPT_EMBEDDED).
+ *    (by defining -I with MCX_OPT_HASARG and --I with MCX_OPT_DEFAULT).
  *
  * TODO:
  *    implement newline/indent magic in option descriptions.
@@ -45,7 +45,6 @@
 #define     MCX_OPT_HASARG       1     /* -a 10, xyz foo */
 #define     MCX_OPT_REQUIRED     2
 #define     MCX_OPT_INFO         4
-#define     MCX_OPT_EMBEDDED     8     /* --a=b, xyz or xyz=foo, NOT xyz foo */
 #define     MCX_OPT_HIDDEN       16
 #define     MCX_OPT_UNUSED       32
 
@@ -246,8 +245,10 @@ mcxbool mcxOptCheckBounds
 /* TODO
  * provide escape mechanisms for delim;
  * e.g. mcx tilde, UNIX backslash, or SGML percent sign based.
+ * -> smarter space-based separation. \t ?
  *
  * NOTE
+ *    Separates on spaces, which are replaced with '\0'.
  *    src is modified ('\0' are written throughout).
  *    the char* members 'char* argv[]' all point to within src.
 */
@@ -258,7 +259,7 @@ char** mcxOptParseString
 ,  unsigned char delim
 )  ;
 
-char* mcxOptArgLine
+mcxTing* mcxOptArgLine
 (  const char** argv
 ,  int argc
 ,  int quote      /*    '[' or '"' */
@@ -296,39 +297,24 @@ typedef struct
 }  mcxDispEntry   ;
 
 
+
+typedef struct mcx_disp_bundle
+{  int            disp_argc
+;  const char**   disp_argv
+;  const char*    disp_name
+;  const char*    disp_syntax
+;  mcxOptAnchor*  disp_shared
+;  dim            n_disp_shared
+;  mcxstatus    (*shared_handler)(int optid, const char* val, mcxDispHook*, struct mcx_disp_bundle*)
+;  void (*disp_version)(const char* me) 
+;  mcxDispEntry*  disp_table
+;
+}  mcxDispBundle  ;
+
+
 int mcxDispatch
-(  int                  argc
-,  const char*          argv[]
-,  const char*          me
-,  const char*          syntax
-,  mcxOptAnchor*        dispatcher_options
-,  dim                  n_options
-,  mcxDispEntry*        entry_dir
-,  void                 (*report_version)(const char* me)
+(  mcxDispBundle* bundle
 )  ;
-
-
-   /* These are one particular set of default/shared options
-    * called the Giraffe options
-   */
-enum
-{  MCX_DISP_GIRAFFE_HELP = 0
-,  MCX_DISP_GIRAFFE_APROPOS
-,  MCX_DISP_GIRAFFE_VERSION
-,  MCX_DISP_GIRAFFE_TEST
-,  MCX_DISP_GIRAFFE_DEBUG
-,  MCX_DISP_GIRAFFE_SET
-,  MCX_DISP_GIRAFFE_NOP
-,  MCX_DISP_GIRAFFE_AMOIXA
-,  MCX_DISP_GIRAFFE_UNUSED = MCX_DISP_GIRAFFE_AMOIXA + 2
-}  ;
-
-
-extern mcxOptAnchor mcxDispGiraffe[];
-extern dim mcxDispGiraffeCount;
-
-extern mcxbits mcx_disp_giraffe_debug;
-extern mcxbool mcx_disp_giraffe_test;
 
 
 #endif

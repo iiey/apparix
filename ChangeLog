@@ -1,5 +1,27 @@
 
 
+Thu 24 Jul 2007
+
+   *  apparix-08-206 released.
+
+   *  The apparix function 'to' can now be used as a drop-in replacement
+      for cd.
+
+   *  Apparix and its wrappers have been expanded so that they act as
+      a replacement for cd in cases where the mark is not a bookmark but
+      exists as an accessible directory.  Bash tab completion acts by default
+      transparently and simultaneously on both bookmarks and accessible
+      directories.
+
+   *  Added options --try-current-first and --try-current-last.  These can be
+      used in the 'to' definition, instructing apparix to check whether the
+      mark is also the name of an accessible directory.  The definitions of
+      'to' as shipped with apparix do this, using --try-current-first.
+
+   *  Added option --tell-current. This will notify the user if an entry was
+      found as a regular directory rather than via bookmark lookup. Only
+      meaningful in conjunction with one of the options above.
+
 Tue 18 Sep 2007
 
    *  apparix-07-261 released.
@@ -9,8 +31,9 @@ Tue 18 Sep 2007
       globally but must be targeted at a specific bookmark or its destination.
       This is more in line with expected use. See further below.
 
-   *  apparix -sd MARK squashes all the *other* marks that point to the destination
-      bookmarked under MARK. Only MARK is kept for this destination.
+   *  apparix -sd MARK squashes all the *other* marks that point to the
+      destination bookmarked under MARK. Only MARK is kept for this
+      destination.
 
    *  apparix -ld MARK lists all bookmarks MARK (noting that the same bookmark
       is allowed to point to multiple locations) and additionally lists all

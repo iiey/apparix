@@ -30,6 +30,10 @@ typedef  unsigned char  u8  ;       /* at least  8 bits */
 #  define ulong unsigned long
 #endif
 
+#ifndef uchar
+#  define uchar unsigned char
+#endif
+
             /*  dim     is garantueed to be an unsigned type.
              *  ofs     is garantueed to be the corresponding signed type.
             */

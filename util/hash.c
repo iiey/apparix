@@ -1,5 +1,5 @@
 /*   (C) Copyright 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
- *   (C) Copyright 2006, 2007 Stijn van Dongen
+ *   (C) Copyright 2006, 2007, 2008 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 3 of the
@@ -240,7 +240,7 @@ void mcxHashStats
          ;  entries    +=  d
          ;  ctr        +=  (float) d * d
          ;  cb         +=  (float) d * d * d
-         ;  max         =  MAX(max, d)
+         ;  max         =  MCX_MAX(max, d)
       ;  }
 
          while(this)
@@ -252,8 +252,8 @@ void mcxHashStats
       ;  }
       }
 
-      ctr = ctr / MAX(1, entries)
-   ;  cb  = sqrt(cb  / MAX(1, entries))
+      ctr = ctr / MCX_MAX(1, entries)
+   ;  cb  = sqrt(cb  / MCX_MAX(1, entries))
 
    ;  if (buckets && buckets_used)
          mcxTellf

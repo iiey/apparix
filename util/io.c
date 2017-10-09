@@ -8,11 +8,22 @@
 */
 
 
-/* TODO
- *    very few routines should be allowed to touch buffer.
+#define DEBUG 0
+
+/* NOTE
+ *    Very few routines should be allowed to touch buffer.
  *    create/free routines, and step and stepBack.
  *    currently many routines ignore the buffer (but warn
  *    when doing so).
+ *    mcxIOtryCookie is currently only one filling buffer.
+ *    Conceivably, mcxIOfind could be next.
+ *
+ * TODO
+ *    mcxIOfind can be made much faster.
+ *    - inline fillpatbuf
+ *    - get rid of modulus computations - subtract  patlen if necessary.
+ *    - use buffered input.
+ *    The last one requires 
 */
 
 #include <stdlib.h>
@@ -177,7 +188,7 @@ mcxIO* mcxIOrenew
 ,  const char*       name
 ,  const char*       mode
 )
-   {  mcxbool twas_stdio = xf && xf->stdio
+   {  mcxbool twas_stdio = xf && xf->stdio      /* It Was STDIN/OUT/ERR */
    ;  if
       (  mode
       && !strstr(mode, "w") && !strstr(mode, "r") && !strstr(mode, "a")
@@ -185,6 +196,17 @@ mcxIO* mcxIOrenew
       {  mcxErr ("mcxIOrenew PBD", "unsupported open mode <%s>", mode)
       ;  return NULL
    ;  }
+
+      if
+      (  getenv("TINGEA_PLUS_APPEND")
+      && name
+      && (uchar) name[0] == '+'
+      && strchr(mode, 'w')
+      )
+      {  name++
+      ;  mode = "a"
+   ;  }
+
       if (!xf)
       {  if (!name || !mode)
          {  mcxErr("mcxIOrenew PBD", "too few arguments")
@@ -817,9 +839,9 @@ int mcxIOskipSpace
 
 mcxbool mcxIOtryCookie
 (  mcxIO* xf
-,  const unsigned char abcd[4]
+,  const uchar abcd[4]
 )
-   {  unsigned char efgh[5]
+   {  uchar efgh[5]
    ;  int n_read = fread(efgh, sizeof efgh[0], 4, xf->fp)
    ;  int error  = ferror(xf->fp)
    ;  dim i = 0
@@ -841,7 +863,7 @@ mcxbool mcxIOtryCookie
       xf->bc += (4-n_read)
    ;  else
       {  mcxTingNAppend(xf->buffer, (char*) efgh, n_read)
-      ;  xf->bc += n_read
+      ;  /* xf->bc += n_read  mcxIOstep does subsequent accounting */
       ;  if (!error)
          clearerr(xf->fp)
    ;  }
@@ -852,7 +874,7 @@ mcxbool mcxIOtryCookie
 
 mcxbool mcxIOwriteCookie
 (  mcxIO* xf
-,  const unsigned char abcd[4]
+,  const uchar abcd[4]
 )
    {  dim n_written = fwrite(abcd, sizeof abcd[0], 4, xf->fp)
    ;  if (n_written != 4)
@@ -883,7 +905,7 @@ int mcxIOexpect
   */
 
    ;  while
-      (  c = (unsigned char) s[0]
+      (  c = (uchar) s[0]
       ,  
          (  c
          && (  d = mcxIOstep(xf)
@@ -934,13 +956,13 @@ static void mcxio_newpat
       tbl[i] = patlen
 
    ;  for (i = 0; i < patlen-1; i++)
-      tbl[(unsigned char) pat[i]] = patlen -i -1
+      tbl[(uchar) pat[i]] = patlen -i -1
 
-#if 0
+#if DEBUG
    ;  for (i=0; i<patlen; i++)
       fprintf
       (  stderr
-      ,  "shift value for %c is %d\n", pat[i], tbl[(unsigned char) pat[i]]
+      ,  "shift value for %c is %d\n", pat[i], tbl[(uchar) pat[i]]
       )
 #endif
 
@@ -1007,25 +1029,32 @@ mcxstatus mcxIOfind
          break
       ;  for
          (  j=md.circle_last+patlen, k=patlen-1
-         ;  j>md.circle_last && circle[j%patlen] == (unsigned char) pat[k]
+         ;  j>md.circle_last && circle[j%patlen] == (uchar) pat[k]
          ;  j--, k--
          )
-         ;
+         NOTHING
+#if DEBUG
+fprintf
+(stderr
+,"comparing circlebuf pos %d char [%c] with pattern pos %d char [%c]\n"
+,(int) (j%patlen)
+,(int) ((uchar) circle[j%patlen])
+,(int) k
+,(int) pat[k] 
+)
+#endif
 
       ;  if (j == md.circle_last)
-         {  found = 1
-         ;  break  
+         {  found++
+         ;  break
       ;  }
-        /* 
-         * if more matches are needed, do something in this branch
-         * and then simply continue.
-        */
 
          shift = tbl[circle[md.circle_last % patlen]]
-#if 0
+
+#if DEBUG
 ;  fprintf
    (  stderr
-   ,  "___ last[%d] index[%d] pivot[%d] shift[%d]\n"
+   ,  "___ last[%d] index[%d] pivot[%c] shift[%d]\n"
    ,  (int) md.circle_last
    ,  (int) md.circle_last % patlen
    ,  (int) circle[md.circle_last % patlen]

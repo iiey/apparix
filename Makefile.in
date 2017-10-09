@@ -115,6 +115,9 @@ RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+
+#VERSION: ChangeLog NEWS
+#	./setversion
 VERSION = @VERSION@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_RANLIB = @ac_ct_RANLIB@
@@ -565,9 +568,6 @@ uninstall-info: uninstall-info-recursive
 	pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
 	uninstall-info-am
 
-
-VERSION: ChangeLog NEWS
-	./setversion
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

@@ -14,8 +14,9 @@
 
 \setx{"man::tag"}{\"man::tag", \"man::stamp"}
 
+\set{"man::html-keywords"}{cd, change directory, bookmarks, command line, cdpath, subdirectory, tab completion}
 \set{"man::name"}{apparix}
-\set{"man::html-title"}{apparix}
+\set{"man::html-title"}{apparix, augmenting cd with bookmarks}
 \set{"man::author"}{Stijn van Dongen}
 \set{"man::section"}{1}
 
@@ -26,16 +27,25 @@
 \def{apparix}{\bf{apparix}}
 
 \sec{name}{NAME}
-\NAME{apparix}{bookmark directories and apparate inside them}
+\NAME{apparix}{augmenting cd with bookmarks}
 
 
 \sec{synopsis}{SYNOPSIS}
 
 \par{
-   Apparix allows you to bookmark directories and later jump to them using the
-   mark. It is possible to directly jump to subdirectories of the target
-   directory. The contributed bash completion code facilitates completion both
-   on bookmarks and subdirectories.}
+   Apparix allows you to bookmark directories and later jump to them using the mark.
+
+   By default apparix acts as a replacement for \it{cd} and can be used in the
+   same manner, including the special behaviour for \it{cd} without argument
+   and \it{cd}\~\tt{-}.
+
+   It is possible to directly jump to subdirectories of a bookmarked directory.
+
+   The contributed bash completion code facilitates completion both on
+   bookmarks and directories, but can be adjusted to accomodate other
+   preferences.
+
+   }
 
 \par{
    This manual page suffers from an excess in verbosity due to the many
@@ -63,9 +73,10 @@
    them in a shell or adding them to the appropriate resource file, e.g.
    \v{$HOME/.cshrc} or \v{$HOME/.profile} (do not forget to
    \it{source} the resource file). The handles \bf{to}, \bf{bm} and \bf{portal} can
-   of course be changed to any name desired. The following is
-   a mock-up shell navigation session.
-}
+   of course be changed to any name desired. With these preliminaries, the
+   following is a mock-up shell navigation session.
+
+   }
 
 \verbatim{\:/
    > \bf{pwd}
@@ -108,13 +119,28 @@
 \car{
    In the last example apparix simply shows all its bookmarks.  The first batch
    shows portals. The second batch shows secondary bookmarks expanded from
-   portals. The third batch shows all regular bookmarks.}
+   portals. The third batch shows all regular bookmarks.
+
+   }
+
 
 \par{
-   Apparix also allows subdirectory specification. If this is combined with the
-   bash completion code it yields a powerful way of navigating container
-   directories, i.e. directories that contain a large number of subdirectories.
-   Refer to the \secref{sub} section.}
+   In the default definitions of \bf{to} it falls back to regular \it{cd}
+   behaviour in case a mark is not found.  This is done by instructing apparix
+   to check whether the mark exists as the name of a directory.  It is possible
+   to do this either before or after bookmark lookup, or not at all. By default
+   the bash completion code takes into account both bookmarks and directories.
+
+   }
+
+
+\par{
+   Apparix also allows subdirectory specification of bookmarked locations. If
+   this is combined with the bash completion code it yields a powerful way of
+   navigating container directories, i.e. directories that contain a large
+   number of subdirectories.  Refer to the \secref{sub} section.
+
+   }
 
 \cpar{Further options}{
    \synoptopt{--add-mark}{add jump bookmark}
@@ -142,16 +168,19 @@
 \par{
    Apparix combines the properties of the
    \aref{http://www.skamphausen.de/cgi-bin/ska/CDargs}{cdargs} utility and the
-   CDPATH shell mechanism for fast navigation through the file system. It is
-   especially useful for visiting and documenting both often- and rarely-used
-   locations.  Apparix enables you to attach marks to locations and jump to
-   those locations by loading the mark. Marking, unmarking and jumping are
-   simple operations that are performed in the shell. All actions take effect
-   immediately in all shells running.  By setting up convenient aliases for
-   marking and jumping the file system can be navigated in a fast and intuitive
-   manner.  The \secref{files} section lists aliases for csh-type shells and
-   functions for bash, including the setup to equip the \bf{to} function with
-   argument completion in bash.}
+   CDPATH shell mechanism for fast navigation through the file system. It can
+   additionally act as the regular \it{cd} command. It is especially useful for
+   visiting and documenting both often- and rarely-used locations.  Apparix
+   enables you to attach marks to locations and jump to those locations by
+   loading the mark. Marking, unmarking and jumping are simple operations that
+   are performed in the shell. All actions take effect immediately in all
+   shells running.  By setting up convenient aliases for marking and jumping
+   the file system can be navigated in a fast and intuitive manner.  The
+   \secref{files} section lists aliases for csh-type shells and functions for
+   bash, including the setup to equip the \bf{to} function with argument
+   completion in bash.
+
+   }
 
 \par{
    This section contains some examples of the most common uses
@@ -166,7 +195,7 @@
    of these. \secref{history} explains the difference between
    cdargs and apparix.
    The sections \secref{dup}, \secref{sub}, \secref{tab},
-   \secref{mov}, and \secref{list}
+   \secref{mov}, \secref{list}, and \secref{cd}
    further below are also recommended reading.}
 
 \par{
@@ -413,9 +442,30 @@ CSH and variants
 \: }
 
 
+\sec{cd}{replacing cd}
+
+\par{
+   With the supplied definition(s) of \bf{to}, apparix will first see whether
+   the mark is the name of a directory, accessible from the current directory.
+   A directory is accessible if it would be a valid argument to cd, so it need
+   not necessarily be a subdirectory of the current directory.  If the mark is
+   not an accessible directory, apparix will then try to do a lookup of the
+   mark in the bookmark files.  This behaviour can be inverted to do the lookup
+   first and the current directory thereafter. Both modes can be used to make
+   \bf{to} a drop-in replacement for \it{cd}.  Additionally and again similar
+   to \it{cd}, \tt{'to -'} will take you to the previous directory, and
+   specifying \tt{to} without arguments will take you to your home directory.
+
+   }
+
+\par{
+   The bash completion code acts accordingly, and should transparently
+   complete on both marks and directories.
+   }
+
 \sec{options}{OPTIONS}
 
-\car{
+\par{
    For bookmarking and jumping apparix is best invoked by using the aliases
    (tcsh-variants) or functions (sh/bash) listed in \secref{files}.
    Apparix has a few options that are useful for pruning, squashing and
@@ -453,6 +503,35 @@ CSH and variants
    subdirectory. By default the current directory is added as a portal.
    An optional trailing argument will override this behaviour and
    instead be interpreted as the portal location.}
+
+
+\item{\defopt{--try-current-first}{try current directory before lookup}}
+\car{
+   This option is useful in the definition of the \bf{to} wrapper.  Before
+   attempting any lookup of the mark, apparix tests whether the supplied mark
+   exists as a subdirectory in the current directory. If it does,
+   the mark is simply expanded to itself.
+   }
+
+
+\item{\defopt{--try-current-last}{try current directory if lookup fails}}
+\car{
+   This option is useful in the definition of the \bf{to} wrapper. If
+   lookup of the mark fails, apparix tests whether the supplied mark
+   exists as a subdirectory in the current directory. If it does,
+   the mark is simply expanded to itself.
+   }
+
+
+\item{\defopt{--notify-current}{notify if current directory is used}}
+\car{
+   This option is useful in the definition of the \it{bf} wrapper
+   in conjunction with either \genopt{--try-current-first}
+   or \genopt{--try-current-last}.
+   If the mark is found as a subdirectory in the current directory,
+   apparix notifies the user of this fact (on the diagnostic stream).
+   }
+
 
 \item{\defopt{-sm}{<mar>}{squash repeated marks}}
 \car{
@@ -833,21 +912,36 @@ with directories with names starting with minus signs).
    directory names which you attempt to complete.  \secref{author} would like
    to submit that spaces in path names are evil, and that the completion code
    seems to work in their evil presence anyway. Just \iref{bugs}{don't put
-   commas} in path names.}
+   commas} in path names.
+
+   }
 
 \par{
    The autotooled build environment was modified from a template written
-   by Joost van Baal.}
+   by Joost van Baal.
+
+   }
+
+
+\par{
+   Several people suggested to enable apparix to merge accessible directories
+   and marks, but Matias Piipari phrased it the most convincingly.
+
+   }
+
 
 \sec{history}{HISTORY}
 \par{
    Apparix was created to optimize a scenario that
    \aref{http://www.skamphausen.de/cgi-bin/ska/CDargs}{cdargs} does not support
    very well, namely where the mark (called \it{needle} in cdargs) is always
-   known. As an additional feature apparix supports CDPATH-style behaviour and
-   subdirectory specification. In other respects apparix is a much simpler
-   application.  \bf{cdargs} offers menu-based navigation of the file system
-   and the bookmark list, which apparix does not.}
+   known. As additional features apparix supports CDPATH-style behaviour,
+   derived subdirectory specification, and transparent treatment of bookmarks
+   and directories, all integrated with bash tab completion. In other respects
+   apparix is a much simpler application.  \bf{cdargs} offers menu-based
+   navigation of the file system and the bookmark list, which apparix does not.
+
+   }
 
 \"man::postamble"
 

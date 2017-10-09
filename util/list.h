@@ -69,8 +69,8 @@ mcxLink*  mcxListSource
 )  ;
 
 /* 
- * This removes all links that have the same mother link as lk.
- * ! freeval doesn't do anything yet
+ * This removes all links that have the same parent link as lk. [huh?]
+ * BEWARE freeval doesn't do anything yet
 */
 
 void  mcxListFree

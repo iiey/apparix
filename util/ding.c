@@ -1,5 +1,5 @@
 /*   (C) Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
- *   (C) Copyright 2006, 2007 Stijn van Dongen
+ *   (C) Copyright 2006, 2007, 2008 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 3 of the
@@ -16,7 +16,6 @@
 #include "types.h"
 #include "alloc.h"
 #include "minmax.h"
-
 
 
 char* mcxStrDup
@@ -388,79 +387,78 @@ mcxTing* mcxMemPrint
 ;  }
 
 
-
 int mcxEditDistance
-(  const char* s1
-,  const char* s2
+(  const char* s
+,  const char* t
 ,  int* lcs
 )
-   {  int l1 = strlen(s1)
-   ;  int l2 = strlen(s2)
+   {  int ls = strlen(s)
+   ;  int lt = strlen(t)
    ;  int* tbl
    ;  dim i, j
    ;  int min_val = 0
    ;  *lcs = -1
 
-#define TBL(i,j)  tbl[(i)*(l1+1)+(j)]
+#define TBL(i,j)  tbl[(i)*(ls+1)+(j)]
 
-   ;  if (l1 == 0 || l2 == 0)
+   ;  if (ls == 0 || lt == 0)
       return -999;
 
-   ;  if (!(tbl = malloc((l1+1) * (l2+1) * sizeof (int))))
+   ;  if (!(tbl = malloc((ls+1) * (lt+1) * sizeof (int))))
       return -1000;
 
-   ;  for (i=0;i<=l2;i++)
-      for (j=0;j<=l1;j++)
+   ;  for (i=0;i<=lt;i++)
+      for (j=0;j<=ls;j++)
       TBL(i,j) = 0
 
-   ;  for (i=0;i<=l1;i++)
+   ;  for (i=0;i<=ls;i++)
       TBL(0,i) = i 
 
-   ;  for (i=0;i<l2;i++)
-      for (j=0;j<l1;j++)
-         TBL(i+1,j+1) = MIN(1 + TBL(i,j+1), 1 + TBL(i+1,j))
-      ,  TBL(i+1,j+1) = MIN(TBL(i+1,j+1), TBL(i,j) + (s2[i] == s1[j] ? 0 : 1))
+   ;  for (i=0;i<lt;i++)
+      for (j=0;j<ls;j++)
+         TBL(i+1,j+1) = MCX_MIN(1 + TBL(i,j+1), 1 + TBL(i+1,j))
+      ,  TBL(i+1,j+1) = MCX_MIN(TBL(i+1,j+1), TBL(i,j) + (t[i] == s[j] ? 0 : 1))
 
 
-   ;  min_val = TBL(l2, l1)
+   ;  min_val = TBL(lt, ls)
 
-   ;  for (i=0;i<l2;i++)
-      if (TBL(i,l1) < min_val)
-      min_val = TBL(i,l1);
+   ;  for (i=0;i<lt;i++)
+      if (TBL(i,ls) < min_val)
+      min_val = TBL(i,ls);
 
-     /* 2. try to insert s2 into s1 */
-   ;  for (i=0;i<=l2;i++)
+     /* 2. try to insert t into s */
+   ;  for (i=0;i<=lt;i++)
       TBL(i,0) = i
 
-   ;  for (i=0;i<=l1;i++)
+   ;  for (i=0;i<=ls;i++)
       TBL(0,i) = 0 
 
-   ;  for (i=0;i<l2;i++)
-      for (j=0;j<l1;j++)
-         TBL(i+1,j+1) = MIN(1 + TBL(i,j+1), 1 + TBL(i+1,j))
-      ,  TBL(i+1,j+1) = MIN(TBL(i+1,j+1), TBL(i,j) + (s2[i] == s1[j] ? 0 : 1))
+   ;  for (i=0;i<lt;i++)
+      for (j=0;j<ls;j++)
+         TBL(i+1,j+1) = MCX_MIN(1 + TBL(i,j+1), 1 + TBL(i+1,j))
+      ,  TBL(i+1,j+1) = MCX_MIN(TBL(i+1,j+1), TBL(i,j) + (t[i] == s[j] ? 0 : 1))
 
 
      /*  find best answer */
 
-   ;  for (i=0;i<l1;i++)
-      if (TBL(l2,i+1) < min_val)
-      min_val = TBL(l2, i+1)
+   ;  for (i=0;i<ls;i++)
+      if (TBL(lt,i+1) < min_val)
+      min_val = TBL(lt, i+1)
 
    ;  if (lcs)
       {  int best = 0
-      ;  if (l1 == 0 || l2 == 0)
+      ;  if (ls == 0 || lt == 0)
          return -999;
 
-      ;  for (i=0;i<=l2;i++)
+      ;  for (i=0;i<=lt;i++)
          TBL(i,0) = 0
 
-      ;  for (i=0;i<=l1;i++)
+      ;  for (i=0;i<=ls;i++)
          TBL(0,i) = 0
 
-      ;  for (i=0;i<l2;i++)
-         for (j=0;j<l1;j++)
-         {  TBL(i+1,j+1) = (TBL(i,j) + 1) * (s2[i] == s1[j] ? 1 : 0)
+      ;  for (i=0;i<lt;i++)
+         for (j=0;j<ls;j++)
+         {  TBL(i+1,j+1) = (TBL(i,j) + 1) * (t[i] == s[j] ? 1 : 0)
          ;  if (TBL(i+1,j+1) > best)
             best = TBL(i+1,j+1)
       ;  }

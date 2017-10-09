@@ -55,10 +55,17 @@ typedef enum
 ,  STATUS_IGNORE           /* for iterator type interfaces (line parser)   */
 ,  STATUS_NOMEM
 ,  STATUS_ABORT            /* e.g. user response                           */
+,  STATUS_NEW              /* for cache type interfaces                    */
 ,  STATUS_UNUSED           /* use this as lower bound for new statuses     */
 }  mcxstatus         ;
 
+extern const char* mcx_status_list[];
 
+#define MCXSTATUS(status)           \
+      (  status <= STATUS_UNUSED    \
+      ?  mcx_status_list[status]    \
+      :  "NO_such_status!"          \
+      )
 
 #ifndef FALSE
    typedef enum
@@ -73,6 +80,7 @@ typedef enum
 {  RETURN_ON_FAIL =  1960
 ,  EXIT_ON_FAIL
 ,  SLEEP_ON_FAIL
+,  ENQUIRE_ON_FAIL    /* user sets TINGEA_MEM_DO to e.g. exit or retry */
 }  mcxOnFail         ;
 
 

@@ -14,13 +14,13 @@
 
 #if MCX_GNUC_OK && TINGEA__TYPED_MINMAX
 /* these buggers do not nest, which I dislike */
-#  define MAX(x,y)                                 \
+#  define MCX_MAX(x,y)                             \
    (  {  const typeof(x) _x = x;                   \
          const typeof(y) _y = y;                   \
          (void) (&_x == &_y);                      \
          _x > _y ? _x : _y;                        \
    }  )
-#  define MIN(x,y)                                 \
+#  define MCX_MIN(x,y)                             \
    (  {  const typeof(x) _x = x;                   \
          const typeof(y) _y = y;                   \
          (void) (&_x == &_y);                      \
@@ -28,8 +28,8 @@
    }  )
 #else
 /* The usual brain-damaged min and max, which do nest though. */
-#  define  MAX(a,b)  ((a)>(b) ? (a) : (b))
-#  define  MIN(a,b)  ((a)<(b) ? (a) : (b))
+#  define  MCX_MAX(a,b)  ((a)>(b) ? (a) : (b))
+#  define  MCX_MIN(a,b)  ((a)<(b) ? (a) : (b))
 #endif
 
 
@@ -42,7 +42,7 @@
 */
 
 #if 0 && MCX_GNUC_OK
-#  define  SIGN(a)                                 \
+#  define  MCX_SIGN(a)                             \
          __extension__                             \
          (  {  typedef  _ta   =  (a)               \
             ;  _ta      _a    =  (a)               \
@@ -54,9 +54,14 @@
          ;  }                                      \
          )
 #else
-#  define  SIGN(a)                                 \
+#  define  MCX_SIGN(a)                             \
          ((a) > 0 ? 1 : !(a) ? 0 : -1)
 #endif
+
+#define MCX_RESTRICT(x,a,b)                       \
+   do { if (x < a) x = a; else if (x > b) x = b; } while (0)
+
 #endif
+
 
 

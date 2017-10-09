@@ -1,5 +1,5 @@
 /*   (C) Copyright 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
- *   (C) Copyright 2006, 2007 Stijn van Dongen
+ *   (C) Copyright 2006, 2007, 2008 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 3 of the
@@ -10,8 +10,13 @@
 #ifndef tingea_hash_h
 #define tingea_hash_h
 
-/* TODO: make sort routines for keys and values by key or value criteria.
- * make interface for storing integers, preferably without objectifying them.
+#include <stdio.h>
+
+/* TODO:
+ * -  make sort routines for keys and values by key or value criteria.
+ * -  make interface for storing integers, preferably without objectifying them.
+ * -  shrink hashes dynamically.
+ *
 */
 
 

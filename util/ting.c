@@ -450,12 +450,12 @@ mcxstatus mcxTingSplice
       offset = ting->len
 
    ;  if (n_delete == TING_INS_CENTER)
-      {  n_delete = MIN(ting->len, n_copy)
+      {  n_delete = MCX_MIN(ting->len, n_copy)
       ;  offset = (ting->len - n_delete) / 2    /* n_delete <= ting->len */
    ;  }
 
       else if (n_delete == TING_INS_OVERWRITE)
-      n_delete = MIN(ting->len - offset, n_copy)  /* offset <= ting->len */
+      n_delete = MCX_MIN(ting->len - offset, n_copy)  /* offset <= ting->len */
 
    ;  else if (n_delete == TING_INS_OVERRUN || n_delete < 0)
       n_delete = ting->len - offset               /* offset <= ting->len */

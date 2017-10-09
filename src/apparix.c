@@ -1,4 +1,4 @@
-/* (c) Copyright 2005, 2006, 2007 Stijn van Dongen
+/* (c) Copyright 2005, 2006, 2007, 2008 Stijn van Dongen
  *
  * This file is part of apparix.  You can redistribute and/or modify apparix
  * under the terms of the GNU General Public License; either version 3 of the
@@ -39,6 +39,9 @@
 enum
 {  MY_OPT_ADD_JUMP
 ,  MY_OPT_ADD_PORTAL
+,  MY_OPT_TRY_CURRENT_FIRST
+,  MY_OPT_TRY_CURRENT_LAST
+,  MY_OPT_NTF_CURRENT
 ,  MY_OPT_REHASH
 ,  MY_OPT_GREP
 ,  MY_OPT_DUMP
@@ -62,11 +65,14 @@ enum
 }  ;
 
 
-static mcxbool quietjump =  FALSE;
+static mcxbool quietjump   =  FALSE;
 
-static const char* us    =  "apparix";
+static mcxbool trycurrentfirst = FALSE;
+static mcxbool trycurrentlast  = FALSE;
+static mcxbool notifycurrent   = FALSE;
 
-static mcxbool use_cwd  =  FALSE;
+static const char* us      =  "apparix";
+static mcxbool use_cwd     =  FALSE;
 
 #define MY_PATH_MAX 1024
 
@@ -75,11 +81,16 @@ const char* shell_examples[] =
 {  "BASH-style functions\n---"
 ,  "function to () {"
 ,  "   if test \"$2\"; then"
-,  "     cd \"$(apparix \"$1\" \"$2\" || echo .)\";"
+,  "     cd \"$(apparix --try-current-first -favour rOl \"$1\" \"$2\" || echo .)\""
+,  "   elif test \"$1\"; then"
+,  "     if test \"$1\" == '-'; then"
+,  "       cd -"
+,  "     else"
+,  "       cd \"$(apparix --try-current-first -favour rOl \"$1\" || echo .)\""
+,  "     fi"
 ,  "   else"
-,  "     cd \"$(apparix \"$1\" || echo .)\";"
+,  "     cd $HOME"
 ,  "   fi"
-,  "   pwd"
 ,  "}"
 ,  "function bm () {"
 ,  "   if test \"$2\"; then"
@@ -102,12 +113,12 @@ const char* shell_examples[] =
 ,  "{   cur=$2"
 ,  "    dir=$3"
 ,  "    COMPREPLY=()"
-,  "    if [ \"$1\" == \"$3\" ]"
-,  "    then"
-,  "        COMPREPLY=( $( cat $HOME/.apparix{rc,expand} | \\"
-,  "                       grep \"j,.*$cur.*,\" | cut -f2 -d, ) )"
+,  "    if let $(($COMP_CWORD == 1)); then"
+,  "        # Below will not complete on subdirectories. swap if so desired."
+,  "        # COMPREPLY=( $( cat $HOME/.apparix{rc,expand} | grep \"j,.*$cur.*,\" | cut -f2 -d, ) )"
+,  "        COMPREPLY=( $( (cat $HOME/.apparix{rc,expand} | cut -f2 -d, ; ls -1p | grep '/$' | tr -d /) | grep \".*$cur.*\" ))"
 ,  "    else"
-,  "        dir=`apparix -favour rOl $dir 2>/dev/null` || return 0"
+,  "        dir=`apparix --try-current-first -favour rOl $dir 2>/dev/null` || return 0"
 ,  "        eval_compreply=\"COMPREPLY=( $("
 ,  "            cd \"$dir\""
 ,  "            \\ls -d *$cur* | while read r"
@@ -125,7 +136,9 @@ const char* shell_examples[] =
 ,  "# being expanded"
 ,  "complete -F _apparix_aliases to"
 ,  "---\nCSH-style aliases\n---"
-,  "alias to    'cd `(apparix -favour rOl \\!* || echo -n .)` && pwd'"
+,  "# The outcommented alias does not supplant cd, the other one does."
+,  "# alias to    'cd `(apparix -favour rOl \\!* || echo -n .)`'"
+,  "alias to '(test \"x-\" =  \"x\\!*\") && cd - || (test \"x\" !=  \"x\\!*\") && cd `(apparix --try-current-first -favour rOl \\!* || echo -n .)` || cd'"
 ,  "alias bm   'apparix --add-mark \\!*'"
 ,  "alias portal 'apparix --add-portal \\!*'"
 ,  "---"
@@ -207,6 +220,24 @@ mcxOptAnchor options[] =
    ,  NULL
    ,  "add portal bookmark, accepts trailing [destination]"
    }
+,  {  "--try-current-first"
+   ,  MCX_OPT_DEFAULT
+   ,  MY_OPT_TRY_CURRENT_FIRST
+   ,  NULL
+   ,  "try current directory first, then try lookup"
+   }
+,  {  "--notify-current"
+   ,  MCX_OPT_DEFAULT
+   ,  MY_OPT_NTF_CURRENT
+   ,  NULL
+   ,  "emit notification when current directory prevails over lookup"
+   }
+,  {  "--try-current-last"
+   ,  MCX_OPT_DEFAULT
+   ,  MY_OPT_TRY_CURRENT_LAST
+   ,  NULL
+   ,  "try current directory if lookup fails"
+   }
 ,  {  "-sm"
    ,  MCX_OPT_HASARG
    ,  MY_OPT_SQUASH_MARK
@@ -283,9 +314,9 @@ void show_version
       (  stdout
       ,
 "apparix %s, %s\n"
-"(c) Copyright 2005, 2006 Stijn van Dongen. apparix comes with NO WARRANTY\n"
-"to the extent permitted by law. You may redistribute copies of apparix under\n"
-"the terms of the GNU General Public License.\n"
+"(c) Copyright 2005, 2006, 2007, 2008 Stijn van Dongen. apparix comes with NO\n"
+"WARRANTY to the extent permitted by law. You may redistribute copies of apparix\n"
+"under the terms of the GNU General Public License.\n"
       ,  apxNumTag
       ,  apxDateTag
       )
@@ -580,7 +611,7 @@ folder* expand_portal
          ;  break
       ;  }
          while ((de = readdir(dir)))
-         {  struct stat fstat
+         {  struct stat dstat
          ;  mcxTingWrite(dname, de->d_name)
          ;  mcxTingPrint(fqname, "%s/%s", dest, de->d_name)
          ;  if ((unsigned char) dname->str[0] == '.')
@@ -612,11 +643,11 @@ folder* expand_portal
             ;  if (!syntaxerror && p)   /* we hit an APPARIXEXCLUDE match */
                continue
          ;  }
-            if (lstat(fqname->str, &fstat) < 0)
+            if (stat(fqname->str, &dstat) < 0)
             {  mcxErr(us, "error accessing node %s", fqname->str)
             ;  break
          ;  }
-            if (!S_ISDIR(fstat.st_mode))
+            if (!S_ISDIR(dstat.st_mode))
             continue
          ;  fprintf(xfport->fp, "j,%s,%s\n", dname->str, fqname->str)
          ;  folder_add(fl, 'J', 0, dname, fqname, ct++)
@@ -645,8 +676,8 @@ mcxstatus bookmark_resync_portal
    ;  int ct_portal = 0
 
    ;  mcxIOclose(xfport)
-   ;  {  struct stat fstat
-      ;  if (lstat(portname, &fstat) < 0)
+   ;  {  struct stat dstat
+      ;  if (stat(portname, &dstat) < 0)
          {  if (errno == ENOENT)
             mcxTell(us, "portal file %s will be newly created", portname)
          ;  else
@@ -1111,6 +1142,18 @@ int resolve_user
 ;  }
 
 
+mcxTing* try_current
+(  const char* name
+)
+   {  struct stat dstat
+   ;  if (stat(name, &dstat) < 0 || !S_ISDIR(dstat.st_mode))
+      return NULL
+   ;  if (notifycurrent)
+      fprintf(stderr, "(found in current directory)\n")
+   ;  return mcxTingNew(name)
+;  }
+
+
 
 mcxstatus attempt_jump
 (  folder*  flreg
@@ -1139,11 +1182,15 @@ mcxstatus attempt_jump
    ;  }
 
       while (1)
-      {  if (!bmx)
-         break
-
-      ;  if
-         (  bmx < bmz-1
+      {  if (trycurrentfirst)
+         dest = try_current(mark->str)
+         
+      ;  if (dest)
+         NOTHING              /* trycurrentfirst succeeded */
+      ;  else if (!bmx)
+         NOTHING              /* trycurrentlast might still work */
+      ;  else if
+         (  bmx < bmz-1       /* DUPLICATES */
          && !strcmp(bmx->mark->str, bmx[1].mark->str)
          )
          {  int n_same = 2
@@ -1169,6 +1216,9 @@ mcxstatus attempt_jump
          }
          else
          dest  =  bmx->dest
+
+      ;  if (!dest && trycurrentlast)
+         dest = try_current(mark->str)
 
       ;  if (!dest)
          break
@@ -1475,6 +1525,21 @@ int main
 
             case  MY_OPT_ADD_PORTAL
          :  mode = MODE_ADD_PORTAL; n_mode++
+         ;  break
+         ;
+
+            case  MY_OPT_TRY_CURRENT_FIRST
+         :  trycurrentfirst = TRUE
+         ;  break
+         ;
+
+            case  MY_OPT_NTF_CURRENT
+         :  notifycurrent = TRUE
+         ;  break
+         ;
+
+            case  MY_OPT_TRY_CURRENT_LAST
+         :  trycurrentlast = TRUE
          ;  break
          ;
 

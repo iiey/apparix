@@ -25,14 +25,8 @@
  *    -  File "-" is interpreted as either STDIN or STDOUT depending on the open mode.
  *
  * BUGS
- *    -  leader framework is very fragile.
- *       =================================
- *       mcxIOfind is the only one consuming the leader, so if
- *       leader contains the pattern and more there is no one
- *       else to consume the remainder in leader.
- *       [ The leader framework was primarily created to support
- *         cookies for unseekable streams. ]
- *
+ *    -  buffer framework is fully implemented:
+ *          mcxIOexpectNum and mcxIOexpectReal ignore buffer.
  *    -  Should incorporate more (f)error checking.
  *
  * TODO:

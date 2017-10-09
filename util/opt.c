@@ -140,12 +140,6 @@ mcxOption* mcxOptParse__
             {  strncpy(argcpy, arg, (eq-arg))
             ;  argcpy[eq-arg] = '\0'
             ;  if
-               (  (kv = mcxHashSearch(argcpy, opthash, MCX_DATUM_FIND))
-               && (anch = (mcxOptAnchor*) kv->val)
-               && (anch->flags & MCX_OPT_EMBEDDED)
-               )
-               embedded_val = eq+1
-            ;  else if
                (  !strncmp(argcpy, "--", 2)
                && (kv = mcxHashSearch(argcpy+1, opthash, MCX_DATUM_FIND))
                && (anch = (mcxOptAnchor*) kv->val)
@@ -167,15 +161,7 @@ mcxOption* mcxOptParse__
 
          ;  if (embedded_val)
             opt->val = embedded_val
-         ;  else if
-            (  anch->flags & MCX_OPT_HASARG
-            && anch->flags & MCX_OPT_EMBEDDED   /* fixme: embedded is stale? */
-            )
-            {  mcxErr("mcxOptParse", "option <%s> takes =value", anch->tag)
-            ;  *status  =  MCX_OPT_STATUS_NOARG
-            ;  break
-         ;  }
-            else if (anch->flags & MCX_OPT_HASARG) 
+         ;  else if (anch->flags & MCX_OPT_HASARG) 
             {  argp++
             ;  if (argp >= argl)
                {  mcxErr("mcxOptParse", "option <%s> takes value", anch->tag)
@@ -586,12 +572,12 @@ void mcxOptApropos
          (  !(opt->flags & MCX_OPT_HIDDEN)
          || display & MCX_OPT_DISPLAY_HIDDEN
          )
-         mywidth = MAX(mywidth, thislen)
+         mywidth = MCX_MAX(mywidth, thislen)
 
       ;  if (opt->descr_usage)
          {  parse_descr
             (opt->descr_usage, &descr_usage, &descr_mark, &mark_width)
-         ;  mark_width_max = MAX(mark_width_max, mark_width)
+         ;  mark_width_max = MCX_MAX(mark_width_max, mark_width)
       ;  }
       }
 
@@ -612,17 +598,12 @@ void mcxOptApropos
          skip = "\n"
       ;  id_prev = opt->id
       
-      ;  if
-         (  (  opt->flags & MCX_OPT_HASARG
-            || opt->flags & MCX_OPT_EMBEDDED
-            )
-            && opt->descr_arg
-         )
+      ;  if (opt->flags & MCX_OPT_HASARG && opt->descr_arg)
          mcxTingPrint
          (  scr
          ,  "%s%c%s"
          ,  opt->tag
-         ,  opt->flags & MCX_OPT_EMBEDDED ? '=' : ' '
+         ,  ' '
          ,  opt->descr_arg
          )
       ;  else
@@ -700,7 +681,7 @@ mcxbool mcxOptIsInfo
 ;  }
 
 
-char* mcxOptArgLine
+mcxTing* mcxOptArgLine
 (  const char** argv
 ,  int argc
 ,  int quote
@@ -727,88 +708,29 @@ char* mcxOptArgLine
 
    ;  for (i=1;i<argc;i++)
       mcxTingPrintAfter(cl, " %s%s%s", ql, argv[i], qr)
-   ;  return mcxTinguish(cl)
+   ;  return cl
 ;  }
 
 
-
-mcxOptAnchor mcxDispGiraffe[] =
-{  {  "--version"
-   ,  MCX_OPT_DEFAULT
-   ,  MCX_DISP_GIRAFFE_VERSION
-   ,  NULL
-   ,  "output version information, exit"
-   }
-,  {  "--test"
-   ,  MCX_OPT_HIDDEN
-   ,  MCX_DISP_GIRAFFE_TEST
-   ,  NULL
-   ,  "test"
-   }
-,  {  "-debug"
-   ,  MCX_OPT_HIDDEN
-   ,  MCX_DISP_GIRAFFE_DEBUG
-   ,  "<int>"
-   ,  "set debug level or bits"
-   }
-,  {  "-set"
-   ,  MCX_OPT_HASARG
-   ,  MCX_DISP_GIRAFFE_SET
-   ,  "key=val"
-   ,  "set key to val in ENV"
-   }
-,  {  "--nop"
-   ,  MCX_OPT_DEFAULT
-   ,  MCX_DISP_GIRAFFE_NOP
-   ,  NULL
-   ,  "this option has no affect but changing the argument count"
-   }
-,  {  "-h"
-   ,  MCX_OPT_DEFAULT
-   ,  MCX_DISP_GIRAFFE_HELP
-   ,  NULL
-   ,  "this"
-   }
-,  {  "--apropos"
-   ,  MCX_OPT_DEFAULT
-   ,  MCX_DISP_GIRAFFE_APROPOS
-   ,  NULL
-   ,  "this"
-   }
-,  {  "--amoixa"
-   ,  MCX_OPT_HIDDEN
-   ,  MCX_DISP_GIRAFFE_AMOIXA
-   ,  NULL
-   ,  "show hidden options too"
-   }
-,  {  NULL ,  0 ,  0 ,  NULL, NULL}
-}  ;
-
-
-dim mcxDispGiraffeCount = sizeof(mcxDispGiraffe) / sizeof(mcxOptAnchor) -1;
-
-mcxbits mcx_disp_giraffe_debug =  0;
-mcxbool mcx_disp_giraffe_test  =  FALSE;
-
-
 int mcxDispatch
-(  int                  argc
-,  const char*          argv[]
-,  const char*          me
-,  const char*          syntax
-,  mcxOptAnchor*        dispatcher_options
-,  dim                  n_options
-,  mcxDispEntry*        entry_dir
-,  void                 (*report_version)(const char* me)
+(  mcxDispBundle* bundle  
 )
-   {  const char* mode_str
+   {  int            argc     =  bundle->disp_argc
+   ;  const char**   argv     =  bundle->disp_argv
+   ;  const char*    me       =  bundle->disp_name
+   ;  const char*    syntax   =  bundle->disp_syntax
+   ;  mcxOptAnchor*  dispatcher_options = bundle->disp_shared
+   ;  dim            n_options=  bundle->n_disp_shared
+   ;  mcxDispEntry*  entry_dir=  bundle->disp_table
+   ;  void           (*report_version)(const char* me) = bundle->disp_version
+
+   ;  const char* mode_str
    ;  mcxDispHook* hk = NULL
 
    ;  mcxOption* opts, *opt
    ;  int n_arg_read = 0
    ;  mcxstatus parseStatus = STATUS_FAIL
    ;  mcxHash *clmOpts, *delgOpts, *mergedOpts
-   ;  mcxTing* me_and_it
    ;  mcxDispEntry* entry
    ;  int help = argc <= 1 || !strcmp(argv[1], "-h") ? 1 : 0
    ;  int delg_id_max
@@ -818,27 +740,23 @@ int mcxDispatch
    ;  clmOpts = mcxOptHash(dispatcher_options, NULL)
    ;  delg_id_max = dispatcher_options[n_options-1].id
 
-   ;  if (argc > 1 && !strcmp(argv[1], "--amoixa"))
-      help = 2
-
    ;  if (help)
       {  entry = entry_dir+0
       ;  fprintf(stdout, "%s\n\n", syntax)
       ;  while(entry->id >= 0)
          {  hk = entry->get_hk()
-         ;  if ((hk->flags & MCX_DISP_HIDDEN) && help < 2)
-            NOTHING
-         ;  else
+         ;  if (!(hk->flags & MCX_DISP_HIDDEN))
             fprintf(stdout, "%s %s\n", me, hk->syntax)
          ;  entry++
       ;  }
          exit(0)
    ;  }
-      else if (!strcmp(argv[1], "--version"))
-         report_version(me)
-      ,  exit(0)
+      else if (argc > 1 && !strcmp(argv[1], "--version"))
+      {  report_version(me)
+      ;  exit(0)
+   ;  }
 
-   ;  mode_str = argv[1]
+      mode_str = argv[1]
 
                   /* Find the mode in which we are invoked */
    ;  {  const char* name
@@ -854,9 +772,12 @@ int mcxDispatch
          mcxDie(1, me, "unknown mode <%s>", mode_str)
    ;  }
 
-      me_and_it = mcxTingPrint(NULL, "%s %s", me, hk->syntax)
-   ;  mcxOptAnchorSortById(hk->options, hk->n_options)
 
+      mcxOptAnchorSortById(hk->options, hk->n_options)
+
+            /* caller screwed up: it's IDs should top the
+             * largest ID in the shared options.
+            */
    ;  if (delg_id_max >= hk->options[0].id)
       mcxDie(1, me, "PBD option merge is pointless")
 
@@ -864,6 +785,12 @@ int mcxDispatch
    ;  mergedOpts  =  mcxHashMerge(clmOpts, delgOpts, NULL, NULL)
    ;  opts        =  mcxHOptExhaust
                      (mergedOpts, (char**) argv, argc, 2, &n_arg_read, &parseStatus)
+
+   ;  a = 2 + n_arg_read
+
+         /* fixme: we should be able to check n_at_most and n_at_least
+          * right here, should we not?
+         */
 
    ;  if (parseStatus != STATUS_OK)
       {  mcxErr(me, "initialization failed")
@@ -875,130 +802,19 @@ int mcxDispatch
 
    ;  for (opt=opts;opt->anch;opt++)
       {  mcxOptAnchor* anch = opt->anch
-      ;  switch(anch->id)
-         {  case MCX_DISP_GIRAFFE_HELP
-         :  case MCX_DISP_GIRAFFE_APROPOS
-         :  case MCX_DISP_GIRAFFE_AMOIXA
-         :  mcxOptApropos
-            (  stdout
-            ,  hk->name
-            ,  me_and_it->str
-            ,  15
-            ,  0
-            ,  dispatcher_options
-            )
-         ;  mcxOptApropos
-            (  stdout
-            ,  hk->name
-            ,  NULL
-            ,  15
-            ,     MCX_OPT_DISPLAY_SKIP
-               |  (  anch->id == MCX_DISP_GIRAFFE_AMOIXA
-                  ?  MCX_OPT_DISPLAY_HIDDEN
-                  :  0
-                  )
-            ,  hk->options
-            )
-         ;  mcxExit(0)
-         ;  break
-         ;
-
-            case MCX_DISP_GIRAFFE_VERSION
-         :  report_version(me)
-         ;  mcxExit(0)
-         ;  break
-         ;
-
-            case MCX_DISP_GIRAFFE_NOP
-         :  NOTHING
-         ;  break
-         ;
-
-            case MCX_DISP_GIRAFFE_TEST
-         :  mcx_disp_giraffe_test = TRUE
-         ;  break
-         ;
-
-            case MCX_DISP_GIRAFFE_DEBUG
-         :  mcx_disp_giraffe_debug = atoi(opt->val)
-         ;  break
-         ;
-
-            case MCX_DISP_GIRAFFE_SET
-         :  mcxSetenv(opt->val)
-         ;  break
-         ;
-
-            default
-         :  if (hk->arg_cb(anch->id, opt->val)) mcxDie(1, me, "curtains")
-         ;  break
-         ;
-         }
-      }
-#if 0
-      {  mcxOptAnchor* anch = opt->anch
-      ;  if
-         (  anch->id == MCX_DISP_GIRAFFE_HELP
-         || anch->id == MCX_DISP_GIRAFFE_APROPOS
-         || anch->id == MCX_DISP_GIRAFFE_AMOIXA
-         )
-         {  mcxOptApropos
-            (  stdout
-            ,  hk->name
-            ,  me_and_it->str
-            ,  15
-            ,  0
-            ,  dispatcher_options
-            )
-         ;  mcxOptApropos
-            (  stdout
-            ,  hk->name
-            ,  NULL
-            ,  15
-            ,     MCX_OPT_DISPLAY_SKIP
-               |  (  anch->id == MCX_DISP_GIRAFFE_AMOIXA
-                  ?  MCX_OPT_DISPLAY_HIDDEN
-                  :  0
-                  )
-            ,  hk->options
-            )
-         ;  mcxExit(0)
+      ;  if (anch->id <= delg_id_max)
+         {  if (bundle->shared_handler(anch->id, opt->val, hk, bundle))
+            mcxDie(1, me, "dispatcher curtains")
       ;  }
-         else if (anch->id == MCX_DISP_GIRAFFE_VERSION)
-            report_version(me)
-         ,  mcxExit(0)
-
-      ;  else if (anch->id == MCX_DISP_GIRAFFE_NOP)
-         NOTHING
-
-      ;  else if (anch->id == MCX_DISP_GIRAFFE_TEST)
-         mcx_disp_giraffe_test = TRUE
-
-      ;  else if (anch->id == MCX_DISP_GIRAFFE_DEBUG)
-         mcx_disp_giraffe_debug = atoi(opt->val)
-
-      ;  else if (anch->id == MCX_DISP_GIRAFFE_SET)
-         mcxSetenv(opt->val)
-
-      ;  else if (hk->arg_cb(anch->id, opt->val))
-         mcxDie(1, me, "curtains")
+         else if (hk->arg_cb(anch->id, opt->val))
+         mcxDie(1, me, "dispatchee curtains")
    ;  }
-#endif
 
-      a = 2 + n_arg_read
-
-   ;  if (argc == 2)
-         mcxOptApropos
-         (  stdout
-         ,  hk->name
-         ,  me_and_it->str
-         ,  15
-         ,  0
-         ,  hk->options
-         )
-      ,  mcxExit(0)
-
-   ;  if
+            /* do the checks below after parsing:
+             * Parsing is needed to -h --help type flags
+             * and other type of meta-enquiry options.
+            */
+      if
       (  a + hk->n_at_least > argc
       || (hk->n_at_most >= 0 && a + hk->n_at_most < argc)
       )
@@ -1013,11 +829,18 @@ int mcxDispatch
       ;  if (hk->n_at_most > hk->n_at_most)
          mcxTingPrintAfter(t, " and at most %d", hk->n_at_most)
 
+      ;  if (hk->n_at_most >= 0 && a + hk->n_at_most < argc)
+         mcxTingPrintAfter(t, " (found %s)", argv[a])
+
       ;  mcxDie(1, me, t->str)
    ;  }
 
-      return hk->main(argc-a, argv+a)
-   ;  return 0
+      mcxOptFree(&opts)
+   ;  mcxOptHashFree(&clmOpts)
+   ;  mcxOptHashFree(&delgOpts)
+   ;  mcxOptHashFree(&mergedOpts)
+
+   ;  return hk->main(argc-a, argv+a)
 ;  }
 
 

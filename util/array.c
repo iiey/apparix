@@ -35,7 +35,7 @@ mcxstatus mcxSplice
 
    ;  dim   n_base1        =  *pn_base1
    ;  dim   N_base1        =  *pN_base1
-   ;  dim   m_base1, o_base1
+   ;  dim   m_base1 = 0, o_base1 = 0
 
    ;  const char  *errMsg  =  ""
    ;  mcxstatus   stat     =  STATUS_FAIL
@@ -216,7 +216,7 @@ void* mcxBufExtend
 
    ;  if (buf->n_alloc < buf->n + n_request)
       {  dim n_new    
-         =  MAX
+         =  MCX_MAX
             (  (dim) (buf->n_alloc * buf->factor + 8)
             ,  (dim) (buf->n + n_request)
             )
