@@ -53,12 +53,14 @@ void mcxTingFree_v
 ;  }
 
 
+#if 0
 void mcxTingAbandon
 (  void  *tingpp
 )
    {  mcxTing* ting = *((mcxTing**) tingpp)
    ;  mcxFree(ting)
 ;  }
+#endif
 
 
 mcxTing* mcxTingShrink
@@ -71,9 +73,9 @@ mcxTing* mcxTingShrink
    ;  if (offset < 0 || (dim) offset > ting->len)
       {  mcxErr
          (  "mcxTingShrink"
-         ,  "funny offset <%zu> newlen <%zu> combo"
-         ,  (size_t) ting->len
-         ,  (size_t) offset
+         ,  "funny offset <%lu> newlen <%ld> combo"
+         ,  (ulong) ting->len
+         ,  (long) offset
          )
       ;  return ting
    ;  }
@@ -130,7 +132,7 @@ static mcxTing*  mcx_ting_print
           * it also seems that vsnprintf is widely ill-implemented
          */
    ;  if (npf < 0 || npf+1 >= PRINT_BUF_SIZE)
-      {  m  =  (dim) npf >= PRINT_BUF_SIZE ? npf : 2 * m
+      {  m  =  ((dim) npf) >= PRINT_BUF_SIZE ? ((dim) npf) : 2 * m
       ;  while (1)
          {  if (!(txtbuf = mcxTingEmpty(txtbuf, m)))
             {  mcxTingFree(&txtbuf)
@@ -280,7 +282,7 @@ mcxTing*  mcxTingDouble
 )
    {  char num[500]
    ;  char* p
-   ;  int len = snprintf(num, 500, "%f", x)
+   ;  int len = snprintf(num, 500, "%.*f", decimals, x)
 
    ;  if (decimals < 0)
       {  mcxErr("mcxTingDouble PBD", "negative decimals arg")
@@ -461,8 +463,8 @@ mcxstatus mcxTingSplice
    ;  else if (n_delete < 0)
       {  mcxErr
          (  "mcxTingSplice PBD"
-         ,  "unsupported delete mode %zd"
-         ,  (ssize_t) n_delete
+         ,  "unsupported delete mode %ld"
+         ,  (long) n_delete
          )
       ;  return STATUS_FAIL
    ;  }
@@ -823,6 +825,13 @@ u32 mcxTingELFhash
 ;  }
 
 
+u32 mcxTingFNVhash
+(  const void* ting
+)
+   {  return(mcxFNVhash(((mcxTing*) ting)->str, ((mcxTing*) ting)->len))
+;  }
+
+
 u32 (*mcxTingHFieByName(const char* id))(const void* ting)
    {  if (!strcmp(id, "dp"))
       return mcxTingDPhash
@@ -846,6 +855,8 @@ u32 (*mcxTingHFieByName(const char* id))(const void* ting)
       return mcxTingSvD1hash
    ;  else if (!strcmp(id, "ct"))
       return mcxTingCThash
+   ;  else if (!strcmp(id, "fnv"))
+      return mcxTingFNVhash
    ;  else
       return NULL
 ;  }

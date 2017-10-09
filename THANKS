@@ -8,7 +8,7 @@ Thanks to:
       for writing cdargs which begat apparix.
 
    Sitaram Chamarty
-      contributed the bash completion mechanism for apparix.  If was first
+      contributed the bash completion mechanism for apparix.  It was first
       modelled after the cdargs equivalent, but then took on a life of its own
       as it acquired completion on subdirectory names of the bookmark target.
 

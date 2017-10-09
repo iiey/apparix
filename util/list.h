@@ -6,8 +6,8 @@
  * copy of the GPL along with tingea, in the file COPYING.
 */
 
-#ifndef util_list_h
-#define util_list_h
+#ifndef tingea_list_h
+#define tingea_list_h
 
 #include "gralloc.h"
 #include "types.h"

@@ -7,12 +7,12 @@
  * copy of the GPL along with tingea, in the file COPYING.
 */
 
-#ifndef util_compile_h
-#define util_compile_h
+#ifndef tingea_compile_h
+#define tingea_compile_h
 
 
-#ifndef MCX_UTIL_TYPED_MINMAX
-#  define MCX_UTIL_TYPED_MINMAX 0
+#ifndef TINGEA__TYPED_MINMAX
+#  define TINGEA__TYPED_MINMAX 0
 #endif
 
 
@@ -33,7 +33,7 @@
 #else
 #  define   MCX_GNUC_OK       1
 #if __GNUC__  >= 3
-#  define inline         inline __attribute__ ((always_inline))
+#  define inline __inline__ __attribute__ ((always_inline))
 #  define cpl__pure         __attribute__ ((pure))
 #  define cpl__const        __attribute__ ((const))
 #  define cpl__noreturn     __attribute__ ((noreturn))

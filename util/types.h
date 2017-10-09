@@ -24,6 +24,8 @@ typedef unsigned long mcxenum  ;
 #define VOID_TO_UINT (unsigned)
 #define UINT_TO_VOID (void*)
 
+#define NOTHING   do { } while (0)
+
 
 /*  **************************************************************************
  * *

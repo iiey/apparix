@@ -139,7 +139,7 @@ TROFF = groff
 ZOEM = zoem
 TIDY = tidy
 docdir = $(datadir)/doc/$(PACKAGE)
-docdocdir = $(docdir)/doc
+docdocdir = $(docdir)
 azms = apparix.azm
 docdoc_DATA = apparix.html apparix.ps $(azms)
 man_MANS = apparix.1
@@ -380,8 +380,8 @@ uninstall-man: uninstall-man1
 	$(TROFF) -man $< > $@
 
 .azm.html:
-	$(ZOEM) --allow=../src/apparix -d html -i $< -o $@
-	$(ZOEM) --allow=../src/apparix -d html -i $< -o $@
+	$(ZOEM) --allow=../src/apparix:date -d html -i $< -o $@
+	$(ZOEM) --allow=../src/apparix:date -d html -i $< -o $@
 	- $(TIDY) -e $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -26,8 +26,8 @@
  * -  design {reset,close} framework, esp related to usr member.
 */
 
-#ifndef util_file_h
-#define util_file_h
+#ifndef tingea_file_h
+#define tingea_file_h
 
 #include <stdio.h>
 #include <sys/types.h>

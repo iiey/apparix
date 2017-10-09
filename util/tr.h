@@ -6,8 +6,8 @@
  * the GPL along with tingea, in the file COPYING.
 */
 
-#ifndef util_tr
-#define util_tr
+#ifndef tingea_tr
+#define tingea_tr
 
 #include <string.h>
 

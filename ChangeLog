@@ -1,4 +1,15 @@
 
+
+Fri 20 Oct 2006
+
+	*	apparix-06-293 released.
+
+	*	Fix dumb apparix crash when .apparixrc is not present.
+		(This bug would occur only once as apparix created .apparixrc
+		before crashing).
+
+	*	Warn when commas are found in mark or target.
+
 Tue 23 May 2006
 
    *  apparix-06-142 released.

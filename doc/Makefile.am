@@ -1,12 +1,12 @@
 ## Process this file with automake to produce Makefile.in
-## $Id: Makefile.am,v 1.2 2005/11/02 23:00:08 flux Exp $
+## $Id: Makefile.am,v 1.4 2006-08-04 20:50:19 flux Exp $
 
 TROFF =  groff
 ZOEM  =  zoem
 TIDY  =  tidy
 
 docdir = $(datadir)/doc/$(PACKAGE)
-docdocdir = $(docdir)/doc
+docdocdir = $(docdir)
 
 azms =  apparix.azm
 
@@ -32,7 +32,7 @@ SUFFIXES = .1 .7 .azm .html .ps
 	$(TROFF) -man $< > $@
 
 .azm.html:
-	$(ZOEM) --allow=../src/apparix -d html -i $< -o $@
-	$(ZOEM) --allow=../src/apparix -d html -i $< -o $@
+	$(ZOEM) --allow=../src/apparix:date -d html -i $< -o $@
+	$(ZOEM) --allow=../src/apparix:date -d html -i $< -o $@
 	- $(TIDY) -e $@
 

@@ -103,7 +103,7 @@ mcxLink*  mcxLinkNew
 
 #if DEBUG
 ;  fprintf
-   (stderr, "new list ptr <%p> capacity <%zu>\n", (void*) ls, (ssize_t) capacity_start)
+   (stderr, "new list ptr <%p> capacity <%ld>\n", (void*) ls, (long) capacity_start)
 #endif
 
    ;  if

@@ -1,5 +1,5 @@
 .\" Copyright (c) 2006 Stijn van Dongen
-.TH "apparix" 1 "22 May 2006" "apparix 1\&.003, 06-142" "USER COMMANDS "
+.TH "apparix" 1 "20 Oct 2006" "apparix 1\&.003, 06-293" "USER COMMANDS "
 .po 2m
 .de ZI
 .\" Zoem Indent/Itemize macro I.
@@ -55,42 +55,41 @@ a mock-up shell navigation session\&.
 .di ZV
 .in 0
 .nf \fC
-> \fBpwd\fP
-/home/eez/cvs/xyz/tfa/faq/zut/bar/foo
-> \fBls\fP
-src/ doc/ CVS/ bin/
-> \fBbm xkr\fP          # bookmark as xkr (funny name though)
-> \fBbm\fP              # bookmark as foo (trailing component is default)
+   > \fBpwd\fP
+   /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+   > \fBls\fP
+   src/ doc/ CVS/ bin/
+   > \fBbm xkr\fP       # bookmark as xkr (funny name though)
+   > \fBbm\fP           # bookmark as foo (trailing component is default)
 (later)
-> \fBto xkr\fP          # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+   > \fBto xkr\fP       # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 (alternatively)
-> \fBto xkr src\fP      # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo/src
+   > \fBto xkr src\fP   # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo/src
 (alternatively)
-> \fBto foo\fP          # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
-
-
-(later)
-> \fBls\fP
-aap pyu/ qua tim/ zut/
-> \fBpwd\fP
-/home/eez/another/branch/deep/down/under
-> \fBportal\fP          # bookmark as portal, imports tim zut pyu bookmarks
-added flock of 3 in portal /home/eez/another/branch/deep/down/under
+   > \fBto foo\fP       # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 
 (later)
-> \fBto zut\fP          # cd to /home/eez/another/branch/deep/down/under/zut
+   > \fBls\fP
+   aap pyu/ qua tim/ zut/
+   > \fBpwd\fP
+   /home/eez/another/branch/deep/down/under
+   > \fBportal\fP       # bookmark as portal, imports tim zut pyu bookmarks
+   added flock of 3 in portal /home/eez/another/branch/deep/down/under
 
 (later)
-> \fBapparix\fP         # show all bookmarks
---- portals
-e              /home/eez/another/branch/deep/down/under
---- expansions
-j pyu          /home/eez/another/branch/deep/down/under/pyu
-j tim          /home/eez/another/branch/deep/down/under/tim
-j zut          /home/eez/another/branch/deep/down/under/zut
---- bookmarks
-j xkr          /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
-j foo          /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+   > \fBto zut\fP       # cd to /home/eez/another/branch/deep/down/under/zut
+
+(later)
+   > \fBapparix\fP   # show all bookmarks
+   --- portals
+   e              /home/eez/another/branch/deep/down/under
+   --- expansions
+   j pyu          /home/eez/another/branch/deep/down/under/pyu
+   j tim          /home/eez/another/branch/deep/down/under/tim
+   j zut          /home/eez/another/branch/deep/down/under/zut
+   --- bookmarks
+   j xkr          /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+   j foo          /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 .fi \fR
 .in
 .di
@@ -99,15 +98,14 @@ j foo          /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 .ZV
 .fi \fR
 
-In the last example apparix simply shows all its bookmarks\&.
-The first batch shows portals\&. The second batch shows
-secondary bookmarks expanded from portals\&. The third
-batch shows all regular bookmarks\&.
+In the last example apparix simply shows all its bookmarks\&. The first batch
+shows portals\&. The second batch shows secondary bookmarks expanded from
+portals\&. The third batch shows all regular bookmarks\&.
 
-Apparix also allows subdirectory specification\&. If this is combined
-with the bash completion code it yields a powerful way of navigating
-container directories, i\&.e\&. directories that contain a large number
-of subdirectories\&. Refer to the \fBsubdirectory specification\fP section\&.
+Apparix also allows subdirectory specification\&. If this is combined with the
+bash completion code it yields a powerful way of navigating container
+directories, i\&.e\&. directories that contain a large number of subdirectories\&.
+Refer to the \fBsubdirectory specification\fP section\&.
 
 \fBFurther options\fP
 .br
@@ -437,10 +435,13 @@ When invoked without arguments apparix will simply dump its bookmarks\&.
 .ZI 3m "\fB--add-mark\fP (\fIadd jump bookmark\fP)"
 \&
 .br
-This options expects trailing \fImark [destination]\fP argument(s)\&.
-The first argument is the bookmark name\&. The optional second argument
-is the target directory\&. If the target directory is not given, apparix
-assumes the current directory should be bookmarked\&.
+This options expects trailing \fI[mark [destination]]\fP argument(s)\&.
+Both arguments are optional\&. If a single argument is given it
+is interpreted as a bookmark name to be mapped to the current directory\&.
+If two arguments are given the last argument is taken as the
+target directory\&. If no argument is given apparix will enlist
+the current directory as a target bookmarked by the trailing component
+of the directory path\&.
 .in -3m
 
 .ZI 3m "\fB--add-portal\fP (\fIadd portal bookmark\fP)"
@@ -644,66 +645,6 @@ below point \fIcd\fP(1) in the right direction\&.
 .di ZV
 .in 0
 .nf \fC
-BASH-style functions
----
-function to () {
-   if test "$2"; then
-     cd "$(apparix "$1" "$2" || echo \&.)";
-   else
-     cd "$(apparix "$1" || echo \&.)";
-   fi
-   pwd
-}
-function bm () {
-   if test "$2"; then
-      apparix --add-mark "$1" "$2";
-   elif test "$1"; then
-      apparix --add-mark "$1";
-   else
-      apparix --add-mark;
-   fi
-}
-function portal () {
-   if test "$1"; then
-      apparix --add-portal "$1";
-   else
-      apparix --add-portal;
-   fi
-}
-# function to generate list of completions from \&.apparixrc
-function _apparix_aliases ()
-{   cur=$2
-    dir=$3
-    COMPREPLY=()
-    if [ "$1" == "$3" ]
-    then
-        COMPREPLY=( $( cat $HOME/\&.apparix{rc,expand} | \e
-                       grep "j,\&.*$cur\&.*," | cut -f2 -d, ) )
-    else
-        dir=\&`apparix -favour rOl $dir 2>/dev/null\&` || return 0
-        eval_compreply="COMPREPLY=( $(
-            cd "$dir"
-            \els -d *$cur* | while read r
-            do
-                [[ -d "$r" ]] &&
-                [[ $r == *$cur* ]] &&
-                    echo \e"${r// /\e\e }\e"
-            done
-            ) )"
-        eval $eval_compreply
-    fi
-    return 0
-}
-# command to register the above to expand when the \&'to\&' command\&'s args are
-# being expanded
-complete -F _apparix_aliases to
----
-CSH-style aliases
----
-alias to    \&'cd \&`(apparix -favour rOl \e!* || echo -n \&.)\&` && pwd\&'
-alias bm   \&'apparix --add-mark \e!*\&'
-alias portal \&'apparix --add-portal \e!*\&'
----
 .fi \fR
 .in
 .di

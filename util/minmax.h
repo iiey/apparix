@@ -12,7 +12,7 @@
 
 #include "compile.h"
 
-#if MCX_GNUC_OK && MCX_UTIL_TYPED_MINMAX
+#if MCX_GNUC_OK && TINGEA__TYPED_MINMAX
 /* these buggers do not nest, which I dislike */
 #  define MAX(x,y)                                 \
    (  {  const typeof(x) _x = x;                   \

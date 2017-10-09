@@ -7,8 +7,8 @@
  * copy of the GPL along with tingea, in the file COPYING.
 */
 
-#ifndef util_let
-#define util_let
+#ifndef tingea_let
+#define tingea_let
 
 #include "types.h"
 #include "ting.h"

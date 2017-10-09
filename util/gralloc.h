@@ -6,8 +6,8 @@
  * copy of the GPL along with tingea, in the file COPYING.
 */
 
-#ifndef util_gralloc_h
-#define util_gralloc_h
+#ifndef tingea_gralloc_h
+#define tingea_gralloc_h
 
 #include "types.h"
 
@@ -36,6 +36,10 @@ void mcxGrimLet
 )  ;
 
 dim mcxGrimCount
+(  mcxGrim* src
+)  ;
+
+dim mcxGrimMemSize
 (  mcxGrim* src
 )  ;
 

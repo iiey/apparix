@@ -8,8 +8,8 @@
 */
 
 
-#ifndef util_heap_h
-#define util_heap_h
+#ifndef tingea_heap_h
+#define tingea_heap_h
 
 
 enum

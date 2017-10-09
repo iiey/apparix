@@ -14,6 +14,14 @@
  *    callbacks to parse 'external' data.
 */
 
+/*
+ * TODO
+ *    catch integer overflow.
+ *    consider unsigned type. Perhaps implement signed with separate sign.
+ *    consider bit operators and unsigned type.
+ *    precision.
+*/
+
 #include <stdio.h>
 #include <ctype.h>
 #include <limits.h>
@@ -1129,16 +1137,13 @@ mcxstatus flatten
             :  err = 1
          ;  }
 
-            if (!(flags & TN_NOINT))
-            flags |=  tn_isint(lft) & tn_isint(rgt)
-
-               /* this rules implements implicit behaviour with overruling:
+               /* this rule implements implicit behaviour with overruling:
                 * two integers result in an integer unless overruled
                 * with the TN_NOINT attribute.
                */
 
-         ;  if ((fval > NUM_MAX || fval < NUM_MIN) && (flags & TN_ISINT))
-            flags ^= TN_ISINT
+            if (!(flags & TN_NOINT))
+            flags |=  tn_isint(lft) & tn_isint(rgt)
 
                /* next we check whether overflow occurred. If so, discard the
                 * integer attribute.  This depends on i) fval follows ival as
@@ -1146,16 +1151,19 @@ mcxstatus flatten
                 * fval is computed to be similar to ival.
                */
 
-         ;  if (flags & TN_ISINT)
-            fval = ival
-         ;  else
-            ival = 0
+         ;  if ((fval > NUM_MAX || fval < NUM_MIN) && (flags & TN_ISINT))
+            flags ^= TN_ISINT
 
                /* make fval follow ival, otherwise, give ival special
                 * value. *Never* should float->int conversion happen
                 * in this code; it should be user-enforced.
                 * Setting ival to 0 may help show any such behaviour as a bug.
                */
+
+         ;  if (flags & TN_ISINT)
+            fval = ival
+         ;  else
+            ival = 0
       ;  }
          else
          {  mcxErr(me, "panicking at toktype <%ld>", (long) op->toktype)

@@ -7,8 +7,11 @@
 */
 
 /* This file is largish, mostly because it was spaceously written.
+ * NOTE
+ *    we do not do hash lookup of mark, because just building the hash
+ *    takes longer then a sequential search.
  * TODO
-   -  j/J is a bit of a kludge. On disk is always j.
+ *    j/J is a bit of a kludge. On disk is always j.
 */
 
 
@@ -37,6 +40,7 @@ enum
 {  MY_OPT_ADD_JUMP
 ,  MY_OPT_ADD_PORTAL
 ,  MY_OPT_REHASH
+,  MY_OPT_GREP
 ,  MY_OPT_DUMP
 ,  MY_OPT_LIST
 ,  MY_OPT_UNDO
@@ -274,7 +278,6 @@ void show_version
 
 
 #define  BIT_PURGE         1
-#define  BIT_ISEXPANDED    2
 
 typedef struct
 {  int         type              /*  'j', 'e', 'J' */
@@ -327,9 +330,7 @@ int bookmark_cmp_level
 ;  }
 
 
-   /* SORTS ON MARK FIRST (do not use for dest) */
-
-int bookmark_cmp_favour
+int bookmark_cmp_mark_favour
 (  const void* bm1
 ,  const void* bm2
 )
@@ -528,7 +529,6 @@ folder* folder_merge
 ,  mcxbool reuse_ord
 )
    {  folder* fl3       =  folder_new(fl1->bm_n+fl2->bm_n)
-   ;  bookmark* bm      =  NULL
 
    ;  folder_addto(fl3, fl1, reuse_ord)
    ;  folder_addto(fl3, fl2, reuse_ord)
@@ -717,10 +717,6 @@ void bookmark_squash
 )
    {  int j
    ;  mcxbool dest = mode == SQUASH_DEST
-   ;  int (*cmp)(const void*, const void*)
-      =     dest
-         ?  bookmark_cmp_dest
-         :  bookmark_cmp_mark
 
    ;  if (!flreg->bm_n)
       return
@@ -732,7 +728,7 @@ void bookmark_squash
              * regular before expansions (irrelevant due to o)
             */
 
-   ;  qsort(flreg->bms, flreg->bm_n, sizeof flreg->bms[0], bookmark_cmp_favour)
+   ;  qsort(flreg->bms, flreg->bm_n, sizeof flreg->bms[0], bookmark_cmp_mark_favour)
 
    ;  for (j=1;j<flreg->bm_n;j++)
       {  bookmark* bmj = flreg->bms+j
@@ -805,7 +801,7 @@ void bookmark_list
       {  bookmark* bm = fl->bms+i
       ;  int len = strlen(bm->mark->str)
 
-      ;  if (n_char + 1 + len <= 80)
+      ;  if (n_char + 1 + len <= 70)
             fputc(' ', stdout)
          ,  n_char += 1 + len
       ;  else
@@ -915,8 +911,12 @@ folder*  bookmark_parse
          {  mark  =  NULL
          ;  dest  =  lk->val
       ;  }
+         else if (n_args > 3)
+         {  mcxErr(us, "comma in destination at line %d - skipping", lct)
+         ;  continue
+      ;  }
          else
-         {  mcxErr(us, "syntax error at line %d token %s", lct, typeting->str)
+         {  mcxErr(us, "syntax error at line %d - skipping", lct)
          ;  continue
       ;  }
 
@@ -961,9 +961,12 @@ folder* resource_prepare
       ;  if (mcxIOopen(xf, RETURN_ON_FAIL))
          mcxErr(us, "cannot create %s file %s", type, xf->fn->str)
       ;  else
-            mcxTell(us, "created %s file %s", type, xf->fn->str)
-         ,  fl = folder_new(0)
-   ;  }
+         {  mcxTell(us, "created %s file %s", type, xf->fn->str)
+         ;  fl = folder_new(0)
+         ;  if (flportpp)
+            *flportpp = folder_new(0)
+      ;  }
+      }
       return fl
 ;  }
 
@@ -1060,7 +1063,7 @@ mcxstatus attempt_jump
                dest = bmx[ans].dest
          ;  }
             else     /* WARNING changed ordering in this segment */
-            {  qsort(bmx, n_same, sizeof bmx[0], bookmark_cmp_favour)
+            {  qsort(bmx, n_same, sizeof bmx[0], bookmark_cmp_mark_favour)
             ;  dest = bmx->dest
          ;  }
          }
@@ -1159,6 +1162,12 @@ mcxstatus bookmark_add_jump
          newmark = sep+1
    ;  }
 
+      if (strchr(newmark, ','))
+      {  mcxErr(us, "I cannot handle commas in mark")
+      ;  status = STATUS_FAIL
+   ;  }
+
+      if (!status)
       status = bookmark_write_jump(xfrc, newmark, dest)
 
    ;  if (!status)
@@ -1179,7 +1188,6 @@ mcxstatus bookmark_add_portal
 ,  int n_arg_trailing
 )
    {  const char* dest= n_arg_trailing == 1 ? argv[argc-1] : NULL
-   ;  char buf[MY_PATH_MAX+1]
    ;  folder* fl = NULL
    ;  mcxTing* pwd = NULL
 

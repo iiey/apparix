@@ -39,7 +39,7 @@ mcxHash* mcxOptHash
    ;  hash  =  hash
                ?  hash
                :  mcxHashNew
-                  (  8
+                  (  100
                   ,  mcxStrHash
                   ,  strcmp_void
                   )
@@ -108,7 +108,8 @@ mcxOption* mcxOptParse__
                                   /* fixme: very ugly internal iface*/
 
    ;  mcxOption* opts
-      =  mcxNAlloc(argc+1, sizeof(mcxOption), mcxOptInit, RETURN_ON_FAIL)
+      =  mcxNAlloc
+         (argc+1, sizeof(mcxOption), mcxOptInit, RETURN_ON_FAIL)
 
    ;  mcxOption* opt = opts
 
@@ -130,9 +131,9 @@ mcxOption* mcxOptParse__
       ;  const char* eq       =  strchr(arg, '=')
 
       ;  if (!kv && eq)
-         {  char argcpy[201]
-         ;  if (eq - arg < 200)
-            {  strncpy(argcpy, arg, eq-arg)
+         {  char argcpy[501]
+         ;  if (eq - arg < 500)
+            {  strncpy(argcpy, arg, (eq-arg))
             ;  argcpy[eq-arg] = '\0'
             ;  if
                (  (kv = mcxHashSearch(argcpy, opthash, MCX_DATUM_FIND))
@@ -515,7 +516,7 @@ int mcxOptAnchorCmpTag
 
 void mcxOptAnchorSortByTag
 (  mcxOptAnchor *anchors
-,  int n_anchors
+,  dim n_anchors
 )
    {  qsort(anchors, n_anchors, sizeof(mcxOptAnchor), mcxOptAnchorCmpTag)
 ;  }
@@ -523,7 +524,7 @@ void mcxOptAnchorSortByTag
 
 void mcxOptAnchorSortById
 (  mcxOptAnchor *anchors
-,  int n_anchors
+,  dim n_anchors
 )
    {  qsort(anchors, n_anchors, sizeof(mcxOptAnchor), mcxOptAnchorCmpId)
 ;  }

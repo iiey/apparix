@@ -6,8 +6,8 @@
  * copy of the GPL along with tingea, in the file COPYING.
 */
 
-#ifndef util_tok
-#define util_tok
+#ifndef tingea_tok
+#define tingea_tok
 
 #include <string.h>
 #include "inttypes.h"

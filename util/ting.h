@@ -6,8 +6,8 @@
  * copy of the GPL along with tingea, in the file COPYING.
 */
 
-#ifndef util_ting
-#define util_ting
+#ifndef tingea_ting
+#define tingea_ting
 
 #include "types.h"
 
@@ -145,14 +145,6 @@ void mcxTingFree_v
                            *     e.g. as callback in mcxNFree.
                           */
 void mcxTingRelease
-(  void        *ting
-)  ;
-
-                          /*     Free shell struct
-                           *     e.g. as callback in mcxHashFree.
-                           *     Assumes the members ownership lies elsewhere.
-                          */
-void mcxTingAbandon
 (  void        *ting
 )  ;
 
@@ -464,6 +456,10 @@ u32 mcxTingGEhash
 )  ;
 
 u32 mcxTingOAThash
+(  const void* ting
+)  ;
+
+u32 mcxTingFNVhash
 (  const void* ting
 )  ;
 

@@ -9,11 +9,14 @@
 
 
 /* TODO (?)
+ *
+ * integer overflow handling.
+ *
  * better bucket fill statistics.
  *
  * nested hashes.
  *    could lump
- *       options  cmp  hash  src_link  src_kv
+ *       options  cmp  hash  src_link
  *    into a structure and make hashes share them.
 */
 
@@ -21,6 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "hash.h"
 #include "minmax.h"
@@ -43,33 +47,59 @@ int promilles[32] =
 }  ;
 
 
-typedef struct bucket
-{  mcxLink*       base
+#ifndef TINGEA_HASH_CACHE
+#  define   TINGEA_HASH_CACHE 0
+#endif
+
+
+typedef struct hash_link
+{  struct hash_link* next
+;  mcxKV             kv
+#if TINGEA_HASH_CACHE
+;  u32               hv
+#endif
 ;
-}  mcx_bucket     ;
+}  hash_link         ;
 
 
-               /* For further optimization work:
-                * +  n_entries redundant.
-                * +  n_bits can be unsigned char
-                * +  options cmp hash src_link src_kv can be shared
-                *       between different hashes.
+typedef struct bucket
+{  hash_link*        base
+;
+}  mcx_bucket        ;
+
+
+               /* For further optimization work, options
+                *    options
+                *    load
+                *    cmp
+                *    hash
+                *    src_link
+                * can be shared between different hashes (e.g.
+                * with multidimensional hashes). Consider
+                * making src_link file static variable.
                */
 
 struct mcxHash
-{  dim         n_buckets      /* 2^n_bits                         */
+{  dim         n_buckets      /* 2^n_bits          */
+;  mcx_bucket *buckets
 ;  dim         n_entries
 
-;  float       load
 ;  mcxbits     options
 
 ;  int         (*cmp) (const void *a, const void *b)
 ;  u32         (*hash) (const void *a)
 
-;  mcx_bucket *buckets
-;  mcxLink*    src_link
-;  mcxGrim*    src_kv
-;  u8          n_bits         /* length of mask                   */
+;  mcxGrim*    src_link
+
+;  float       load
+;
+}  ;
+
+
+struct mcxHashWalk
+{  mcxHash*    hash
+;  dim         i_bucket
+;  hash_link*  link
 ;
 }  ;
 
@@ -80,20 +110,6 @@ void* mcx_bucket_init
    {  ((mcx_bucket*) buck)->base = NULL
    ;  return NULL
 ;  }
-
-
-mcxKV* mcx_hash_kv
-(  mcxHash* hash
-,  void*    key
-)
-   {  mcxKV* kv = mcxGrimGet(hash->src_kv)
-   ;  if (!kv)
-      return NULL
-   ;  kv->key = key
-   ;  kv->val = NULL
-   ;  return kv
-;  }
-
 
 void bitprint
 (  u32   key
@@ -125,29 +141,21 @@ mcxHash* mcxHashNew
 
    ;  while(n_buckets)
       {  n_buckets >>=  1
-      ;  n_bits++    /* in DEC strict mode signedness conversion warning */
+      ;  n_bits++
    ;  }
 
       h->load           =  0.5
    ;  h->n_entries      =  0
-   ;  h->n_bits         =  n_bits
    ;  h->n_buckets      =  n_buckets = (1 << n_bits)
    ;  h->cmp            =  cmp
    ;  h->hash           =  hash
    ;  h->options        =  MCX_HASH_OPT_DEFAULTS
 
    ;  h->src_link       =  NULL
-   ;  h->src_kv         =  NULL
 
-   ;  while (1)
-      {  if
-         (!(h->src_link = mcxLinkNew(h->n_buckets, NULL, MCX_GRIM_ARITHMETIC)))
-         break
-
-      ;  if
-         ( !(  h->src_kv
-         =     mcxGrimNew(sizeof(mcxKV), h->n_buckets, MCX_GRIM_ARITHMETIC)
-         )  )
+   ;  while (1)                        /* fixme 2nd arg below, have better choice? */
+      {  h->src_link = mcxGrimNew(sizeof(hash_link), h->n_buckets, MCX_GRIM_ARITHMETIC)
+      ;  if (!h->src_link)
          break
 
       ;  if
@@ -165,8 +173,7 @@ mcxHash* mcxHashNew
    ;  }
 
       if (!ok)
-      {  mcxLinkFree(&h->src_link, NULL)
-      ;  mcxGrimFree(&h->src_kv)
+      {  mcxGrimFree(&h->src_link)
       ;  mcxFree(h)
       ;  return NULL
    ;  }
@@ -175,21 +182,28 @@ mcxHash* mcxHashNew
 ;  }
 
 
+dim mcxHashMemSize
+(  mcxHash*    hash
+)
+   {  return
+         mcxGrimMemSize(hash->src_link)
+      +  sizeof(mcx_bucket) * hash->n_buckets
+;  }
+
 
 void mcxHashGetSettings
 (  mcxHash*          hash
 ,  mcxHashSettings*  settings
 )
    {  settings->n_buckets  =  hash->n_buckets
-   ;  settings->n_bits     =  hash->n_bits
    ;  settings->load       =  hash->load
    ;  settings->n_entries  =  hash->n_entries
    ;  settings->options    =  hash->options
 ;  }
 
 
-static dim mcxLinkSize
-(  mcxLink*        link
+static dim hash_link_size
+(  hash_link* link
 )
    {  dim s =  0
    ;  while(link)
@@ -210,7 +224,6 @@ void mcxHashStats
    ;  dim      max      =  0
    ;  dim      entries  =  0
    ;  const    char* me =  "mcxHashStats"
-   ;  mcxGrim* grimlink =  mcxLinkGrim(h->src_link)
 
    ;  int      j, k, distr[32]
    ;  mcx_bucket  *buck
@@ -219,8 +232,8 @@ void mcxHashStats
       distr[j] = 0
 
    ;  for (buck=h->buckets; buck<h->buckets + h->n_buckets; buck++)
-      {  dim   d        =  mcxLinkSize(buck->base)
-      ;  mcxLink* this  =  buck->base
+      {  dim   d        =  hash_link_size(buck->base)
+      ;  hash_link* this=  buck->base
 
       ;  if (d)
          {  buckets_used++
@@ -230,11 +243,12 @@ void mcxHashStats
          ;  max         =  MAX(max, d)
       ;  }
 
-         while(this && this->val)
-         {  u32   u     =  (h->hash)(((mcxKV*) this->val)->key)
+         while(this)
+         {  u32   u     =  (h->hash)(this->kv.key)
          ;  int   ct    =  bitcount(u)
          ;  this        =  this->next
          ;  distr[ct]++
+;if (0) fprintf(stderr, "bucket [%d] key [%s]\n", (int)d,  ((mcxTing*) this->kv.key)->str)
       ;  }
       }
 
@@ -245,20 +259,20 @@ void mcxHashStats
          mcxTellf
          (  fp
          ,  me
-         ,  "%4.2f bucket usage (%zu available, %zu used, %zu entries)"
+         ,  "%4.2f bucket usage (%ld available, %ld used, %ld entries)"
          ,  (double) ((double) buckets_used) / buckets
-         ,  (size_t) buckets
-         ,  (size_t) buckets_used
-         ,  (size_t) entries
+         ,  (long) buckets
+         ,  (long) buckets_used
+         ,  (long) entries
          )
       ,  mcxTellf
          (  fp
          ,  me
-         ,  "bucket average: %.2f, center: %.2f, cube: %.2f, max: %zu"
+         ,  "bucket average: %.2f, center: %.2f, cube: %.2f, max: %ld"
          ,  (double) entries / ((double) buckets_used)
          ,  (double) ctr
          ,  (double) cb
-         ,  (size_t) max
+         ,  (long) max
          )
 
    ;  mcxTellf(fp, me, "bit distribution (promilles):")
@@ -276,13 +290,9 @@ void mcxHashStats
          fprintf(fp, "%3d ",  promilles[j])
       ;  fprintf(fp, "\n")
    ;  }
-      mcxTellf
-      (  fp
-      ,  me
-      ,  "sanity check: %zu / %zu"
-      ,  (size_t) mcxGrimCount(grimlink) - 1
-      ,  (size_t) mcxGrimCount(h->src_kv)
-      )  
+      mcxTellf(fp, me, "link count: %ld", (long) (mcxGrimCount(h->src_link)))
+   ;  mcxTellf(fp, me, "link mem count: %ld", (long) (mcxGrimMemSize(h->src_link)))
+
    ;  mcxTellf(fp, me, "done")
 ;  }
 
@@ -299,6 +309,13 @@ void mcxHashSetOpts
 ;  }
 
 
+void mcxHashFreeScalar
+(  void* scalar cpl__unused
+)
+   {  /* this triggers freeing of kv.key or kv.val */
+;  }
+
+
 void mcxHashFree
 (  mcxHash**   hpp
 ,  void        freekey(void* key)
@@ -306,28 +323,30 @@ void mcxHashFree
 )
    {  mcxHash* h        =  *hpp
    ;  mcx_bucket* buck  =  h ? h->buckets   : NULL
-   ;  dim d             =  h ? h->n_buckets : NULL
+   ;  dim d             =  h ? h->n_buckets : 0
 
    ;  if (!h)
       return
 
-   ;  while (d-- > 0)      /* careful with unsignedness */
-      {  mcxLink* link  =  (buck++)->base
+   ;  if (freekey || freeval)
+      {  while (d-- > 0)      /* careful with unsignedness */
+         {  hash_link* link = (buck++)->base
 
-      ;  while(link)
-         {  mcxKV* kv  = link->val
-         ;  if (kv)
-            {  if (freekey)
-               freekey(&(kv->key))
-            ;  if (freeval)
-               freeval(&(kv->val))
+         ;  while(link)
+            {  void* key = link->kv.key
+            ;  void* val = link->kv.val
+            ;  if (freekey && key)
+                  freekey(key)
+               ,  mcxFree(key)
+            ;  if (freeval && val)
+                  freeval(val)
+               ,  mcxFree(val)
+            ;  link = link->next
          ;  }
-            link = link->next
-      ;  }
+         }
       }
 
-   ;  mcxLinkFree(&h->src_link, NULL)
-   ;  mcxGrimFree(&h->src_kv)
+      mcxGrimFree(&h->src_link)
    ;  mcxFree(h->buckets)
    ;  mcxFree(h)
    ;  *hpp = NULL
@@ -337,22 +356,80 @@ void mcxHashFree
 #define MCX_HASH_DOUBLING MCX_HASH_OPT_UNUSED
 
 
-mcxLink* mcx_bucket_search
+#if TINGEA_HASH_CACHE
+
+static hash_link* mcx_bucket_search
 (  mcxHash*          h
-,  mcx_bucket*       buck
 ,  void*             ob
 ,  mcxmode           ACTION
-,  int*              delta
+,  u32*              hashval
 )
-   {  int      c     =  1
-   ;  mcxLink* link  =  buck->base, *prev = NULL, *new
-
-   ;  *delta =  0
+   {  u32   thishash    =  hashval ? *hashval : (h->hash)(ob)
+   ;  mcx_bucket *buck  =  h->buckets + (thishash & (h->n_buckets-1))
+   ;  hash_link* link   =  buck->base, *prev = NULL, *new
+   ;  int delta         =  0
 
    ;  while
       (   link
-      &&  ((mcxKV*) link->val)->key
-      &&  (c = h->cmp(ob, ((mcxKV*) link->val)->key)) > 0
+      &&  (  link->hv != thishash
+          || h->cmp(ob, link->kv.key)
+          )
+      ) 
+         prev = link
+      ,  link = link->next
+
+   ;  if (link && ACTION == MCX_DATUM_DELETE)
+      {  if (buck->base == link)
+         buck->base = link->next
+      ;  else
+         prev->next = link->next
+      ;  delta = -1
+      ;  mcxGrimLet(h->src_link, link)
+               /* we return link below though */
+   ;  }
+      else if (!link)
+      {  if (ACTION == MCX_DATUM_FIND || ACTION == MCX_DATUM_DELETE)
+         link = NULL
+
+      ;  else if (ACTION == MCX_DATUM_INSERT)
+         {  new = mcxGrimGet(h->src_link)
+         ;  new->next   = NULL
+         ;  new->kv.val = NULL
+         ;  new->kv.key = ob
+         ;  new->hv     =  thishash
+
+         ;  if (!buck->base)
+            buck->base = new
+                              /* in TINGEA_HASH_CACHE case we always append */
+         ;  else
+               new->next  = prev->next
+            ,  prev->next = new
+         ;  delta = 1
+         ;  link = new
+      ;  }
+      }
+
+      h->n_entries += delta
+   ;  return link
+;  }
+
+#else
+
+static hash_link* mcx_bucket_search
+(  mcxHash*          h
+,  void*             ob
+,  mcxmode           ACTION
+,  u32*              hashval
+)
+   {  u32   thishash    =  hashval ? *hashval : (h->hash)(ob)
+   ;  mcx_bucket *buck  =  h->buckets + (thishash & (h->n_buckets-1))
+   ;  hash_link* link   =  buck->base, *prev = NULL, *new
+   ;  int c             =  1
+   ;  int delta         =  0
+
+   ;  while
+      (   link
+      &&  (c = h->cmp(ob, link->kv.key)) > 0
       ) 
          prev = link
       ,  link = link->next
@@ -360,68 +437,69 @@ mcxLink* mcx_bucket_search
    ;  if (!c && ACTION == MCX_DATUM_DELETE)
       {  if (buck->base == link)
          buck->base = link->next
-      ;  *delta = -1
-      ;  return mcxLinkDelete(link)
+      ;  else
+         prev->next = link->next
+      ;  delta = -1
+      ;  mcxGrimLet(h->src_link, link)
+               /* we return link below though */
    ;  }
       else if (!link || c < 0)
       {  if (ACTION == MCX_DATUM_FIND || ACTION == MCX_DATUM_DELETE)
-         return NULL
+         link = NULL
 
       ;  else if (ACTION == MCX_DATUM_INSERT)
-         {  if (!buck->base)
-            new = buck->base = mcxLinkSpawn(h->src_link, NULL)
+         {  new = mcxGrimGet(h->src_link)
+         ;  new->next   = NULL
+         ;  new->kv.val = NULL
+         ;  new->kv.key = ob
+
+         ;  if (!buck->base)
+            buck->base = new
          ;  else if (link == buck->base)
-               new = mcxLinkBefore(buck->base, NULL)
+               new->next = buck->base
             ,  buck->base = new
          ;  else
-            new = mcxLinkAfter(prev, NULL)
-         ;  *delta = 1
-         ;  return new
+               new->next  = prev->next
+            ,  prev->next = new
+         ;  delta = 1
+         ;  link = new
       ;  }
       }
-      return link
+
+      h->n_entries += delta
+   ;  return link
 ;  }
 
+#endif
 
-mcxstatus mcxHashDouble
+
+static mcxstatus mcx_hash_double
 (  mcxHash* h
 )  ;
 
 
-mcxKV* mcxHashSearch
+mcxKV* mcxHashSearchx
 (  void*       key
 ,  mcxHash*    h
 ,  mcxmode     ACTION
+,  int*        delta
 )
-   {  mcxKV    *fkv     =  NULL     /* found KV */
-   ;  u32      hashval  =  (h->hash)(key) & (h->n_buckets-1)   /* inttruncok */
-   ;  mcx_bucket *buck  =  (h->buckets)+hashval
-   ;  int      delta    =  0
-
-   ;  mcxLink *link     =  mcx_bucket_search(h, buck, key, ACTION, &delta)
-
-   ;  if (!(h->options & MCX_HASH_DOUBLING))
-      h->n_entries += delta
-
-   ;  if (!link)
-      return NULL    /* not found or memory shortage (yes todo errno etc) */
-
-   ;  if (ACTION == MCX_DATUM_INSERT && !link->val)
-      link->val = mcx_hash_kv(h, key)
-
-   ;  fkv = (mcxKV*) link->val
-
-   ;  if (ACTION == MCX_DATUM_DELETE)
-      mcxLinkDelete(link)        /* warning; fkv must be left alone */
+   {  hash_link *link
+   ;  dim n_entries = h->n_entries
 
    ;  if
       (  h->load * h->n_buckets < h->n_entries
       && !(h->options & (MCX_HASH_OPT_CONSTANT | MCX_HASH_DOUBLING))
-      && mcxHashDouble(h)
+      && mcx_hash_double(h)
       )
-      return NULL
+      mcxErr("mcxHashSearch", "cannot double hash")
 
-   ;  return fkv
+   ;  link     =  mcx_bucket_search(h, key, ACTION, NULL)
+
+   ;  if (delta)
+      *delta   =  h->n_entries < n_entries ? -1 : h->n_entries - n_entries
+
+   ;  return link ? &link->kv : NULL
 ;  }
 
 
@@ -431,29 +509,43 @@ enum
 }  ;
 
 
-void** mcxHashArray
+void mcxHashApply
+(  mcxHash* hash
+,  void    (*cb)(const void* key, void* val, void* data)
+,  void*    data
+)
+   {  mcxHashWalk* walk = mcxHashWalkInit(hash)
+   ;  mcxKV* kv
+   ;  dim i_bucket
+   ;  while ((kv = mcxHashWalkStep(walk, &i_bucket)))
+      cb(kv->key, kv->val, data)
+   ;  mcxHashWalkFree(&walk)
+;  }
+
+
+static void** hash_array
 (  mcxHash*    hash
 ,  dim*        n_entries
 ,  int       (*cmp)(const void*, const void*)
 ,  mcxbits     opts     cpl__unused
 ,  mcxenum     mode
 )
-   {  mcxHashWalk walk
-   ;  void** obs   =  mcxAlloc(sizeof(void*) * hash->n_entries, RETURN_ON_FAIL)
+   {  void** obs   =  mcxAlloc(sizeof(void*) * hash->n_entries, RETURN_ON_FAIL)
    ;  dim d = 0
    ;  mcxKV* kv
+   ;  const char* me = mode == ARRAY_OF_KEY ? "mcxHashKeys" : "mcxHashKVs"
 
-   ;  mcxHashWalkInit(hash, &walk)
+   ;  mcxHashWalk* walk = mcxHashWalkInit(hash)
 
-   ;  if (!obs)
+   ;  if (!walk || !obs)
       return NULL
 
-   ;  while ((kv = mcxHashWalkStep(&walk)))
+   ;  while ((kv = mcxHashWalkStep(walk, NULL)))   /* fixme extract */
       {  if (d >= hash->n_entries)
          {  mcxErr
-            (  "mcxHashKeys PANIC"
-            ,  "inconsistent state (n_entries %zu)"
-            ,  (size_t) hash->n_entries
+            (  me
+            ,  "PANIC inconsistent state (n_entries %ld)"
+            ,  (long) hash->n_entries
             )
          ;  break
       ;  }
@@ -461,9 +553,10 @@ void** mcxHashArray
       ;  d++
    ;  }
       if (d != hash->n_entries)
-      mcxErr("mcxHashKeys PANIC", "inconsistent state (n_entries %d)", hash->n_entries)
+      mcxErr(me, "PANIC inconsistent state (n_entries %d)", hash->n_entries)
 
    ;  qsort(obs, d, sizeof(void*), cmp)
+   ;  mcxHashWalkFree(&walk)
 
    ;  *n_entries = d
    ;  return obs
@@ -477,7 +570,7 @@ void** mcxHashKeys
 ,  int       (*cmp)(const void*, const void*)
 ,  mcxbits     opts                    /* unused yet */
 )
-   {  return mcxHashArray(hash, n_entries, cmp, opts, ARRAY_OF_KEY)
+   {  return hash_array(hash, n_entries, cmp, opts, ARRAY_OF_KEY)
 ;  }
 
 
@@ -488,39 +581,47 @@ void** mcxHashKVs
 ,  int       (*cmp)(const void*, const void*)
 ,  mcxbits     opts                    /* unused yet */
 )
-   {  return mcxHashArray(hash, n_entries, cmp, opts, ARRAY_OF_KV)
+   {  return hash_array(hash, n_entries, cmp, opts, ARRAY_OF_KV)
 ;  }
 
 
 
 mcxKV* mcxHashWalkStep
 (  mcxHashWalk  *walk
+,  dim          *i_bucket
 )
-   {  mcxLink* step  =  walk->link
+   {  hash_link* step  =  walk->link
    
    ;  while (!step && ++walk->i_bucket < walk->hash->n_buckets)
       step = (walk->hash->buckets+walk->i_bucket)->base
 
    ;  if (step)
       {  walk->link = step->next
-      ;  return step->val
+      ;  if (i_bucket)
+         *i_bucket = walk->i_bucket
+      ;  return &step->kv
    ;  }
       return NULL
 ;  }
 
 
-void mcxHashWalkInit
+mcxHashWalk* mcxHashWalkInit
 (  mcxHash  *h
-,  mcxHashWalk* walk
 )
-   {  walk->hash     =  h
+   {  mcxHashWalk* walk = mcxAlloc(sizeof *walk, RETURN_ON_FAIL)
+   ;  if (!walk)
+      return NULL
+      
+   ;  walk->hash =  h
 
    ;  if (!h || !h->buckets)
-      return
+      {  mcxFree(walk)
+      ;  return NULL
+   ;  }
 
-   ;  walk->i_bucket =  0
+      walk->i_bucket =  0
    ;  walk->link     =  (h->buckets+0)->base
-   ;  return
+   ;  return walk
 ;  }
 
 
@@ -574,19 +675,15 @@ mcxHash* mcxHashMerge
          {  mcx_bucket* buck
 
          ;  for (buck = h->buckets; buck<h->buckets + h->n_buckets; buck++)
-            {  mcxLink* this =  buck->base
+            {  hash_link* this =  buck->base
 
-            ;  while(this && this->val)
-               {  mcxKV* kv
-               ;  if
-                  ( !(  kv
-                     =  mcxHashSearch
-                        (((mcxKV*) this->val)->key, hd, MCX_DATUM_INSERT)
-                  )  )
+            ;  while(this)
+               {  mcxKV* kv = mcxHashSearch(this->kv.key, hd, MCX_DATUM_INSERT)
+               ;  if (!kv)
                   return NULL
 /*  note/fixme: cannot free hd, don't have key/val free functions */
                ;  if (!kv->val)
-                  kv->val = ((mcxKV*)this->val)->val
+                  kv->val = this->kv.val
                ;  this = this->next
             ;  }
             }
@@ -597,55 +694,57 @@ mcxHash* mcxHashMerge
 ;  }
 
 
-mcxstatus mcxHashDouble
+static mcxstatus mcx_hash_double
 (  mcxHash* h
 )
    {  mcx_bucket* ole_bucket  =  h->buckets
    ;  mcx_bucket* ole_buckets =  h->buckets
-   ;  dim d       =  h->n_buckets
-   ;  dim n_fail  =  0
+   ;  dim d                   =  h->n_buckets
+   ;  dim n_fail              =  0
 
    ;  if (h->options & MCX_HASH_DOUBLING)     /* called before */
-      return STATUS_FAIL
+      {  mcxErr("mcx_hash_double PANIC", "double trouble")
+      ;  return STATUS_FAIL
+   ;  }
 
-   ;  h->options |= MCX_HASH_DOUBLING
-
-   ;  h->n_buckets  *=  2
-   ;  h->n_bits     +=  1
+      h->options |= MCX_HASH_DOUBLING
 
    ;  if
       (! (  h->buckets
          =  mcxNAlloc
-            (  h->n_buckets
+            (  2 * h->n_buckets
             ,  sizeof(mcx_bucket)
             ,  mcx_bucket_init
             ,  RETURN_ON_FAIL
       )  )  )
       {  h->options ^= MCX_HASH_DOUBLING
+      ;  h->buckets = ole_buckets
       ;  return STATUS_FAIL
    ;  }
 
-      while(d-- > 0)    /* careful with unsignedness */
-      {  mcxLink* this     =  ole_bucket->base
+      h->n_buckets  *=  2
+   ;  h->n_entries   =  0
+
+   ;  while(d-- > 0)    /* careful with unsignedness */
+      {  hash_link* this   =  ole_bucket->base
 
       ;  while(this)
-         {  mcxKV* kv = this->val
-         ;  mcxLink* next = this->next
-         ;  if (kv)
-            {  void* val   =  kv->val
-            ;  void* key   =  kv->key
+         {  hash_link* next = this->next, *clone
+         ;  void* val   =  this->kv.val
+         ;  void* key   =  this->kv.key
 
-            ;  mcxGrimLet(h->src_kv, kv)  /* will be used immediately */
-            ;  mcxLinkDelete(this)        /* idem */
-
-            ;  kv = mcxHashSearch(key, h, MCX_DATUM_INSERT)
-            ;  if (kv->key != key || kv->val)
-               n_fail++
-            ;  else
-               kv->val = val
-         ;  }
-            else
+         ;  mcxGrimLet(h->src_link, this)  /* will be used immediately */
+#if TINGEA_HASH_CACHE
+         ;  clone = mcx_bucket_search(h, key, MCX_DATUM_INSERT, &this->hv)
+#else
+         ;  clone = mcx_bucket_search(h, key, MCX_DATUM_INSERT, NULL)
+#endif
+         
+         ;  if (clone)
+            clone->kv.val = val
+         ;  else
             n_fail++
+
          ;  this = next
       ;  }
          ole_bucket++
@@ -653,10 +752,10 @@ mcxstatus mcxHashDouble
 
       if (n_fail)
       mcxErr
-      (  "mcxHashDouble PANIC"
-      ,  "<%zu> reinsertion failures in hash with <%zu> entries"
-      ,  (size_t) n_fail
-      ,  (size_t) h->n_entries
+      (  "mcx_hash_double PANIC"
+      ,  "<%ld> reinsertion failures in hash with <%ld> entries"
+      ,  (long) n_fail
+      ,  (long) h->n_entries
       )
 
    ;  mcxFree(ole_buckets)
@@ -696,12 +795,12 @@ mcxstatus mcxHashDouble
 */
 
                         /* created by Bob Jenkins */
-u32      mcxBJhash
+u32 mcxBJhash
 (  register const void*    key
 ,  register u32            len
 )
    {  register u32      a, b, c, l
-   ;  char* k     =  (char *) key
+   ;  const char* k =  key
 
    ;  l           =  len
    ;  a = b       =  0x9e3779b9u
@@ -735,7 +834,7 @@ u32      mcxBJhash
                         /* case 0: nothing left to add */
    ;  }
 
-   ;  BJmix(a,b,c)
+      BJmix(a,b,c)
    ;  return c
 ;  }
 
@@ -750,7 +849,7 @@ u32   mcxCThash
 #define ctHASH4 ctHASH4b
 
    {   u32 h               =  0
-   ;   unsigned char *k    =  (unsigned char*) key
+   ;   const unsigned char *k    =  key
 
    ;   if (len > 0)
        {   unsigned loop = (len + 8 - 1) >> 3    /* loop >= 1 */
@@ -789,7 +888,7 @@ u32   mcxSvDhash
 ,  u32               len
 )
    {  u32   h     =  0x7cabd53e /* 0x7cabd53e */
-   ;  char* k     =  (char *) key
+   ;  const char* k =  key
 
    ;  h           =  0x0180244a
 
@@ -814,7 +913,7 @@ u32   mcxSvD2hash
 ,  u32               len
 )
    {  u32   h     =  0x7cabd53e /* 0x7cabd53e */
-   ;  char* k     =  (char *) key
+   ;  const char* k     =  key
 
    ;  while (len--)
       {  u32  g   =  *k
@@ -835,7 +934,7 @@ u32   mcxSvD1hash
 ,  u32               len
 )
    {  u32   h     =  0xeca96537u
-   ;  char* k     =  (char *) key
+   ;  const char* k     =  key
 
    ;  while (len--)
       {  u32  g   =  *k
@@ -855,7 +954,7 @@ u32   mcxDPhash
 )
    {  u32   h0    =  0x12a3fe2du
    ,        h1    =  0x37abe8f9u
-   ;  char* k     =  (char *) key
+   ;  const char* k     =  key
 
    ;  while (len--)
       {
@@ -872,7 +971,7 @@ u32 mcxGEhash
 (  const void* key
 ,  u32         len
 )
-   {  char* k  =  (char*) key
+   {  const char* k  =  key
    ;  u32 hash =  0
    ;  int t
    ;  while (len--)
@@ -884,14 +983,35 @@ u32 mcxGEhash
 ;  }
 
 
+                           /* Fowler Noll Vo hash */
+u32   mcxFNVhash
+(  const void *buf
+,  u32 len
+)
+   {  u32 hval = 0x811c9dc5
+   ;  const char *bp = buf
+
+   ;  while (len--)
+      {
+#if 0                               /* other branch supposedly optimizes gcc */
+         hval *= 0x01000193
+#else
+         hval += (hval<<1) + (hval<<4) + (hval<<7) + (hval<<8) + (hval<<24)
+#endif
+      ;  hval ^= *bp++;
+   ;  }
+       return hval
+;  }
+
+
 
                            /* Berkely Database hash */
 u32 mcxBDBhash
 (  const void *key
 ,  u32        len
 )
-   {  char* k     =  (char *) key
-   ;  u32   hash  =  0
+   {  const char* k  =  key
+   ;  u32   hash     =  0
 
    ;  while (len--)
       {  hash = *k++ + (hash << 6) + (hash << 16) - hash
@@ -905,7 +1025,7 @@ u32 mcxOAThash
 (  const void *key
 ,  u32        len
 )
-   {  char* k     =  (char *) key
+   {  const char* k     =  key
    ;  u32   hash  =  0
 
    ;  while (len--)
@@ -926,7 +1046,7 @@ u32 mcxDJBhash
 (  const void *key
 ,  u32        len
 )
-   {  char* k     =  (char *) key
+   {  const char* k     =  key
    ;  u32   hash  =  5381
    ;  while (len--)
       {  hash = *k++ + (hash << 5) + hash
@@ -940,7 +1060,7 @@ u32 mcxELFhash
 (  const void *key
 ,  u32        len
 )
-   {  char* k     =  (char *) key
+   {  const char* k     =  key
    ;  u32   hash  =  0
    ;  u32   g
 
@@ -959,7 +1079,7 @@ u32 mcxELFhash
 u32 mcxStrHash
 (  const void* s
 )
-   {  dim l =  strlen((char*) s)
+   {  dim l =  strlen(s)
    ;  return(mcxDPhash(s, l))
 ;  }
 
@@ -979,11 +1099,13 @@ void bitprint
 int bitcount
 (  u32   key
 )
-   {  int ct = key & 1
-   ;  while ((key = key >> 1))
+   {  int ct = 0
+   ;  do
       {  if (key & 1)
          ct++
-   ;  }               
-      return ct
+   ;  }
+      while ((key = key >> 1))
+   ;  return ct
 ;  }
+
 

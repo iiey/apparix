@@ -7,8 +7,8 @@
  * copy of the GPL along with tingea, in the file COPYING.
 */
 
-#ifndef util_opt_h
-#define util_opt_h
+#ifndef tingea_opt_h
+#define tingea_opt_h
 
 #include "types.h"
 #include "ting.h"
@@ -89,13 +89,13 @@ typedef struct mcxOptAnchor
 
 void mcxOptAnchorSortByTag
 (  mcxOptAnchor *anchors
-,  int n_anchors
+,  dim n_anchors
 )  ;
 
 
 void mcxOptAnchorSortById
 (  mcxOptAnchor *anchors
-,  int n_anchors
+,  dim n_anchors
 )  ;
 
 

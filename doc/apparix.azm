@@ -58,55 +58,53 @@
 }
 
 \verbatim{\:/
-> \bf{pwd}
-/home/eez/cvs/xyz/tfa/faq/zut/bar/foo
-> \bf{ls}
-src/ doc/ CVS/ bin/
-> \bf{bm xkr}          # bookmark as xkr (funny name though)
-> \bf{bm}              # bookmark as foo (trailing component is default)
+   > \bf{pwd}
+   /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+   > \bf{ls}
+   src/ doc/ CVS/ bin/
+   > \bf{bm xkr}       # bookmark as xkr (funny name though)
+   > \bf{bm}           # bookmark as foo (trailing component is default)
 (later)
-> \bf{to xkr}          # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+   > \bf{to xkr}       # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 (alternatively)
-> \bf{to xkr src}      # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo/src
+   > \bf{to xkr src}   # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo/src
 (alternatively)
-> \bf{to foo}          # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
-
-
-(later)
-> \bf{ls}
-aap pyu/ qua tim/ zut/
-> \bf{pwd}
-/home/eez/another/branch/deep/down/under
-> \bf{portal}          # bookmark as portal, imports tim zut pyu bookmarks
-added flock of 3 in portal /home/eez/another/branch/deep/down/under
+   > \bf{to foo}       # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 
 (later)
-> \bf{to zut}          # cd to /home/eez/another/branch/deep/down/under/zut
+   > \bf{ls}
+   aap pyu/ qua tim/ zut/
+   > \bf{pwd}
+   /home/eez/another/branch/deep/down/under
+   > \bf{portal}       # bookmark as portal, imports tim zut pyu bookmarks
+   added flock of 3 in portal /home/eez/another/branch/deep/down/under
 
 (later)
-> \bf{apparix}         # show all bookmarks
---- portals
-e              /home/eez/another/branch/deep/down/under
---- expansions
-j pyu          /home/eez/another/branch/deep/down/under/pyu
-j tim          /home/eez/another/branch/deep/down/under/tim
-j zut          /home/eez/another/branch/deep/down/under/zut
---- bookmarks
-j xkr          /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
-j foo          /home/eez/cvs/xyz/tfa/faq/zut/bar/foo}
+   > \bf{to zut}       # cd to /home/eez/another/branch/deep/down/under/zut
+
+(later)
+   > \bf{apparix}   # show all bookmarks
+   --- portals
+   e              /home/eez/another/branch/deep/down/under
+   --- expansions
+   j pyu          /home/eez/another/branch/deep/down/under/pyu
+   j tim          /home/eez/another/branch/deep/down/under/tim
+   j zut          /home/eez/another/branch/deep/down/under/zut
+   --- bookmarks
+   j xkr          /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+   j foo          /home/eez/cvs/xyz/tfa/faq/zut/bar/foo}
 
 
 \car{
-   In the last example apparix simply shows all its bookmarks.
-   The first batch shows portals. The second batch shows
-   secondary bookmarks expanded from portals. The third
-   batch shows all regular bookmarks.}
+   In the last example apparix simply shows all its bookmarks.  The first batch
+   shows portals. The second batch shows secondary bookmarks expanded from
+   portals. The third batch shows all regular bookmarks.}
 
 \par{
-   Apparix also allows subdirectory specification. If this is combined
-   with the bash completion code it yields a powerful way of navigating
-   container directories, i.e. directories that contain a large number
-   of subdirectories. Refer to the \secref{sub} section.}
+   Apparix also allows subdirectory specification. If this is combined with the
+   bash completion code it yields a powerful way of navigating container
+   directories, i.e. directories that contain a large number of subdirectories.
+   Refer to the \secref{sub} section.}
 
 \cpar{Further options}{
    \synoptopt{--add-mark}{add jump bookmark}
@@ -131,7 +129,7 @@ j foo          /home/eez/cvs/xyz/tfa/faq/zut/bar/foo}
 
 \par{
    Apparix combines the properties of the
-   \aref{http://www.skamphausen.de/software/cdargs/}{cdargs} utility and the
+   \aref{http://www.skamphausen.de/cgi-bin/ska/CDargs}{cdargs} utility and the
    CDPATH shell mechanism for fast navigation through the file system. It is
    especially useful for visiting and documenting both often- and rarely-used
    locations.  Apparix enables you to attach marks to locations and jump to
@@ -422,10 +420,13 @@ CSH and variants
 \begin{itemize}
 \item{\defopt{--add-mark}{add jump bookmark}}
 \car{
-   This options expects trailing \it{mark [destination]} argument(s).
-   The first argument is the bookmark name. The optional second argument
-   is the target directory. If the target directory is not given, apparix
-   assumes the current directory should be bookmarked.}
+   This options expects trailing \it{[mark [destination]]} argument(s).
+   Both arguments are optional. If a single argument is given it
+   is interpreted as a bookmark name to be mapped to the current directory.
+   If two arguments are given the last argument is taken  as the
+   target directory. If no argument is given apparix will enlist
+   the current directory as a target bookmarked by the trailing component
+   of the directory path.}
 
 \item{\defopt{--add-portal}{add portal bookmark}}
 \car{
@@ -743,7 +744,7 @@ with directories with names starting with minus signs).
 \sec{history}{HISTORY}
 \par{
    Apparix was created to optimize a scenario that
-   \aref{http://www.skamphausen.de/software/cdargs/}{cdargs} does not support
+   \aref{http://www.skamphausen.de/cgi-bin/ska/CDargs}{cdargs} does not support
    very well, namely where the mark (called \it{needle} in cdargs) is always
    known. As an additional feature apparix supports CDPATH-style behaviour and
    subdirectory specification. In other respects apparix is a much simpler

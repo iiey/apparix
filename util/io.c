@@ -567,6 +567,7 @@ mcxstatus  mcxIOreadLine
             && (  ll == 2
                || (ll == 3 && line->str[1] == '\r')
                )
+               /* fixme still not fully covering */
             )
             break
                   /* do not attach the single-dot-line */
@@ -636,7 +637,7 @@ void mcxIOpos
    {  const char* ateof =  xf->ateof ? "at EOF in " : ""
    ;  fprintf
       (  channel
-      ,  "[mclIO] %sstream <%s>, line <%ld>, character <%ld>\n"
+      ,  "[mcxIO] %sstream <%s>, line <%ld>, character <%ld>\n"
       ,  ateof
       ,  xf->fn->str
       ,  (long) xf->lc

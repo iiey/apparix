@@ -83,9 +83,10 @@ mcxstatus mcxSplice
       {  mcxErr("[mcxSplice PBD]", "%s", errMsg)
       ;  mcxErr
          (  "[mcxSplice PBD]"
-         ,  "[n1, %zu] [N1, %zu] [o1, %zd] [d1, %zu] [c2, %zu]"
-         ,     (size_t) n_base1, (size_t) N_base1, (ssize_t) O_base1
-             , (size_t) d_base1, (size_t) c_base2
+         ,  "[n1, %lu] [N1, %lu] [o1, %lu] [d1, %lu] [c2, %lu]"
+         ,     (ulong) n_base1, (ulong) N_base1
+            ,  (ulong) O_base1
+            ,  (ulong) d_base1, (ulong) c_base2
          )
       ;  return STATUS_FAIL
    ;  }
@@ -292,6 +293,8 @@ void* mcxBsearchCeil
    ;  dim bar, rgt
    ;  if (!nmemb || cmp(key, ((char*)base) + (nmemb-1) * size) > 0)
       return NULL
+
+   ;  if (cmp(key, base) <= 0)
 
    ;  lft = -1
    ;  rgt = nmemb

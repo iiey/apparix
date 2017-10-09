@@ -1,5 +1,10 @@
 
--  add a time stamp to bookmarks? for sentimental reasons.
+$  change to tab separated resource files.
+
+-  make backup mechanism where date tag is automatically added.
+
+-  [src] it would be neater to have the shell examples in a separate file
+   and have code that incorporates it into the C source (a la clmformat).
 
 -  enable sorting with 'apparix -l', 'apparix', possibly 'apparix -d'
 
@@ -7,8 +12,6 @@
 
 ?  when a subdirectory is given it could be used to resolve
    multiple hits (bit too fancy though).
-
--  change to tab separated resource files.
 
 ?  portal exclusion with env variable?  CVS src doc
    perhaps do a couple within the program.

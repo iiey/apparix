@@ -7,8 +7,8 @@
  * copy of the GPL along with tingea, in the file COPYING.
 */
 
-#ifndef util_alloc_h
-#define util_alloc_h
+#ifndef tingea_alloc_h
+#define tingea_alloc_h
 
 #include <stdio.h>
 

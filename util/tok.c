@@ -110,9 +110,9 @@ mcxstatus mcxTokMatch
    ;  if (status)
       mcxErr
       (  "mcxTokMatch"
-      ,  "stacklen <%zu>, offset <%zu>, char <%c>"
-      ,  (size_t) stack->len
-      ,  (size_t) (offset - str_search)
+      ,  "stacklen <%lu>, offset <%ld>, char <%c>"
+      ,  (ulong) stack->len
+      ,  (long) (offset - str_search)
       ,  (int) *offset
       )
 

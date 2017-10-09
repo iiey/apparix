@@ -7,13 +7,11 @@
  * copy of the GPL along with tingea, in the file COPYING.
 */
 
-#ifndef util_hash_h
-#define util_hash_h
+#ifndef tingea_hash_h
+#define tingea_hash_h
 
 /* TODO: make sort routines for keys and values by key or value criteria.
  * make interface for storing integers, preferably without objectifying them.
- *
- * make mcxHashWalk struct hidden.
 */
 
 
@@ -86,13 +84,6 @@ typedef struct
 }  mcxKV       ;
 
 
-typedef struct mcxHLink
-{  struct mcxHLink*  next
-;  mcxKV*            kv
-;
-}  mcxHLink          ;
-
-
 mcxHash* mcxHashNew
 (  dim         n_buckets
 ,  u32         (*hash)  (const void *a)
@@ -111,13 +102,16 @@ void mcxHashSetOpts
 ,  int         option      /* negative values will be ignored (feature) */
 )  ;
 
+dim mcxHashMemSize
+(  mcxHash*    hash
+)  ;
+
 
 typedef struct mcxHashSettings
 {  dim         n_buckets
 ;  dim         n_entries
 ;  float       load
 ;  mcxbits     options
-;  u8          n_bits
 ;  
 }  mcxHashSettings   ;
 
@@ -155,6 +149,8 @@ void mcxHashGetSettings
  *    When deleting, the key-value pair is removed from the hash
  *    *AND RETURNED TO CALLER* - you have to decide yourself what to do
  *    with it. If the key was not present, a value of NULL is returned.
+ *    You have to fetch the val and key members of the returned mcxKV
+ *    object immediately: Subsequent inserts in the hash may reuse it.
  *
  *    When finding, life is simple. NULL if absent, matching kv otherwise.
  *
@@ -164,11 +160,15 @@ void mcxHashGetSettings
  *    If usage is clean, you can use mcxHashFree for disposal of hash.
 */
 
-mcxKV*   mcxHashSearch
+#define mcxHashSearch(key, hash, ACTION)  mcxHashSearchx(key, hash, ACTION, NULL)
+
+mcxKV*   mcxHashSearchx
 (  void*       key
 ,  mcxHash*    hash
 ,  mcxmode     ACTION
+,  int*        delta
 )  ;
+
 
 
 /*  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -196,28 +196,50 @@ mcxHash* mcxHashMerge
  * *
  **            mcxHashFree
  *
-*     This one is tricky, especially in the kind of free routines it expects.
- *    The free routines must cast the keypp and valpp to type (type**) which
- *    must correspond with the address of a variable. They will be applied
- *    as, for instance, keyfree(&(kv->key)). keyfree and valfree are expected
- *    to check whether their argument points to a NULL variable (this is nice
- *    for the caller who does not have to worry), and after freeing they are
- *    expected to set the pointee to NULL (this is not strictly necessary
- *    though).
- *
- *    It only works of course if all keys are of the same type and all values
+ *    This only works if all keys are of the same type and/or all values
  *    are of the same type, and if your objects were created as expected by
  *    the free routines (presumably malloced heap memory) - be careful with
  *    constant objects like constant strings.
  *
- *    Both freekey and freeval may be NULL.
+ *    freekey and freeval may not free their argument. This is because
+ *    tingea does not allow routines that leave arguments in an
+ *    inconsistent state, and free routines in tingea generally accept
+ *    an argument of the form <type>** pptr.
+ *    In the case of mcxHashFree this means that the interface may
+ *    feel slighly more cumbersome.
+ *    A way out would have been to make the callbacks of signature
+ *
+ *          void freemem(void** mempp)
+ * 
+ *    The caller could access *mempp, cast it to the expected type,
+ *    and later set *mempp to NULL. However, this would require
+ *    new free routines for lots of types. With the current interface
+ *    existing <type>Release routines can be used:
+ *
+ *    The type of free routine expected by mcxHashFree is generally
+ *    called <type>Release or <type>Release_v, e.g. mcxTingRelease.
+ *    Release routines release all memory of a composite object except the
+ *    memory which holds the outer struct.
+ *
+ *    If one of key or val is *not* a composite type or is a composite type
+ *    that does not contain malloced memory, use mcxHashFreeScalar.
+ *
+ *    Both freekey and freeval may be NULL. When NULL, the corresponding
+ *    KV member is not loooked at. This is useful e.g. when hashing objects
+ *    owned by someone else.
 */
+
 
 void mcxHashFree
 (  mcxHash**   hashpp
 ,  void        freekey(void* keypp)    /* (yourtype1** keypp)     */
 ,  void        freeval(void* valpp)    /* (yourtype2** valpp)     */
 )  ;
+
+void mcxHashFreeScalar
+(  void* scalar
+)  ;
+
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -256,27 +278,29 @@ void mcxHashStats
 )  ;
 
 
-typedef struct
-{  mcxHash*    hash
-;  dim         i_bucket
-;  mcxLink*    link
-;
-}  mcxHashWalk ;
+typedef struct mcxHashWalk mcxHashWalk;
 
 
-void mcxHashWalkInit
+mcxHashWalk* mcxHashWalkInit
 (  mcxHash  *hash
-,  mcxHashWalk* walk
 )  ;
 
 
 mcxKV* mcxHashWalkStep
 (  mcxHashWalk* walk
+,  dim          *i_bucket
 )  ;
 
 
 void mcxHashWalkFree
 (  mcxHashWalk  **walkpp
+)  ;
+
+
+void mcxHashApply
+(  mcxHash* hash
+,  void    (*cb)(const void* key, void* val, void* data)
+,  void*    data
 )  ;
 
                         /* UNIX ELF hash */
@@ -328,6 +352,13 @@ u32 mcxCThash
 u32 mcxGEhash
 (  const void* key
 ,  u32         len
+)  ;
+
+
+                        /* Fowler Noll Vo hash */
+u32   mcxFNVhash
+(  const void *buf
+,  u32 len
 )  ;
 
                         /* All experimental with weak points. */

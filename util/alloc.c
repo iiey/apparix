@@ -142,8 +142,8 @@ void mcxMemDenied
    {  mcxErrf
       (  channel
       ,  requestee
-      ,  "memory shortage: could not alloc [%zu] instances of [%s]"
-      ,  n
+      ,  "memory shortage: could not alloc [%lu] instances of [%s]"
+      ,  (ulong) n
       ,  unittype
       )
 ;  }
