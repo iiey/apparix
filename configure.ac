@@ -7,7 +7,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 
-AC_INIT(apparix, 08-331, mcx-devel@lists.micans.org)
+AC_INIT(apparix, 11-062, mcx-devel@lists.micans.org)
 AM_CONFIG_HEADER(config.h)
 
 PACKAGE=$PACKAGE_NAME
@@ -40,6 +40,8 @@ AC_CHECK_LIB([m], [main])
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([fcntl.h float.h limits.h stdlib.h string.h ])
+
+AC_CHECK_VA_COPY
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

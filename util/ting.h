@@ -1,4 +1,5 @@
 /*   (C) Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+ *   (C) Copyright 2006, 2007, 2008, 2009 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 3 of the
@@ -76,6 +77,9 @@ typedef struct
  *   NWrite           |
  *                    |
  *           Append,Insert,Delete,PrintSplice
+
+ * TODO
+ *    the library should be able to deal with embedded \0's. Really.
 */
 
 

@@ -48,6 +48,7 @@ enum
 ,  MY_OPT_LIST
 ,  MY_OPT_UNDO
 ,  MY_OPT_FAVOUR
+,  MY_OPT_PICK
 ,  MY_OPT_QUIETJUMP
 ,  MY_OPT_SQUASH_MARK
 ,  MY_OPT_SQUASH_DEST
@@ -285,6 +286,12 @@ mcxOptAnchor options[] =
    ,  "[lroLRO]*"
    ,  "(level, order, regular) duplicate resolution"
    }
+,  {  "-pick"
+   ,  MCX_OPT_HASARG
+   ,  MY_OPT_PICK
+   ,  "<num>"
+   ,  "resolve duplicates by picking <num>"
+   }
 ,  {  "--rehash"
    ,  MCX_OPT_DEFAULT
    ,  MY_OPT_REHASH
@@ -319,9 +326,9 @@ void show_version
       (  stdout
       ,
 "apparix %s, %s\n"
-"(c) Copyright 2005, 2006, 2007, 2008 Stijn van Dongen. apparix comes with NO\n"
-"WARRANTY to the extent permitted by law. You may redistribute copies of apparix\n"
-"under the terms of the GNU General Public License.\n"
+"(c) Copyright 2005, 2006, 2007, 2008, 2009, 2010, 2011 Stijn van Dongen.\n"
+"apparix comes with NO WARRANTY to the extent permitted by law. You may re-\n"
+"distribute copies of apparix under the terms of the GNU General Public License.\n"
       ,  apxNumTag
       ,  apxDateTag
       )
@@ -349,6 +356,7 @@ typedef struct
 }  folder      ;
 
 static mcxTing* favour  =  NULL;
+unsigned pick = 0;
 
 
 int bookmark_cmp_j_over_J
@@ -1204,7 +1212,7 @@ mcxstatus attempt_jump
                n_same++
            ,   bm++
 
-         ;  if (!favour)
+         ;  if (!favour && !pick)
             {  int ans = resolve_user(bmx, n_same, bmz)
             ;  if (ans < 0)
                {  if (ans == -1)
@@ -1213,6 +1221,10 @@ mcxstatus attempt_jump
             ;  }
                else
                dest = bmx[ans].dest
+         ;  }
+            else if (pick)
+            {  if (pick <= n_same)
+               dest = bmx[pick-1].dest
          ;  }
             else     /* WARNING changed ordering in this segment */
             {  qsort(bmx, n_same, sizeof bmx[0], bookmark_cmp_mark_favour)
@@ -1618,6 +1630,11 @@ int main
             case  MY_OPT_PURGE_MARK
          :  mode = MODE_PURGE_MARK; n_mode++
          ;  mode_arg = opt->val
+         ;  break
+         ;
+
+            case  MY_OPT_PICK
+         :  pick = atoi(opt->val)
          ;  break
          ;
 

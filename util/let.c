@@ -1,5 +1,5 @@
 /*   (C) Copyright 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
- *   (C) Copyright 2006, 2007 Stijn van Dongen
+ *   (C) Copyright 2006, 2007, 2008, 2009  Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 3 of the
@@ -81,7 +81,7 @@
  *    Should min(1,2.0) be 1 rather than 1.0 ?  in that case, need special
  *    behaviour for twoary max and min just like now for oneary abs.
  *
- *    Make int overflow -> double promotion a trmInit option.
+ *    Make int to double overflow promotion a trmInit option.
  *
  *    on STATUS_FAIL for parse, write error message in telraam.
  * 
@@ -1511,7 +1511,11 @@ mcxstatus compute
          ptr  = ptr->next
    ;  }
 
-      if (ptr->toktype != TOKEN_CLOSE || ptr != end)
+                  /* NOTE: by design we should always have ptr != NULL
+                   * that makes the clause to the while (ptr) { } loop
+                   * above a bit dodgy.
+                  */
+      if (ptr != end || ptr->toktype != TOKEN_CLOSE)
       {  mcxErr(me, "ptr does not close")
       ;  dump(ptr->prev, 0, NULL)
       ;  return STATUS_FAIL

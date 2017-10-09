@@ -1,5 +1,5 @@
 /*   (C) Copyright 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
- *   (C) Copyright 2006, 2007 Stijn van Dongen
+ *   (C) Copyright 2006, 2007, 2008, 2009  Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 3 of the
@@ -74,6 +74,34 @@ void* mcxBsearchCeil
 ,  dim size
 ,  int (*cmp)(const void *, const void *)
 )  ;
+
+
+/* Uses weighted combinations of neighbours when the quartile
+ * range does not fall perfectly on array offsets (i.e.
+ * when the array size is not a multiple of 4.
+*/
+double mcxMedian
+(  void* base
+,  dim   n
+,  dim   sz
+,  double (*get)(const void*)
+,  double* iqr
+)  ;
+
+
+/* Fisher Yates shuffle */
+
+void mcxShuffle
+(  void* datap
+,  dim   nmem
+,  dim   mem_size
+,  char* mem_cell    /* should have mem_size size */
+)  ;
+
+
+
+
+
 
 
 typedef struct

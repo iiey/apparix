@@ -1,28 +1,37 @@
-\import{man.zmm}
+\import{pud/man.zmm}
 
-\setx{"man::year"}{\zinsert{stamp.year}}
-\setx{"man::month"}{\zinsert{stamp.month}}
-\setx{"man::day"}{\zinsert{stamp.day}}
-\setx{"man::tag"}{\zinsert{stamp.tag}}
-\setx{"man::stamp"}{\zinsert{stamp.stamp}}
+\setx{"year"}{\zinsert{stamp.year}}
+\setx{"month"}{\zinsert{stamp.month}}
+\setx{"day"}{\zinsert{stamp.day}}
+\setx{"tag"}{\zinsert{stamp.tag}}
+\setx{"stamp"}{\zinsert{stamp.stamp}}
 
-\setx{"man::year"}{\tr{{delete}{[:space:]}}{\"man::year"}}
-\setx{"man::month"}{\tr{{delete}{[:space:]}}{\"man::month"}}
-\setx{"man::day"}{\tr{{delete}{[:space:]}}{\"man::day"}}
-\setx{"man::stamp"}{\tr{{delete}{[:space:]}}{\"man::stamp"}}
-\setx{"man::tag"}{\tr{{delete}{[:space:]}}{\"man::tag"}}
+\setx{"year"}{\tr{{delete}{[:space:]}}{\"year"}}
+\setx{"month"}{\tr{{delete}{[:space:]}}{\"month"}}
+\setx{"day"}{\tr{{delete}{[:space:]}}{\"day"}}
+\setx{"stamp"}{\tr{{delete}{[:space:]}}{\"stamp"}}
+\setx{"tag"}{\tr{{delete}{[:space:]}}{\"tag"}}
 
-\setx{"man::tag"}{\"man::tag", \"man::stamp"}
+\setx{"tag"}{\"tag", \"stamp"}
 
-\set{"man::html-keywords"}{cd, change directory, bookmarks, command line, cdpath, subdirectory, tab completion}
-\set{"man::name"}{apparix}
-\set{"man::html-title"}{apparix, augmenting cd with bookmarks}
-\set{"man::author"}{Stijn van Dongen}
-\set{"man::section"}{1}
+\begin{pud::man}{
 
+   {name}{apparix}
+   {html_title}{apparix, augmenting the shell with directory bookmarks}
+   {keywords}{cd, change directory, bookmarks, command line, cdpath, subdirectory, tab completion}
+   {author}{Stijn van Dongen}
+   {section}{1}
+   {synstyle}{long}
+   {defstyle}{long}
 
-\"man::preamble"
-\${html}{\"man::maketoc"}
+   {year}{\"year"}
+   {day}{\"day"}
+   {month}{\"month"}
+   {stamp}{\"stamp"}
+   {tag}{\"tag"}
+}
+
+\${html}{\"pud::man::maketoc"}
 
 \def{apparix}{\bf{apparix}}
 
@@ -56,25 +65,28 @@
    It obtains directory names and listings, associates
    path names (values) with bookmarks (keys), and has some facilities for
    manipulating keys and values. The functions involving apparix
-   (\tt{bm}, \tt{to}, and \tt{portal}) provide the user interface.
+   (\bf{bm}, \bf{to}, and \bf{portal}) provide the user interface.
+   Other functions, \bf{als} (apparix ls) and \bf{ae} (apparix edit)
+   are discussed on the main apparix page \httpref{http://micans.org/apparix}.
    }
 
 \sec{gs}{GETTING STARTED}
 \par{
-   Install apparix. This should be as easy as \it{./configure
-   --prefix=$HOME/local && make && make install}, or perhaps a pre-packaged
-   apparix is available for your system.
+   Install apparix. This should be as easy as \v{./configure --prefix=$HOME/local && make && make install},
+   or perhaps a pre-packaged apparix is available for your system.
 
    Then get hold of the \bf{to}, \bf{bm} and \bf{portal} shell handles. These
    are either aliases or functions depending on your shell. Currently csh-style
    shells and bash are supported.
-   Get the ones you need either from the \secref{files} section or by issuing
-   \v{apparix --shell-examples}. Activate them by simply pasting
-   them in a shell or adding them to the appropriate resource file, e.g.
-   \v{$HOME/.cshrc} or \v{$HOME/.profile} (do not forget to
-   \it{source} the resource file). The handles \bf{to}, \bf{bm} and \bf{portal} can
-   of course be changed to any name desired. With these preliminaries, the
-   following is a mock-up shell navigation session.
+   Get the ones you need preferably from
+   \httpref{http://micans.org/apparix/#shell}.  For a more limited set of
+   commands either visit the \secref{files} section, or issue \v{apparix
+   --shell-examples}. Activate them by simply pasting them in a shell or adding
+   them to the appropriate resource file, e.g.  \v{$HOME/.cshrc} or
+   \v{$HOME/.bashrc} (do not forget to \it{source} the resource file). The
+   handles \bf{to}, \bf{bm} and \bf{portal} can of course be changed to any
+   name desired. With these preliminaries, the following is a mock-up shell
+   navigation session.
 
    }
 
@@ -149,7 +161,8 @@
    \synoptopt{-sd}{<mark>}{squash repeated destinations}
    \synoptopt{-lm}{<mark>}{list bookmarks with this mark}
    \synoptopt{-ld}{<mark>}{list destinations with mark indirection}
-   \synoptopt{-favour}{<list>}{duplicate resolution}
+   \synoptopt{-favour}{<list>}{duplicate resolution policy}
+   \synoptopt{-pick}{<num>}{immediate duplicate resolution}
    \synoptopt{-purge}{pat}{delete bookmarks}
    \synoptopt{-purge-mark}{pat}
    \synoptopt{-d}{dump resource file to STDOUT}
@@ -285,19 +298,33 @@ contrib/     gmon.out     Makefile     mcl/         shmcl/       taurus/}
 
 \par{
    The \genoptref{-favour}{<list>} option can be used to automate
-   resolution. \usearg{<list>} is a sequence of single characters.
+   resolution. \usearg{<list>} is a sequence of single characters,
+   described further below.
    The order in which they are given denote the order in which
    resolution rules are applied. This option is typically used
    in the definition of the \bf{to} function/alias or
    in the bash completion code.}
 
 \par{
-   Duplicates are allowed because it can be useful to overwrite
-   a bookmark with a new location. The old bookmark is kept
-   as a matter of policy. Use \genoptref{-sm} to explicitly
-   squash duplicates.}
+   The \genoptref{-pick}{<num>} option is used to resolve to a particular
+   directory directly. This is useful when you already know where you want to
+   go, and typically used for the \v{now} bookmark in conjunction with the bash
+   \v{whence} function. Use \v{whence now} to see an indexed list of now
+   bookmarks. It is possible to go to the desired directory by entering the
+   bookmark index. It is possible to bypass the selection step by specifying
+   \v{whence now N}.
+   }
 
-\begin{itemize}{{compact}{1}{contiguous}{0}}
+\par{
+   Duplicates are allowed because it can be useful to overwrite a bookmark with
+   a new location. The old bookmark is kept as a matter of policy. Use
+   \genoptref{-sm} to explicitly squash duplicates.
+   }
+
+\begin{itemize}{
+   {flow}{compact}
+   {interitem}{1}
+}
 \item{l}
 \car{
    \it{level}; prefer paths with fewer components.}
@@ -485,7 +512,10 @@ CSH and variants
 \par{
    When invoked without arguments apparix will simply dump its bookmarks.}
 
-\begin{itemize}
+\begin{itemize}{
+   {flow}{cascade}
+   {interitem}{1}
+}
 \item{\defopt{--add-mark}{add jump bookmark}}
 \car{
    This options expects trailing \it{[mark [destination]]} argument(s).
@@ -606,9 +636,12 @@ CSH and variants
    or removed. Refer to section \secref{environment} for  the effect
    that the environment variable \v{APPARIXEXCLUDE} has on portal expansion.}
 
-\item{\defopt{-favour}{<list>}{set duplicat resolution policy}}
+\items{
+   {\defopt{-favour}{<list>}{set duplicate resolution policy}}
+   {\defopt{-pick}{<num>}{immediate duplicate resolution}}
+}
 \car{
-   This option has its own section. Refer to \secref{dup}.}
+   These options have a section to themselves. Refer to \secref{dup}.}
 
 \item{\defopt{--cwd}{use getcwd(3), not pwd(1)}}
 \car{
@@ -644,7 +677,10 @@ CSH and variants
 
 \sec{environment}{ENVIRONMENT}
 
-\'begin{itemize}{{compact}{0}{contiguous}{0}{align}{left}}
+\'begin{itemize}{
+   {flow}{cascade}
+   {interitem}{1}
+}
 \item{APPARIXEXCLUDE}
 \car{
    This variable specifies exclusion behaviour
@@ -718,7 +754,10 @@ CSH and variants
    Note the fragment that provides \bf{to} argument completion in bash.
 }
 
-\begin{itemize}{}
+\begin{itemize}{
+   {flow}{cascade}
+   {interitem}{1}
+}
 \item{$HOME/.apparixrc}
 \car{This is the primary resource file. There is usually no
 need to edit it by hand. Sometimes it can be useful to edit
@@ -943,5 +982,5 @@ with directories with names starting with minus signs).
 
    }
 
-\"man::postamble"
+\end{pud::man}
 

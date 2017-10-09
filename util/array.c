@@ -1,5 +1,5 @@
 /*   (C) Copyright 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
- *   (C) Copyright 2006, 2007 Stijn van Dongen
+ *   (C) Copyright 2006, 2007, 2008, 2009  Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 3 of the
@@ -40,7 +40,7 @@ mcxstatus mcxSplice
    ;  const char  *errMsg  =  ""
    ;  mcxstatus   stat     =  STATUS_FAIL
 
-   ;  while (1)
+   ;  do
       {  if (n_base1 > N_base1)
          {  errMsg = "integer arguments not consistent"
          ;  break
@@ -76,10 +76,10 @@ mcxstatus mcxSplice
          ;  break
       ;  }
          stat = STATUS_OK
-      ;  break
    ;  }
+      while (0)
 
-      if (stat != STATUS_OK)
+   ;  if (stat != STATUS_OK)
       {  mcxErr("[mcxSplice PBD]", "%s", errMsg)
       ;  mcxErr
          (  "[mcxSplice PBD]"
@@ -117,6 +117,18 @@ mcxstatus mcxSplice
    ;  return STATUS_OK
 ;  }
 
+
+   /* fixme, this implementation looks ugly (nested while). use instead:
+      ;  for (offset=1;offset<n_words;offset++)
+         {  if (words[offset] == words[offset-n_dup-1])
+            {  n_dup++ 
+            ;  if (merge)
+               ...
+         ;  }
+            else if (n_dup)
+            words[offset-n_dup] = words[offset]
+      ;  }
+   */
 
 dim mcxDedup
 (  void*    base
@@ -281,7 +293,6 @@ void mcxBufReset
 ;  }
 
 
-
    /* Return a larger or equal element; the smallest of these.
     * The result is the minimal element at least as big as pivot.
     * and a 'ceil' for pivot.
@@ -293,19 +304,16 @@ void* mcxBsearchCeil
 ,  dim size
 ,  int (*cmp)(const void *, const void *)
 )
-   {  dim lft = 0, rgt = nmemb, bar = rgt/2
-
+   {  dim lft = -1         /* on purpose; we use wraparound */
+   ;  dim rgt = nmemb
+   ;  dim bar = nmemb/2
                            /* nothing, or nothing that is larger than pivot */
    ;  if (!nmemb || cmp(pivot, ((char*)base) + (nmemb-1) * size) > 0)
       return NULL
 
-   ;  lft = 0
-   ;  rgt = nmemb
-   ;  bar = nmemb / 2
-
             /* invariant: lft points to a
              * a member that is smaller than pivot or it
-             * points to the first member.
+             * points before the first member.
             */
    ;  while (lft+1 < rgt)
       {                    /* bar is smaller than pivot, move lft inward */
@@ -314,18 +322,13 @@ void* mcxBsearchCeil
                            /* bar is larger or equal element, move rgt inward */ 
       ;  else
          rgt = bar
-#if 0
-;fprintf(stderr, "lft bar rgt = %d %d %d rgt-lft/2 = %lu\n", (int) lft, (int) bar, (int) rgt, (long) ((rgt -lft)/2))
-#endif
-                           /* update bar to be the middle of lft and rgt */
+                           /* update bar to be the middle of lft and rgt
+                            * when lft == -1 this depends on unsigned wraparound.
+                           */
       ;  bar = rgt - (rgt-lft) / 2;
    ;  }
 
-            /* if lft never moved, it may in fact be larger than base */
-      if (!lft && cmp(pivot, base) <= 0)
-      bar = 0
-
-   ;  return (((char*) base) + bar * size)
+      return (((char*) base) + bar * size)
 ;  }
 
 
@@ -341,7 +344,9 @@ void* mcxBsearchFloor
 ,  dim size
 ,  int (*cmp)(const void *, const void *)
 )
-   {  dim lft = 0, rgt = nmemb, bar = nmemb / 2
+   {  dim lft = 0
+   ;  dim rgt = nmemb
+   ;  dim bar = nmemb / 2
 
                         /* nothing, or nothing that is smaller than pivot */
    ;  if (!nmemb || cmp(pivot, base) < 0)
@@ -349,7 +354,7 @@ void* mcxBsearchFloor
 
             /* invariant: rgt points to a
              * a member that is larger than pivot or it
-             * points to the last member.
+             * points beyond the last member.
             */
    ;  while (lft+1 < rgt)
       {           /* bar is greater than pivot, move right inward */
@@ -358,13 +363,108 @@ void* mcxBsearchFloor
                   /* bar is smaller than (or equal to) pivot element, move lft inward */
       ;  else
          lft = bar
-#if 0
-;fprintf(stderr, "lft bar rgt = %d %d %d rgt-lft/2 = %lu\n", (int) lft, (int) bar, (int) rgt, (long) ((rgt -lft)/2))
-#endif
                   /* update bar to be the middle of lft and rgt */
       ;  bar = lft + (rgt-lft) / 2;
    ;  }
       return (((char*) base) + bar * size)
 ;  }
+
+   /* TODO: compare with std::lower_bound implementation
+
+template<typename fwd_it, typename t>
+fwd_it
+lower_bound(fwd_it first, fwd_it last, const t & val)
+{
+    typedef typename iterator_traits<fwd_it>::difference_type distance;
+    
+    distance len = std::distance(first, last);
+    distance half;
+    fwd_it middle;
+    
+    while (len > 0)
+    {
+        half = len >> 1;
+        middle = first;
+        std::advance(middle, half);
+        if (*middle < val)
+        {
+            first = middle;
+            ++first;
+            len = len - half - 1;
+        }
+        else
+            len = half;
+    }
+    return first;
+}
+   */
+
+
+
+
+double mcxMedian
+(  void* base
+,  dim   n
+,  dim   sz
+,  double (*get)(const void*)
+,  double* iqr
+)
+   {  double median = 0.0, q1 = 0.0, q2 = 0.0, quant = 0.0
+   ;  if (n > 1)
+      median = (get((char*) base + sz * (n/2)) + get((char*) base+ sz * ((n-1)/2))) / 2.0
+   ;  else if (n == 1)
+      median = get(base)
+
+         /* p locates the left boundary of quantile,
+          * q locates the right boundary. We need to interpolate
+          * neighbours in case the boundaries don't fall exacly
+          * on integer offsets. In that case pLoffset and rOffset
+          * are different and a weighted mean between them
+          * is computed.
+         */
+   ;  if (n > 1)
+      {  dim n3 = 3 * n
+      ;  dim pLoffset = n / 4
+      ;  dim pRoffset = pLoffset + 1
+      ;  double pLweight = (4 - (n % 4)) / 4.0
+      ;  double pRweight = 1.0 - pLweight
+
+      ;  dim qRoffset = (n3 - (n3 % 4)) / 4
+      ;  dim qLoffset = qRoffset - 1
+      ;  double qRweight = (n3 % 4) / 4.0
+      ;  double qLweight = 1 - qRweight
+
+      ;  q1 =     pLweight * get((char*) base + sz * pLoffset)
+               +  pRweight * get((char*) base + sz * pRoffset)
+      ;  q2 =     qLweight * get((char*) base + sz * qLoffset)
+               +  qRweight * get((char*) base + sz * qRoffset)
+      ;  quant = q2 - q1
+      ;  if (quant < 0)
+         quant = -quant
+   ;  }
+
+      *iqr = quant
+   ;  return median
+;  }
+
+
+void mcxShuffle
+(  void* datap
+,  dim   nmem
+,  dim   mem_size
+,  char* mem_cell    /* should have mem_size size */
+)
+   {  dim n = nmem
+   ;  char* data = datap
+   ;  while (n > 0)
+      {  unsigned long r = (random() >> 3) % n             /* Fisher-Yates shuffle */
+      ;  if (r != n-1)
+         {  memcpy(mem_cell, data + (n-1) * mem_size, mem_size)
+         ;  memcpy(data + (n-1) * mem_size, data + r * mem_size, mem_size)
+         ;  memcpy(data + r * mem_size, mem_cell, mem_size)
+      ;  }
+         n--
+   ;  }
+   }
 
 
