@@ -31,7 +31,7 @@
 #  define likely(x)      (x)
 #  define unlikely(x)    (x)
 #else
-#  define   MCX_GNUC_OK       1
+#define   MCX_GNUC_OK       1
 #if __GNUC__  >= 3
 #  define inline __inline__ __attribute__ ((always_inline))
 #  define cpl__pure         __attribute__ ((pure))
@@ -45,6 +45,19 @@
 #  define cpl__packed       __attribute__ ((packed))
 #  define likely(x)      __builtin_expect (!!(x), 1)
 #  define unlikely(x)    __builtin_expect (!!(x), 0)
+#else
+#  define inline         /* no inline */
+#  define cpl__pure         /* no pure */ 
+#  define cpl__const        /* no const */
+#  define cpl__noreturn     /* no noreturn */ 
+#  define cpl__malloc       /* no malloc */
+#  define cpl__must_check   /* no warn_unused_result */
+#  define cpl__deprecated   /* no deprecated */ 
+#  define cpl__used         /* no used */
+#  define cpl__unused       /* no unused */
+#  define cpl__packed       /* no packed */
+#  define likely(x)      (x)
+#  define unlikely(x)    (x)
 #endif
 #endif
 

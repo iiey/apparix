@@ -261,6 +261,7 @@ char** mcxOptParseString
 char* mcxOptArgLine
 (  const char** argv
 ,  int argc
+,  int quote      /*    '[' or '"' */
 )  ;
 
 

@@ -703,15 +703,30 @@ mcxbool mcxOptIsInfo
 char* mcxOptArgLine
 (  const char** argv
 ,  int argc
+,  int quote
 )
    {  mcxTing* cl = mcxTingEmpty(NULL, 80)
    ;  int i
+   ;  const char* ql = "*", *qr = "*"
+
+   ;  if (quote == '[')
+      ql = "[", qr = "]"
+   ;  else if (quote == '{')
+      ql = "{", qr = "}"
+   ;  else if (quote == '<')
+      ql = "<", qr = ">"
+   ;  else if (quote == '(')
+      ql = "(", qr = ")"
+   ;  else if (quote == '"')
+      ql = "\"", qr = "\""
+   ;  else if (quote == '\'')
+      ql = "'", qr = "'"
 
    ;  if (argc)
-      mcxTingPrint(cl, "[%s]", argv[0])
+      mcxTingPrint(cl, "%s%s%s", ql, argv[0], qr)
 
    ;  for (i=1;i<argc;i++)
-      mcxTingPrintAfter(cl, " [%s]", argv[i])
+      mcxTingPrintAfter(cl, " %s%s%s", ql, argv[i], qr)
    ;  return mcxTinguish(cl)
 ;  }
 
@@ -737,7 +752,7 @@ mcxOptAnchor mcxDispGiraffe[] =
    ,  "set debug level or bits"
    }
 ,  {  "-set"
-   ,  MCX_OPT_HASARG | MCX_OPT_HIDDEN
+   ,  MCX_OPT_HASARG
    ,  MCX_DISP_GIRAFFE_SET
    ,  "key=val"
    ,  "set key to val in ENV"
@@ -860,6 +875,68 @@ int mcxDispatch
 
    ;  for (opt=opts;opt->anch;opt++)
       {  mcxOptAnchor* anch = opt->anch
+      ;  switch(anch->id)
+         {  case MCX_DISP_GIRAFFE_HELP
+         :  case MCX_DISP_GIRAFFE_APROPOS
+         :  case MCX_DISP_GIRAFFE_AMOIXA
+         :  mcxOptApropos
+            (  stdout
+            ,  hk->name
+            ,  me_and_it->str
+            ,  15
+            ,  0
+            ,  dispatcher_options
+            )
+         ;  mcxOptApropos
+            (  stdout
+            ,  hk->name
+            ,  NULL
+            ,  15
+            ,     MCX_OPT_DISPLAY_SKIP
+               |  (  anch->id == MCX_DISP_GIRAFFE_AMOIXA
+                  ?  MCX_OPT_DISPLAY_HIDDEN
+                  :  0
+                  )
+            ,  hk->options
+            )
+         ;  mcxExit(0)
+         ;  break
+         ;
+
+            case MCX_DISP_GIRAFFE_VERSION
+         :  report_version(me)
+         ;  mcxExit(0)
+         ;  break
+         ;
+
+            case MCX_DISP_GIRAFFE_NOP
+         :  NOTHING
+         ;  break
+         ;
+
+            case MCX_DISP_GIRAFFE_TEST
+         :  mcx_disp_giraffe_test = TRUE
+         ;  break
+         ;
+
+            case MCX_DISP_GIRAFFE_DEBUG
+         :  mcx_disp_giraffe_debug = atoi(opt->val)
+         ;  break
+         ;
+
+            case MCX_DISP_GIRAFFE_SET
+         :  mcxSetenv(opt->val)
+         ;  break
+         ;
+
+            default
+         :  if (hk->arg_cb(anch->id, opt->val)) mcxDie(1, me, "curtains")
+         ;  break
+         ;
+         }
+      }
+#if 0
+      {  mcxOptAnchor* anch = opt->anch
       ;  if
          (  anch->id == MCX_DISP_GIRAFFE_HELP
          || anch->id == MCX_DISP_GIRAFFE_APROPOS
@@ -901,17 +978,12 @@ int mcxDispatch
          mcx_disp_giraffe_debug = atoi(opt->val)
 
       ;  else if (anch->id == MCX_DISP_GIRAFFE_SET)
-         {  if (!strchr(opt->val, '='))
-            mcxErr(me, "expect key=val format, ignoring <%s>", opt->val)
-         ;  else
-            {  char* e = mcxStrDup(opt->val)
-            ;  putenv(e)
-         ;  }
-         }
+         mcxSetenv(opt->val)
 
-         else if (hk->arg_cb(anch->id, opt->val))
+      ;  else if (hk->arg_cb(anch->id, opt->val))
          mcxDie(1, me, "curtains")
    ;  }
+#endif
 
       a = 2 + n_arg_read
 

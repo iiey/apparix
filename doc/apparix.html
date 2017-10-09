@@ -69,9 +69,9 @@ margin-right: 0%;
 </head>
 <body>
 <p style="text-align:right">
-3 Jul 2007&nbsp;&nbsp;&nbsp;
+18 Sep 2007&nbsp;&nbsp;&nbsp;
 <a class="local" href="apparix.ps"><b>apparix</b></a>
-1.003, 07-184
+1.003, 07-261
 </p>
 <div style="margin-top:1em">
 <table
@@ -82,34 +82,36 @@ cellpadding="0" summary="itemize">
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">2.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
 <a class="intern" href="#synopsis">SYNOPSIS</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">3.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#description">DESCRIPTION</a>
+<a class="intern" href="#gs">GETTING STARTED</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">4.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#dup">duplicate resolution</a>
+<a class="intern" href="#description">DESCRIPTION</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">5.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#sub">subdirectory specification</a>
+<a class="intern" href="#dup">duplicate resolution</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">6.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#tab">tab completion</a>
+<a class="intern" href="#sub">subdirectory specification</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">7.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#edit">editing bookmarks</a>
+<a class="intern" href="#tab">tab completion</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">8.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#mov">copying and moving files</a>
+<a class="intern" href="#edit">editing bookmarks</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">9.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#list">listing bookmarks</a>
+<a class="intern" href="#mov">copying and moving files</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">10.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#options">OPTIONS</a>
+<a class="intern" href="#list">listing bookmarks</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">11.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#environment">ENVIRONMENT</a>
+<a class="intern" href="#options">OPTIONS</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">12.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#files">FILES</a>
+<a class="intern" href="#environment">ENVIRONMENT</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">13.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#notes">NOTES</a>
+<a class="intern" href="#files">FILES</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">14.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#bugs">BUGS</a>
+<a class="intern" href="#notes">NOTES</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">15.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#author">AUTHOR</a>
+<a class="intern" href="#bugs">BUGS</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">16.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#thanks">THANKS</a>
+<a class="intern" href="#author">AUTHOR</a>
 </div></td></tr><tr><td width=48 valign="top" class="left nowrap">17.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<a class="intern" href="#thanks">THANKS</a>
+</div></td></tr><tr><td width=48 valign="top" class="left nowrap">18.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
 <a class="intern" href="#history">HISTORY</a>
 </div></td></tr>
 </table>
@@ -129,12 +131,20 @@ mark. It is possible to directly jump to subdirectories of the target
 directory. The contributed bash completion code facilitates completion both
 on bookmarks and subdirectories.</p>
 <p class="default L50" style="margin-bottom:0">
-This manual page suffers of an excess in verbosity due to the many examples,
-explanations of the bells and whistles, and comparisons with other
-approaches to bookmarking. The fundamental idea is simply
-that typing a string of your own choosing takes you
-to the directory associated with it.</p>
-<p class="default L50" style="margin-bottom:0"><b>GETTING STARTED</b><br>
+This manual page suffers from an excess in verbosity due to the many
+examples, explanations of the bells and whistles, and comparisons with other
+approaches to bookmarking. The fundamental idea is simply that typing a
+string of your own choosing takes you to the directory associated with it.
+Apparix does little more than maintaining a list of keys and values.
+It obtains directory names and listings, associates
+path names (values) with bookmarks (keys), and has some facilities for
+manipulating keys and values. The functions involving apparix
+(<tt>bm</tt>, <tt>to</tt>, and <tt>portal</tt>) provide the user interface.
+</p>
+
+<a name="gs"></a>
+<h2>GETTING STARTED</h2>
+<p class="default L50" style="margin-bottom:0">
 Install apparix. This should be as easy as <i>./configure
 --prefix=$HOME/local &amp;&amp; make &amp;&amp; make install</i>, or perhaps a pre-packaged
 apparix is available for your system.
@@ -196,8 +206,10 @@ Refer to the <a class="intern" href="#sub">subdirectory specification</a> sectio
 <p class="default L50" style="margin-bottom:0"><b>Further options</b><br>
 <a class="intern" href="#opt--add-mark"><b>[--add-mark</b> (<i>add jump bookmark</i>)<b>]</b></a>
 <a class="intern" href="#opt--add-portal"><b>[--add-portal</b> (<i>add portal bookmark</i>)<b>]</b></a>
-<a class="intern" href="#opt--squash-mark"><b>[--squash-mark</b> (<i>squash repeated marks</i>)<b>]</b></a>
-<a class="intern" href="#opt--squash-dest"><b>[--squash-dest</b> (<i>squash repeated destinations</i>)<b>]</b></a>
+<a class="intern" href="#opt-sm"><b>[-sm</b> &lt;mark&gt; (<i>squash repeated marks</i>)<b>]</b></a>
+<a class="intern" href="#opt-sd"><b>[-sd</b> &lt;mark&gt; (<i>squash repeated destinations</i>)<b>]</b></a>
+<a class="intern" href="#opt-lm"><b>[-lm</b> &lt;mark&gt; (<i>list bookmarks with this mark</i>)<b>]</b></a>
+<a class="intern" href="#opt-ld"><b>[-ld</b> &lt;mark&gt; (<i>list destinations with mark indirection</i>)<b>]</b></a>
 <a class="intern" href="#opt-favour"><b>[-favour</b> &lt;list&gt; (<i>duplicate resolution</i>)<b>]</b></a>
 <a class="intern" href="#opt-purge"><b>[-purge</b> pat (<i>delete bookmarks</i>)<b>]</b></a>
 <a class="intern" href="#opt-purge-mark"><b>[-purge-mark</b> (<i>pat</i>)<b>]</b></a>
@@ -316,7 +328,7 @@ in the bash completion code.</p>
 <p class="default L50" style="margin-bottom:0">
 Duplicates are allowed because it can be useful to overwrite
 a bookmark with a new location. The old bookmark is kept
-as a matter of policy. Use <a class="intern" href="#opt--squash-mark"><b>--squash-mark</b></a> to explicitly
+as a matter of policy. Use <a class="intern" href="#opt-sm"><b>-sm</b></a> to explicitly
 squash duplicates.</p>
 <div style="margin-top:1em">
 <table
@@ -404,8 +416,8 @@ duplicate bookmarks.
 Apparix appends new bookmarks to the end of the .apparixrc file. Nothing
 stops you from editing the file, and this is in fact recommended if for
 example you need to get rid of a bookmark and neither of <a class="intern" href="#opt-purge"><b>-purge</b></a>,
-<a class="intern" href="#opt-purge-mark"><b>-purge-mark</b></a>, <a class="intern" href="#opt--squash-dest"><b>--squash-dest</b></a>,
-<a class="intern" href="#opt--squash-mark"><b>--squash-mark</b></a> fulfills your needs. It was an easy design choice
+<a class="intern" href="#opt-purge-mark"><b>-purge-mark</b></a>, <a class="intern" href="#opt-sd"><b>-sd</b></a>,
+<a class="intern" href="#opt-sm"><b>-sm</b></a> fulfills your needs. It was an easy design choice
 not to equip apparix with editor capabilities.</p>
 
 <a name="mov"></a>
@@ -473,10 +485,13 @@ as bookmarks. The name of the bookmark is simply the name of the
 subdirectory. By default the current directory is added as a portal.
 An optional trailing argument will override this behaviour and
 instead be interpreted as the portal location.</p>
-</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt--squash-mark"></a><b>--squash-mark</b> (<i>squash repeated marks</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt-sm"></a><b>-sm</b> &lt;mar&gt; (<i>squash repeated marks</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
 <p class="default L50" style="margin-top:0em; margin-bottom:0em">
-Apparix will squash identical marks. It does not consider the corresponding
-destinations and will by default keep the last one occurring in the resource
+Apparix will squash bookmarks with mark <tt>&lt;mark&gt;</tt>.
+This is useful when a mark points to a versioned project, and the
+project is updated to a new version and a new directory.</p>
+<p class="default L50" style="margin-bottom:0">
+Apparix will by default keep the last one occurring in the resource
 file (corresponding with <b>-favour</b>&nbsp;<b>O</b>). This option respects the
 <a class="intern" href="#opt-favour"><b>-favour</b></a> option if given. Duplicating an already existing mark
 can be useful when it identifies a project for which the underlying
@@ -484,18 +499,26 @@ directory changes every once in a while (e.g. the project is downloaded from
 external sources and comes with version information). It is not strictly
 necessary to squash bookmarks since <b>to</b> functions/macros that are
 equipped with the <a class="intern" href="#opt-favour"><b>-favour</b></a> option will generally resolve
-duplicate matches. This option supplies an easy way to declutter the
-apparix resource file every once in a while. Portal specifications are
-never affected.</p>
-</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt-sm"></a><b>-sm</b> (<i>squash repeated marks</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+duplicate matches.
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt-sd"></a><b>-sd</b> &lt;mark&gt; (<i>squash repeated destinations</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
 <p class="default L50" style="margin-top:0em; margin-bottom:0em">
-Same as above.</p>
-</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt--squash-dest"></a><b>--squash-dest</b> (<i>squash repeated destinations</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+All other bookmarks with the same destination as <tt>&lt;mark&gt;</tt> are removed.
+This is useful when a given destination has acquired multiple
+bookmarks and you decide to settle on a favourite.
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt-lm"></a><b>-lm</b> &lt;mark&gt; (<i>list bookmarks with this mark</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
 <p class="default L50" style="margin-top:0em; margin-bottom:0em">
-Apparix will squash identical destinations.
-It does not consider the corresponding marks and will
-simply keep the last one occurring in the resource file.
-Portal specifications are never affected.</p>
+It lists all bookmarks <tt>&lt;mark&gt;</tt> (noting that it may point to
+multiple locations).
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt-ld"></a><b>-ld</b> &lt;mark&gt; (<i>list repeated destinations</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+This lists all bookmarks <tt>&lt;mark&gt;</tt> (noting that it may point to
+multiple locations) and additionally lists all other bookmarks that share
+the destination with any of the first bookmarks. This allows one to predict
+the effect of issuing <tt>apparix -sd &lt;mark&gt;</tt>.
+</p>
 </div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt-purge"></a><b>-purge</b> pat (<i>delete bookmarks</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
 <p class="default L50" style="margin-top:0em; margin-bottom:0em">
 This deletes bookmarks where destination matches <i>pat</i>.
@@ -555,10 +578,15 @@ print synopsis of all options</p>
 
 <a name="environment"></a>
 <h2>ENVIRONMENT</h2>
-<p class="default L50" style="margin-bottom:0">
-The environment variable APPARIXENCLUDE specifies exlusion behaviour
+<div style="margin-top:1em">
+<table
+cellspacing="0" border=0
+cellpadding="0" summary="itemize">
+<tr><td colspan=3>APPARIXEXCLUDE</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+This variable specifies exclusion behaviour
 when portals are expanded with the <tt>--rehash</tt> option.
-This variable has the following syntax:
+It has the following syntax:
 </p>
 <pre>   &lt;[:,][&lt;string&gt;]&gt;+</pre>
 <p class="default L50" style="margin-top:0em; margin-bottom:0em">
@@ -577,6 +605,35 @@ name having <tt>tmp</tt> as a substring.
 The second example will effectively disable portals,
 as it speficies the empty string which is a substring of all strings.
 </p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3>APPARIXTAG</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+This variable, if set, is incorporated into the names of the
+apparix resource files. By default these are <tt>.apparixrc</tt> and <tt>.apparixexpand</tt>.
+When APPARIXTAG is set to <tt>&lt;tag&gt;</tt> they become <tt>.&lt;tag&gt;apparixrc</tt> and
+<tt>.&lt;tag&gt;apparixexpand</tt>.
+This can be used e.g. to maintain different sets of bookmarks on different
+host machines.
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3>APPARIXLOG</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+This variable, if set, is interpreted as the name of a log file.
+The log file keeps track of all newly added bookmarks and
+portals without ever deleting anything, in the same format
+as the <tt>.apparixrc</tt> file. If this variable is not set
+nothing is tracked.
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3>APPARIXPURGE</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+This changes the way apparix dumps purged bookmarks to STDOUT.
+By default they are dumped as command lines that will reimport
+the bookmarks if issued (i.e. cut and pasted).
+By setting this variable to 1 purged bookmarks are dumped
+in the format used in the <tt>.apparixrc</tt> file.
+</p>
+</div></td></tr>
+</table>
+
+</div>
 
 <a name="files"></a>
 <h2>FILES</h2>
@@ -790,7 +847,8 @@ to submit that spaces in path names are evil, and that the completion code
 seems to work in their evil presence anyway. Just <a class="intern" href="#bugs">don't put
 commas</a> in path names.</p>
 <p class="default L50" style="margin-bottom:0">
-Joost van Baal wrote the apparix autotooled build environment.</p>
+The autotooled build environment was modified from a template written
+by Joost van Baal.</p>
 
 <a name="history"></a>
 <h2>HISTORY</h2>

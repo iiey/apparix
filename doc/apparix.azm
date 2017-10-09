@@ -38,13 +38,19 @@
    on bookmarks and subdirectories.}
 
 \par{
-   This manual page suffers of an excess in verbosity due to the many examples,
-   explanations of the bells and whistles, and comparisons with other
-   approaches to bookmarking. The fundamental idea is simply
-   that typing a string of your own choosing takes you
-   to the directory associated with it.}
+   This manual page suffers from an excess in verbosity due to the many
+   examples, explanations of the bells and whistles, and comparisons with other
+   approaches to bookmarking. The fundamental idea is simply that typing a
+   string of your own choosing takes you to the directory associated with it.
+   Apparix does little more than maintaining a list of keys and values.
+   It obtains directory names and listings, associates
+   path names (values) with bookmarks (keys), and has some facilities for
+   manipulating keys and values. The functions involving apparix
+   (\tt{bm}, \tt{to}, and \tt{portal}) provide the user interface.
+   }
 
-\cpar{GETTING STARTED}{
+\sec{gs}{GETTING STARTED}
+\par{
    Install apparix. This should be as easy as \it{./configure
    --prefix=$HOME/local && make && make install}, or perhaps a pre-packaged
    apparix is available for your system.
@@ -52,7 +58,6 @@
    Then get hold of the \bf{to}, \bf{bm} and \bf{portal} shell handles. These
    are either aliases or functions depending on your shell. Currently csh-style
    shells and bash are supported.
-
    Get the ones you need either from the \secref{files} section or by issuing
    \v{apparix --shell-examples}. Activate them by simply pasting
    them in a shell or adding them to the appropriate resource file, e.g.
@@ -114,8 +119,10 @@
 \cpar{Further options}{
    \synoptopt{--add-mark}{add jump bookmark}
    \synoptopt{--add-portal}{add portal bookmark}
-   \synoptopt{--squash-mark}{squash repeated marks}
-   \synoptopt{--squash-dest}{squash repeated destinations}
+   \synoptopt{-sm}{<mark>}{squash repeated marks}
+   \synoptopt{-sd}{<mark>}{squash repeated destinations}
+   \synoptopt{-lm}{<mark>}{list bookmarks with this mark}
+   \synoptopt{-ld}{<mark>}{list destinations with mark indirection}
    \synoptopt{-favour}{<list>}{duplicate resolution}
    \synoptopt{-purge}{pat}{delete bookmarks}
    \synoptopt{-purge-mark}{pat}
@@ -258,7 +265,7 @@ contrib/     gmon.out     Makefile     mcl/         shmcl/       taurus/}
 \par{
    Duplicates are allowed because it can be useful to overwrite
    a bookmark with a new location. The old bookmark is kept
-   as a matter of policy. Use \genoptref{--squash-mark} to explicitly
+   as a matter of policy. Use \genoptref{-sm} to explicitly
    squash duplicates.}
 
 \begin{itemize}{{compact}{1}{contiguous}{0}}
@@ -357,8 +364,8 @@ contrib/     gmon.out     Makefile     mcl/         shmcl/       taurus/}
    Apparix appends new bookmarks to the end of the .apparixrc file. Nothing
    stops you from editing the file, and this is in fact recommended if for
    example you need to get rid of a bookmark and neither of \genoptref{-purge},
-   \genoptref{-purge-mark}, \genoptref{--squash-dest},
-   \genoptref{--squash-mark} fulfills your needs.  It was an easy design choice
+   \genoptref{-purge-mark}, \genoptref{-sd},
+   \genoptref{-sm} fulfills your needs.  It was an easy design choice
    not to equip apparix with editor capabilities.}
 
 \sec{mov}{copying and moving files}
@@ -447,10 +454,14 @@ CSH and variants
    An optional trailing argument will override this behaviour and
    instead be interpreted as the portal location.}
 
-\item{\defopt{--squash-mark}{squash repeated marks}}
+\item{\defopt{-sm}{<mar>}{squash repeated marks}}
 \car{
-   Apparix will squash identical marks.  It does not consider the corresponding
-   destinations and will by default keep the last one occurring in the resource
+   Apparix will squash bookmarks with mark \v{<mark>}.
+   This is useful when a mark points to a versioned project, and the
+   project is updated to a new version and a new directory.}
+
+\par{
+   Apparix will by default keep the last one occurring in the resource
    file (corresponding with \useopt{-favour}{O}).  This option respects the
    \genoptref{-favour} option if given.  Duplicating an already existing mark
    can be useful when it identifies a project for which the underlying
@@ -458,21 +469,29 @@ CSH and variants
    external sources and comes with version information). It is not strictly
    necessary to squash bookmarks since \bf{to} functions/macros that are
    equipped with the \genoptref{-favour} option will generally resolve
-   duplicate matches.  This option supplies an easy way to declutter the
-   apparix resource file every once in a while.  Portal specifications are
-   never affected.}
+   duplicate matches.
+   }
    
-
-\item{\defopt{-sm}{squash repeated marks}}
+\item{\defopt{-sd}{<mark>}{squash repeated destinations}}
 \car{
-   Same as above.}
+   All other bookmarks with the same destination as \v{<mark>} are removed.
+   This is useful when a given destination has acquired multiple
+   bookmarks and you decide to settle on a favourite.
+   }
 
-\item{\defopt{--squash-dest}{squash repeated destinations}}
+\item{\defopt{-lm}{<mark>}{list bookmarks with this mark}}
 \car{
-   Apparix will squash identical destinations.
-   It does not consider the corresponding marks and will
-   simply keep the last one occurring in the resource file.
-   Portal specifications are never affected.}
+   It lists all bookmarks \v{<mark>} (noting that it may point to
+   multiple locations).
+   }
+
+\item{\defopt{-ld}{<mark>}{list repeated destinations}}
+\car{
+   This lists all bookmarks \v{<mark>} (noting that it may point to
+   multiple locations) and additionally lists all other bookmarks that share
+   the destination with any of the first bookmarks.  This allows one to predict
+   the effect of issuing \v{apparix -sd <mark>}.
+   }
 
 \item{\defopt{-purge}{pat}{delete bookmarks}}
 \car{
@@ -546,10 +565,12 @@ CSH and variants
 
 \sec{environment}{ENVIRONMENT}
 
-\par{
-   The environment variable APPARIXENCLUDE specifies exlusion behaviour
+\'begin{itemize}{{compact}{0}{contiguous}{0}{align}{left}}
+\item{APPARIXEXCLUDE}
+\car{
+   This variable specifies exclusion behaviour
    when portals are expanded with the \v{--rehash} option.
-   This variable has the following syntax:
+   It has the following syntax:
    }
 
 \verbatim{\:/
@@ -575,6 +596,39 @@ CSH and variants
    as it speficies the empty string which is a substring of all strings.
    }
 
+
+\item{APPARIXTAG}
+\car{
+   This variable, if set, is incorporated into the names of the
+   apparix resource files. By default these are \v{.apparixrc} and \v{.apparixexpand}.
+   When APPARIXTAG is set to \v{<tag>} they become \v{.<tag>apparixrc} and
+   \v{.<tag>apparixexpand}.
+
+   This can be used e.g. to maintain different sets of bookmarks on different
+   host machines.
+   }
+
+
+\item{APPARIXLOG}
+\car{
+   This variable, if set, is interpreted as the name of a log file.
+   The log file keeps track of all newly added bookmarks and
+   portals without ever deleting anything, in the same format
+   as the \v{.apparixrc} file. If this variable is not set
+   nothing is tracked.
+   }
+
+
+\item{APPARIXPURGE}
+\car{
+   This changes the way apparix dumps purged bookmarks to STDOUT.
+   By default they are dumped as command lines that will reimport
+   the bookmarks if issued (i.e. cut and pasted).
+   By setting this variable to 1 purged bookmarks are dumped
+   in the format used in the \v{.apparixrc} file.
+   }
+
+\end{itemize}
 
 \sec{files}{FILES}
 
@@ -782,7 +836,8 @@ with directories with names starting with minus signs).
    commas} in path names.}
 
 \par{
-   Joost van Baal wrote the apparix autotooled build environment.}
+   The autotooled build environment was modified from a template written
+   by Joost van Baal.}
 
 \sec{history}{HISTORY}
 \par{

@@ -1,5 +1,5 @@
 .\" Copyright (c) 2007 Stijn van Dongen
-.TH "apparix" 1 "3 Jul 2007" "apparix 1\&.003, 07-184" "USER COMMANDS "
+.TH "apparix" 1 "18 Sep 2007" "apparix 1\&.003, 07-261" "USER COMMANDS "
 .po 2m
 .de ZI
 .\" Zoem Indent/Itemize macro I.
@@ -36,14 +36,17 @@ mark\&. It is possible to directly jump to subdirectories of the target
 directory\&. The contributed bash completion code facilitates completion both
 on bookmarks and subdirectories\&.
 
-This manual page suffers of an excess in verbosity due to the many examples,
-explanations of the bells and whistles, and comparisons with other
-approaches to bookmarking\&. The fundamental idea is simply
-that typing a string of your own choosing takes you
-to the directory associated with it\&.
+This manual page suffers from an excess in verbosity due to the many
+examples, explanations of the bells and whistles, and comparisons with other
+approaches to bookmarking\&. The fundamental idea is simply that typing a
+string of your own choosing takes you to the directory associated with it\&.
+Apparix does little more than maintaining a list of keys and values\&.
+It obtains directory names and listings, associates
+path names (values) with bookmarks (keys), and has some facilities for
+manipulating keys and values\&. The functions involving apparix
+(\fCbm\fP, \fCto\fP, and \fCportal\fP) provide the user interface\&.
+.SH GETTING STARTED
 
-\fBGETTING STARTED\fP
-.br
 Install apparix\&. This should be as easy as \fI\&./configure
 --prefix=$HOME/local && make && make install\fP, or perhaps a pre-packaged
 apparix is available for your system\&.
@@ -117,8 +120,10 @@ Refer to the \fBsubdirectory specification\fP section\&.
 .br
 \fB[--add-mark\fP (\fIadd jump bookmark\fP)\fB]\fP
 \fB[--add-portal\fP (\fIadd portal bookmark\fP)\fB]\fP
-\fB[--squash-mark\fP (\fIsquash repeated marks\fP)\fB]\fP
-\fB[--squash-dest\fP (\fIsquash repeated destinations\fP)\fB]\fP
+\fB[-sm\fP <mark> (\fIsquash repeated marks\fP)\fB]\fP
+\fB[-sd\fP <mark> (\fIsquash repeated destinations\fP)\fB]\fP
+\fB[-lm\fP <mark> (\fIlist bookmarks with this mark\fP)\fB]\fP
+\fB[-ld\fP <mark> (\fIlist destinations with mark indirection\fP)\fB]\fP
 \fB[-favour\fP <list> (\fIduplicate resolution\fP)\fB]\fP
 \fB[-purge\fP pat (\fIdelete bookmarks\fP)\fB]\fP
 \fB[-purge-mark\fP (\fIpat\fP)\fB]\fP
@@ -298,7 +303,7 @@ in the bash completion code\&.
 
 Duplicates are allowed because it can be useful to overwrite
 a bookmark with a new location\&. The old bookmark is kept
-as a matter of policy\&. Use \fB--squash-mark\fP to explicitly
+as a matter of policy\&. Use \fB-sm\fP to explicitly
 squash duplicates\&.
 
 .ZI 3m "l"
@@ -387,8 +392,8 @@ duplicate bookmarks\&.
 Apparix appends new bookmarks to the end of the \&.apparixrc file\&. Nothing
 stops you from editing the file, and this is in fact recommended if for
 example you need to get rid of a bookmark and neither of \fB-purge\fP,
-\fB-purge-mark\fP, \fB--squash-dest\fP,
-\fB--squash-mark\fP fulfills your needs\&. It was an easy design choice
+\fB-purge-mark\fP, \fB-sd\fP,
+\fB-sm\fP fulfills your needs\&. It was an easy design choice
 not to equip apparix with editor capabilities\&.
 .SH copying and moving files
 
@@ -464,11 +469,14 @@ An optional trailing argument will override this behaviour and
 instead be interpreted as the portal location\&.
 .in -3m
 
-.ZI 3m "\fB--squash-mark\fP (\fIsquash repeated marks\fP)"
+.ZI 3m "\fB-sm\fP <mar> (\fIsquash repeated marks\fP)"
 \&
 .br
-Apparix will squash identical marks\&. It does not consider the corresponding
-destinations and will by default keep the last one occurring in the resource
+Apparix will squash bookmarks with mark \fC<mark>\fP\&.
+This is useful when a mark points to a versioned project, and the
+project is updated to a new version and a new directory\&.
+
+Apparix will by default keep the last one occurring in the resource
 file (corresponding with \fB-favour\fP\ \&\fBO\fP)\&. This option respects the
 \fB-favour\fP option if given\&. Duplicating an already existing mark
 can be useful when it identifies a project for which the underlying
@@ -476,24 +484,31 @@ directory changes every once in a while (e\&.g\&. the project is downloaded from
 external sources and comes with version information)\&. It is not strictly
 necessary to squash bookmarks since \fBto\fP functions/macros that are
 equipped with the \fB-favour\fP option will generally resolve
-duplicate matches\&. This option supplies an easy way to declutter the
-apparix resource file every once in a while\&. Portal specifications are
-never affected\&.
+duplicate matches\&.
 .in -3m
 
-.ZI 3m "\fB-sm\fP (\fIsquash repeated marks\fP)"
+.ZI 3m "\fB-sd\fP <mark> (\fIsquash repeated destinations\fP)"
 \&
 .br
-Same as above\&.
+All other bookmarks with the same destination as \fC<mark>\fP are removed\&.
+This is useful when a given destination has acquired multiple
+bookmarks and you decide to settle on a favourite\&.
 .in -3m
 
-.ZI 3m "\fB--squash-dest\fP (\fIsquash repeated destinations\fP)"
+.ZI 3m "\fB-lm\fP <mark> (\fIlist bookmarks with this mark\fP)"
 \&
 .br
-Apparix will squash identical destinations\&.
-It does not consider the corresponding marks and will
-simply keep the last one occurring in the resource file\&.
-Portal specifications are never affected\&.
+It lists all bookmarks \fC<mark>\fP (noting that it may point to
+multiple locations)\&.
+.in -3m
+
+.ZI 3m "\fB-ld\fP <mark> (\fIlist repeated destinations\fP)"
+\&
+.br
+This lists all bookmarks \fC<mark>\fP (noting that it may point to
+multiple locations) and additionally lists all other bookmarks that share
+the destination with any of the first bookmarks\&. This allows one to predict
+the effect of issuing \fCapparix -sd <mark>\fP\&.
 .in -3m
 
 .ZI 3m "\fB-purge\fP pat (\fIdelete bookmarks\fP)"
@@ -591,9 +606,12 @@ print synopsis of all options
 .in -3m
 .SH ENVIRONMENT
 
-The environment variable APPARIXENCLUDE specifies exlusion behaviour
+.ZI 3m "APPARIXEXCLUDE"
+\&
+.br
+This variable specifies exclusion behaviour
 when portals are expanded with the \fC--rehash\fP option\&.
-This variable has the following syntax:
+It has the following syntax:
 
 .di ZV
 .in 0
@@ -631,6 +649,38 @@ The first excludes directory names \fCCVS\fP and \fClib\fP and any directory
 name having \fCtmp\fP as a substring\&.
 The second example will effectively disable portals,
 as it speficies the empty string which is a substring of all strings\&.
+.in -3m
+
+.ZI 3m "APPARIXTAG"
+\&
+.br
+This variable, if set, is incorporated into the names of the
+apparix resource files\&. By default these are \fC\&.apparixrc\fP and \fC\&.apparixexpand\fP\&.
+When APPARIXTAG is set to \fC<tag>\fP they become \fC\&.<tag>apparixrc\fP and
+\fC\&.<tag>apparixexpand\fP\&.
+This can be used e\&.g\&. to maintain different sets of bookmarks on different
+host machines\&.
+.in -3m
+
+.ZI 3m "APPARIXLOG"
+\&
+.br
+This variable, if set, is interpreted as the name of a log file\&.
+The log file keeps track of all newly added bookmarks and
+portals without ever deleting anything, in the same format
+as the \fC\&.apparixrc\fP file\&. If this variable is not set
+nothing is tracked\&.
+.in -3m
+
+.ZI 3m "APPARIXPURGE"
+\&
+.br
+This changes the way apparix dumps purged bookmarks to STDOUT\&.
+By default they are dumped as command lines that will reimport
+the bookmarks if issued (i\&.e\&. cut and pasted)\&.
+By setting this variable to 1 purged bookmarks are dumped
+in the format used in the \fC\&.apparixrc\fP file\&.
+.in -3m
 .SH FILES
 
 You should use aliases or functions to make apparix really useful\&.
@@ -884,7 +934,8 @@ to submit that spaces in path names are evil, and that the completion code
 seems to work in their evil presence anyway\&. Just \fIdon\&'t put
 commas\fP in path names\&.
 
-Joost van Baal wrote the apparix autotooled build environment\&.
+The autotooled build environment was modified from a template written
+by Joost van Baal\&.
 .SH HISTORY
 
 Apparix was created to optimize a scenario that

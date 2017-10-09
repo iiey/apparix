@@ -380,6 +380,11 @@ u32 mcxStrHash
 (  const void* s
 )  ;
 
+int mcxStrCmp
+(  const void* a
+,  const void* b
+)  ;
+
 
 #endif
 

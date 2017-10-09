@@ -1,5 +1,46 @@
 
 
+Tue 18 Sep 2007
+
+   *  apparix-07-261 released.
+
+   *  --squash-mark and --squash-dest have gone. They are now replaced
+      by -sm <mark> and -sd <mark>.  Squashing can no longer be applied
+      globally but must be targeted at a specific bookmark or its destination.
+      This is more in line with expected use. See further below.
+
+   *  apparix -sd MARK squashes all the *other* marks that point to the destination
+      bookmarked under MARK. Only MARK is kept for this destination.
+
+   *  apparix -ld MARK lists all bookmarks MARK (noting that the same bookmark
+      is allowed to point to multiple locations) and additionally lists all
+      other bookmarks that share the destination with one of the MARK
+      bookmarks. This allows one to predict the effect of issuing 'apparix -sd
+      MARK'.
+
+   *  apparix -sm MARK squashes all the distinct destinations under the same
+      bookmark MARK.  By default the last destination is taken.
+
+   *  apparix -lm MARK lists all the distinct destinations under the same
+      bookmark MARK.
+
+   *  Apparix squash and purge options now output the dumped bookmarks
+      as command-line statements ready to reimport, rather than the format
+      used in the apparix rc file. A cut and paste will reinstate unwanted
+      removals. Set APPARIXPURGE to 1 to have dumped bookmarks in
+      the apparixrc file format.
+
+   *  The environment variable APPARIXTAG, if set, is incorporated
+      into the names of the apparix resource files. By default these are
+      .apparixrc and .apparixexpand. When APPARIXTAG is set to <tag>
+      they become .<tag>apparixrc and .<tag>apparixexpand.
+
+      This can be used e.g. to have different resource files on different
+      host machines.
+
+   *  If the environment APPARIXLOG is set its value is interpreted as a log
+      file that has all newly created jumps and portals appended to it.
+
 Wed 3 Jul 2007
 
    *  apparix-07-184 released.

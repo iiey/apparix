@@ -13,14 +13,13 @@ $  change to tab separated resource files.
 ?  when a subdirectory is given it could be used to resolve
    multiple hits (bit too fancy though).
 
-?  portal exclusion with env variable?  CVS src doc
-   perhaps do a couple within the program.
-
 ?  portal: option to prepend prefix to all bookmarks.
    This would require change of rc format (because of rehashing)
 
 ?  for a portal, optionally add a bookmark for the portal itself.
    could do this with a two-argument invocation.
+
+#  read from $APPARIXRC (to support different file systems / machines)
 
 #  make a mode (maybe -a) to simply list all matching occurrences
    without going into the menu if multiple matches.

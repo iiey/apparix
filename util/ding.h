@@ -19,6 +19,11 @@ char* mcxStrDup
 (  const char* str
 )  ;
 
+char* mcxStrNDup
+(  const char* str
+,  dim n
+)  ;
+
 
 /*
  * if len < 0, strlen(p) is used.
@@ -77,6 +82,10 @@ int mcxEditDistance
 ,  int* lcs
 )  ;
 
+
+int mcxSetenv
+(  const char* kv
+)  ;
 
 #endif
 

@@ -22,10 +22,18 @@
 char* mcxStrDup
 (  const char* str
 )
-   {  dim len = strlen(str)
-   ;  char* rts = mcxAlloc(len+1, RETURN_ON_FAIL)
+   {  return mcxStrNDup(str, strlen(str))
+;  }
+
+
+char* mcxStrNDup
+(  const char* str
+,  dim n
+)
+   {  char* rts = mcxAlloc(n+1, RETURN_ON_FAIL)
    ;  if (rts)
-      memcpy(rts, str, len+1)
+         memcpy(rts, str, n)
+      ,  rts[n] = '\0'
    ;  return rts
 ;  }
 
@@ -463,4 +471,13 @@ int mcxEditDistance
    ;  return min_val
 ;  }
 
+
+int mcxSetenv
+(  const char* kv
+)
+   {  mcxTing* tv = mcxTingNew(kv)
+   ;  if (!strchr(kv, '='))
+      mcxTingAppend(tv, "=1")
+   ;  return putenv(mcxTinguish(tv))
+;  }
 

@@ -494,10 +494,10 @@ mcxKV* mcxHashSearchx
       )
       mcxErr("mcxHashSearch", "cannot double hash")
 
-   ;  link     =  mcx_bucket_search(h, key, ACTION, NULL)
+   ;  link = mcx_bucket_search(h, key, ACTION, NULL)
 
    ;  if (delta)
-      *delta   =  h->n_entries < n_entries ? -1 : h->n_entries - n_entries
+      *delta = h->n_entries < n_entries ? -1 : h->n_entries - n_entries
 
    ;  return link ? &link->kv : NULL
 ;  }
@@ -1081,6 +1081,14 @@ u32 mcxStrHash
 )
    {  dim l =  strlen(s)
    ;  return(mcxDPhash(s, l))
+;  }
+
+
+int mcxStrCmp
+(  const void* a
+,  const void* b
+)
+   {  return strcmp(a, b)
 ;  }
 
 
