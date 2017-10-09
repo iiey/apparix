@@ -1,5 +1,5 @@
-.\" Copyright (c) 2006 Stijn van Dongen
-.TH "apparix" 1 "10 Nov 2006" "apparix 1\&.003, 06-314" "USER COMMANDS "
+.\" Copyright (c) 2007 Stijn van Dongen
+.TH "apparix" 1 "3 Jul 2007" "apparix 1\&.003, 07-184" "USER COMMANDS "
 .po 2m
 .de ZI
 .\" Zoem Indent/Itemize macro I.
@@ -31,10 +31,16 @@
 apparix \- bookmark directories and apparate inside them
 .SH SYNOPSIS
 
-Apparix allows you to bookmark directories and later jump to
-them using the mark\&. When jumping, the contributed bash completion code
-allows one to complete on bookmarks and on subdirectories of
-the target directory\&.
+Apparix allows you to bookmark directories and later jump to them using the
+mark\&. It is possible to directly jump to subdirectories of the target
+directory\&. The contributed bash completion code facilitates completion both
+on bookmarks and subdirectories\&.
+
+This manual page suffers of an excess in verbosity due to the many examples,
+explanations of the bells and whistles, and comparisons with other
+approaches to bookmarking\&. The fundamental idea is simply
+that typing a string of your own choosing takes you
+to the directory associated with it\&.
 
 \fBGETTING STARTED\fP
 .br
@@ -219,7 +225,7 @@ one fell swoop by marking the parent directory as a \fIportal\fP\&. This is
 similar to adding the parent directory to the CDPATH environment variable,
 except that apparix bookmarks are not part of the cd namespace\&. It is
 argued in \fBNOTES\fP that this is a good thing\&.
-Consider this\&.
+Consider this:
 
 .di ZV
 .in 0
@@ -238,7 +244,7 @@ contrib/     gmon\&.out     Makefile     mcl/         shmcl/       taurus/
 
 Some of the subdirectories have not-so-distinct names such as \fIcontrib\fP and
 \fIattic\fP, but they happen to be the directories least visited\&.
-Issuing
+Issuing:
 
 .di ZV
 .in 0
@@ -255,7 +261,11 @@ Issuing
 
 yields all of the subdirectories as destinations bookmarked by the last
 component of their path name\&.
-Note that bookmarks resulting from portal expansion are kept in a separate
+Incidentally, directory names such as \fCCVS\fP can be explicitly excluded
+from expansion by setting the environment variable \fCAPPARIXEXCLUDE\fP
+appropriately \- refer to section \fBENVIRONMENT\fP\&.
+
+Bookmarks resulting from portal expansion are kept in a separate
 resource file (see \fBFILES\fP)\&. Portal expansions can be recreated
 by issuing
 
@@ -353,7 +363,7 @@ with versions\&. Assume you have a directory structure such as this:
 It is probably easiest to simply bookmark the OpusMagnum directory
 in some way (say with bookmark \fCom\fP)\&. You can then issue
 \&'\fCto om v2\fP\&' to jump to \fCOpusMagnum/v2\fP\&. This is more flexible
-and maintainable then creating bookmarks \fCom1\fP, \fCom2\fP, \fCom3\fP\&.
+and maintainable than creating bookmarks \fCom1\fP, \fCom2\fP, \fCom3\fP\&.
 One could add OpusMagnum as a portal, but with generic names such
 as \fCv1\fP this is not a very extendible approach\&.
 
@@ -412,7 +422,7 @@ to dump the resource file to STDOUT exactly as it is\&. This can be useful
 when you intend to use the \fB-u\fP\ \&\fInum\fP option to remove bookmarks or
 portals that were most recently added\&.
 
-Use \fB-l\fP two list all available jumps without their destinations\&.
+Use \fB-l\fP to list all available jumps without their destinations\&.
 The jumps are grouped into expansions resulting from portals and
 regular bookmarks\&.
 .SH OPTIONS
@@ -421,7 +431,7 @@ For bookmarking and jumping apparix is best invoked by using the aliases
 Apparix has a few options that are useful for pruning, squashing and
 rehasing bookmarks\&. These are best issued by invoking apparix directly\&.
 
-If you are intested in marks or destinations matching a certain pattern,
+If you are interested in marks or destinations matching a certain pattern,
 simply issue apparix without arguments and pipe it through
 your program of choice\&.
 
@@ -457,19 +467,18 @@ instead be interpreted as the portal location\&.
 .ZI 3m "\fB--squash-mark\fP (\fIsquash repeated marks\fP)"
 \&
 .br
-Apparix will squash identical marks, keeping the first (\fIunder the employed
-sorting\fP) it encounters\&.
-It does not consider the corresponding destinations and will by default keep
-the last one occurring in the resource file (corresponding with
-\fB-favour\fP\ \&\fBO\fP)\&. This option respects the \fB-favour\fP option if
-given\&. Duplicating an already existing mark can be useful when it
-identifies a project for which the underlying directory changes every once
-in a while (e\&.g\&. the project is downloaded from external sources and comes
-with version information)\&. It is not strictly necessary to squash bookmarks
-since \fBto\fP functions/macros that are equipped with the \fB-favour\fP
-option will generally resolve duplicate matches\&. This option supplies an
-easy way to declutter the apparix resource file every once in a while\&.
-Portal specifications are never affected\&.
+Apparix will squash identical marks\&. It does not consider the corresponding
+destinations and will by default keep the last one occurring in the resource
+file (corresponding with \fB-favour\fP\ \&\fBO\fP)\&. This option respects the
+\fB-favour\fP option if given\&. Duplicating an already existing mark
+can be useful when it identifies a project for which the underlying
+directory changes every once in a while (e\&.g\&. the project is downloaded from
+external sources and comes with version information)\&. It is not strictly
+necessary to squash bookmarks since \fBto\fP functions/macros that are
+equipped with the \fB-favour\fP option will generally resolve
+duplicate matches\&. This option supplies an easy way to declutter the
+apparix resource file every once in a while\&. Portal specifications are
+never affected\&.
 .in -3m
 
 .ZI 3m "\fB-sm\fP (\fIsquash repeated marks\fP)"
@@ -529,7 +538,8 @@ jumps are treated alike\&.
 .br
 Apparix will reread the resource file and reexpand portal
 locations\&. Useful if directories have been added, renamed,
-or removed\&.
+or removed\&. Refer to section \fBENVIRONMENT\fP for the effect
+that the environment variable \fCAPPARIXEXCLUDE\fP has on portal expansion\&.
 .in -3m
 
 .ZI 3m "\fB-favour\fP <list> (\fIset duplicat resolution policy\fP)"
@@ -579,6 +589,48 @@ This creates the backup file in \fIfname\fP\&. Use
 .br
 print synopsis of all options
 .in -3m
+.SH ENVIRONMENT
+
+The environment variable APPARIXENCLUDE specifies exlusion behaviour
+when portals are expanded with the \fC--rehash\fP option\&.
+This variable has the following syntax:
+
+.di ZV
+.in 0
+.nf \fC
+   <[:,][<string>]>+
+.fi \fR
+.in
+.di
+.ne \n(dnu
+.nf \fC
+.ZV
+.fi \fR
+
+That is, a list of names with each name preceded by a colon or a comma\&.
+A colon indicates that \fC<string>\fP triggers exclusion of directory names
+for which the trailing component is identical to \fC<string>\fP\&.
+A comma indicates that \fC<string>\fP triggers exclusion of directory names
+for which the trailing component contains \fC<string>\fP as a substring\&.
+Consider:
+
+.di ZV
+.in 0
+.nf \fC
+   export APPARIXEXCLUDE=:CVS:lib,tmp        # A - example
+   export APPARIXEXCLUDE=,                   # B - curiosity
+.fi \fR
+.in
+.di
+.ne \n(dnu
+.nf \fC
+.ZV
+.fi \fR
+
+The first excludes directory names \fCCVS\fP and \fClib\fP and any directory
+name having \fCtmp\fP as a substring\&.
+The second example will effectively disable portals,
+as it speficies the empty string which is a substring of all strings\&.
 .SH FILES
 
 You should use aliases or functions to make apparix really useful\&.
@@ -645,6 +697,66 @@ below point \fIcd\fP(1) in the right direction\&.
 .di ZV
 .in 0
 .nf \fC
+BASH-style functions
+---
+function to () {
+   if test "$2"; then
+     cd "$(apparix "$1" "$2" || echo \&.)";
+   else
+     cd "$(apparix "$1" || echo \&.)";
+   fi
+   pwd
+}
+function bm () {
+   if test "$2"; then
+      apparix --add-mark "$1" "$2";
+   elif test "$1"; then
+      apparix --add-mark "$1";
+   else
+      apparix --add-mark;
+   fi
+}
+function portal () {
+   if test "$1"; then
+      apparix --add-portal "$1";
+   else
+      apparix --add-portal;
+   fi
+}
+# function to generate list of completions from \&.apparixrc
+function _apparix_aliases ()
+{   cur=$2
+    dir=$3
+    COMPREPLY=()
+    if [ "$1" == "$3" ]
+    then
+        COMPREPLY=( $( cat $HOME/\&.apparix{rc,expand} | \e
+                       grep "j,\&.*$cur\&.*," | cut -f2 -d, ) )
+    else
+        dir=\&`apparix -favour rOl $dir 2>/dev/null\&` || return 0
+        eval_compreply="COMPREPLY=( $(
+            cd "$dir"
+            \els -d *$cur* | while read r
+            do
+                [[ -d "$r" ]] &&
+                [[ $r == *$cur* ]] &&
+                    echo \e"${r// /\e\e }\e"
+            done
+            ) )"
+        eval $eval_compreply
+    fi
+    return 0
+}
+# command to register the above to expand when the \&'to\&' command\&'s args are
+# being expanded
+complete -F _apparix_aliases to
+---
+CSH-style aliases
+---
+alias to    \&'cd \&`(apparix -favour rOl \e!* || echo -n \&.)\&` && pwd\&'
+alias bm   \&'apparix --add-mark \e!*\&'
+alias portal \&'apparix --add-portal \e!*\&'
+---
 .fi \fR
 .in
 .di
@@ -722,7 +834,7 @@ apparix however, I would mistakenly issue \fIto\fP rather than \fIcd\fP
 to jump to those locations\&. My brain classified both types of jump
 in the same category\&.
 
-Then apparix (and cdargs) have another use besides jumping, namely
+Apparix (and cdargs) have another use besides jumping, namely
 annotation\&. Whenever I end up in an esoteric part of the file system and
 need to make a quick note of the location, I simply bookmark it\&.
 

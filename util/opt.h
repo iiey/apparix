@@ -1,10 +1,15 @@
 /*   (C) Copyright 2002, 2003, 2004, 2005 Stijn van Dongen
- *   (C) Copyright 2006 Stijn van Dongen
+ *   (C) Copyright 2006, 2007 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
- * under the terms of the GNU General Public License; either version 2 of the
+ * under the terms of the GNU General Public License; either version 3 of the
  * License or (at your option) any later version.  You should have received a
  * copy of the GPL along with tingea, in the file COPYING.
+*/
+
+
+/* TODO
+ *    support Giraffe options for non-dispatching programs as well.
 */
 
 #ifndef tingea_opt_h
@@ -83,6 +88,7 @@ typedef struct mcxOptAnchor
 ;  int            id             /* ID                                  */
 ;  char*          descr_arg      /* "<fname>" or "<num>", NULL ok       */
 ;  char*          descr_usage    /* NULL allowed                        */
+;  mcxbits        usr_bits       /* not used here                       */
 ;
 }  mcxOptAnchor   ;
 
@@ -258,6 +264,71 @@ char* mcxOptArgLine
 )  ;
 
 
-#endif
+/*
+ *
+ *
+ *
+*/
 
+#define  MCX_DISP_DEFAULT  0
+#define  MCX_DISP_HIDDEN   1
+
+typedef struct
+{  const char*    name
+;  const char*    syntax
+;  mcxOptAnchor*  options
+;  int            n_options
+;  mcxstatus      (*arg_cb)(int optid, const char* val)
+;  mcxstatus      (*init)( void )
+;  mcxstatus      (*main)(int argc, const char* argv[])
+;  int            n_at_least     /* trailing arguments */
+;  int            n_at_most      /* trailing arguments */
+;  mcxbits        flags
+;
+}  mcxDispHook    ;
+
+
+typedef struct
+{  int        id
+;  mcxDispHook* (*get_hk)(void)
+;
+}  mcxDispEntry   ;
+
+
+int mcxDispatch
+(  int                  argc
+,  const char*          argv[]
+,  const char*          me
+,  const char*          syntax
+,  mcxOptAnchor*        dispatcher_options
+,  dim                  n_options
+,  mcxDispEntry*        entry_dir
+,  void                 (*report_version)(const char* me)
+)  ;
+
+
+   /* These are one particular set of default/shared options
+    * called the Giraffe options
+   */
+enum
+{  MCX_DISP_GIRAFFE_HELP = 0
+,  MCX_DISP_GIRAFFE_APROPOS
+,  MCX_DISP_GIRAFFE_VERSION
+,  MCX_DISP_GIRAFFE_TEST
+,  MCX_DISP_GIRAFFE_DEBUG
+,  MCX_DISP_GIRAFFE_SET
+,  MCX_DISP_GIRAFFE_NOP
+,  MCX_DISP_GIRAFFE_AMOIXA
+,  MCX_DISP_GIRAFFE_UNUSED = MCX_DISP_GIRAFFE_AMOIXA + 2
+}  ;
+
+
+extern mcxOptAnchor mcxDispGiraffe[];
+extern dim mcxDispGiraffeCount;
+
+extern mcxbits mcx_disp_giraffe_debug;
+extern mcxbool mcx_disp_giraffe_test;
+
+
+#endif
 

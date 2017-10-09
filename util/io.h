@@ -1,8 +1,8 @@
 /*   (C) Copyright 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
- *   (C) Copyright 2006 Stijn van Dongen
+ *   (C) Copyright 2006, 2007 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
- * under the terms of the GNU General Public License; either version 2 of the
+ * under the terms of the GNU General Public License; either version 3 of the
  * License or (at your option) any later version.  You should have received a
  * copy of the GPL along with tingea, in the file COPYING.
 */
@@ -20,10 +20,29 @@
  *    It is explicitly not an aim to be an all-encompassing interface, wrapping
  *    everything provided by stdio.h.  The type is not opaque and you are
  *    encouraged to inspect its fp member.
+ *    -  The open modes are inspected to infer some knowledge,
+ *       then passed on directly to fopen.
+ *    -  File "-" is interpreted as either STDIN or STDOUT depending on the open mode.
+ *
+ * BUGS
+ *    -  leader framework is very fragile.
+ *       =================================
+ *       mcxIOfind is the only one consuming the leader, so if
+ *       leader contains the pattern and more there is no one
+ *       else to consume the remainder in leader.
+ *       [ The leader framework was primarily created to support
+ *         cookies for unseekable streams. ]
+ *
+ *    -  Should incorporate more (f)error checking.
  *
  * TODO:
- * ?  support for pipes
- * -  design {reset,close} framework, esp related to usr member.
+ *    -  document interfaces.
+ *    -  document which routines corrupt the counts.
+ *    -  make sure that buffer treats \0 bytes correctly. Should be
+ *       pretty close.
+ *    -  buffered reads (problematic: mcxIOexpectNum and friends).
+ *    -  design {reset,close} framework, esp related to usr member.
+ *    ?  support for pipes
 */
 
 #ifndef tingea_file_h
@@ -37,13 +56,19 @@
 
 
 /* The thing below seems a reasonable test for seekability.
- * I tried to look for a common idiom, but so far no luck.
  * Let's agree that the main thing is the encapsulation.
  *
- * A better name would thus be mcxFPseemsSeekable.
 */
 
 #define mcxFPisSeekable(fp) (!fseek(fp, 0, SEEK_CUR))
+
+/* Possibly more stringent check:
+ * int had_error  = ferror(file);
+ * long curpos    = ftell(file);
+ * bool seekable  = (curpos != -1L && fseek(file, curpos, SEEK_SET) == 0);
+ * if (!had_error)
+ * clearerr(file);
+*/
 
 
 
@@ -124,7 +149,8 @@ typedef struct
 ;  dim            bc       /*    byte count        */
 ;  int            ateof
 ;  int            stdio
-;  long           pos      /*    handle for fseek  */
+;  mcxTing*       buffer   /*    e.g. when tryCookie fails and unseekable stream */
+;  dim            buffer_consumed
 ;  void*          usr      /*    user object       */
 ;  mcxstatus    (*usr_reset)(void*)    /*  function to reset user object */
 ;  void         (*usr_free)(void*)     /*  function to free user object  */
@@ -214,6 +240,7 @@ mcxstatus  mcxIOreadFile
 #define MCX_READLINE_BSC          8
 #define MCX_READLINE_DOT          16
 
+
 mcxstatus  mcxIOreadLine
 (  mcxIO       *xf
 ,  mcxTing     *lineTxt
@@ -229,11 +256,19 @@ ofs mcxIOappendChunk
 )  ;
 
 
-/*    returns count of discarded characters.
+/* Returns the number of bytes that could be discarded.
 */
-
 dim mcxIOdiscardLine
 (  mcxIO       *xf
+)  ;
+
+
+/* Returns the number of bytes that could be discarded.
+ * ONLY keeps the xf->bc counter up to date.
+*/
+dim mcxIOdiscard
+(  mcxIO       *xf
+,  dim         amount
 )  ;
 
 
@@ -321,8 +356,6 @@ int mcxIOskipSpace
  *    streams, (using reads of size pagesize) and then reposition the stream
  *    after searching.
  *
- *    That raise the questions: is ftell *garantueed* to set EBADF for
- *    non-seekable streams?
 */
 
 mcxstatus mcxIOfind
@@ -332,14 +365,38 @@ mcxstatus mcxIOfind
 )  ;
 
 
+/*
+ *    NOTE
+ *       When the cookie is not found this routine does
+ *       1) It tries to fseek to the point of departure
+ *       2) If that fails, it stores the bytes it could not rewind
+ *             in xfin->buffer
+ *
+ *    +  mcxIOstep
+ *    +  mcxIOfind
+ *    +  mcxIOskipSpace
+ *    +  mcxIOexpect
+ *    +  mcxIOreadLine
+ *
+ *    will access this buffer, but certain other routines will not, e.g.
+ *
+ *    -  mcxIOreadFile
+ *    -  mcxIOexpectNum
+ *    -  mcxIOexpectReal
+ *    -  all stdio routines (fread, fgetc)
+ *
+ *    For all mcxIO routines this is an open bug.
+ *
+*/
+
 mcxbool mcxIOtryCookie
 (  mcxIO*        xfin
-,  unsigned      number
+,  const unsigned char abcd[4]
 )  ;
 
 mcxbool mcxIOwriteCookie
 (  mcxIO*        xfout
-,  unsigned      number
+,  const unsigned char abcd[4]
 )  ;
 
 

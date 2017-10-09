@@ -1,8 +1,8 @@
 /*   (C) Copyright 2002, 2003, 2004, 2005 Stijn van Dongen
- *   (C) Copyright 2006 Stijn van Dongen
+ *   (C) Copyright 2006, 2007 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
- * under the terms of the GNU General Public License; either version 2 of the
+ * under the terms of the GNU General Public License; either version 3 of the
  * License or (at your option) any later version.  You should have received a
  * copy of the GPL along with tingea, in the file COPYING.
 */
@@ -192,9 +192,10 @@ void mcxLogSig
 /* ********************* all / terse  */
 
 #define MCX_LOG_NONE       0
-#define MCX_LOG_ALL      ( MCX_LOG_CELL | MCX_LOG_LINE | MCX_LOG_DEBUG | MCX_LOG_SLOT | MCX_LOG_ASPECTS )
+#define MCX_LOG_VERBOSE  ( MCX_LOG_CELL | MCX_LOG_LINE | MCX_LOG_DEBUG | MCX_LOG_SLOT | MCX_LOG_ASPECTS )
 #define MCX_LOG_TERSER   ( MCX_LOG_PANIC | MCX_LOG_AGGR | MCX_LOG_APP )
 #define MCX_LOG_TERSE    ( MCX_LOG_TERSER | MCX_LOG_ASPECTS )
+#define MCX_LOG_UNIVERSE ( MCX_LOG_DATA | MCX_LOG_FUNC | MCX_LOG_MON | MCX_LOG_SLOT | MCX_LOG_ASPECTS )
 
 
 /* ********************* unused       */

@@ -1,8 +1,8 @@
 /*   (C) Copyright 2002, 2003, 2004, 2005 Stijn van Dongen
- *   (C) Copyright 2006 Stijn van Dongen
+ *   (C) Copyright 2006, 2007 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
- * under the terms of the GNU General Public License; either version 2 of the
+ * under the terms of the GNU General Public License; either version 3 of the
  * License or (at your option) any later version.  You should have received a
  * copy of the GPL along with tingea, in the file COPYING.
 */
@@ -169,7 +169,7 @@ mcxOption* mcxOptParse__
             opt->val = embedded_val
          ;  else if
             (  anch->flags & MCX_OPT_HASARG
-            && anch->flags & MCX_OPT_EMBEDDED
+            && anch->flags & MCX_OPT_EMBEDDED   /* fixme: embedded is stale? */
             )
             {  mcxErr("mcxOptParse", "option <%s> takes =value", anch->tag)
             ;  *status  =  MCX_OPT_STATUS_NOARG
@@ -500,7 +500,10 @@ int mcxOptAnchorCmpId
 (  const void *a1
 ,  const void *a2
 )
-   {  return (((mcxOptAnchor*) a1)->id - ((mcxOptAnchor*) a2)->id)
+   {  const mcxOptAnchor* A1 = a1
+   ;  const mcxOptAnchor* A2 = a2
+   ;  return
+      A1->id < A2->id ? -1 : A1->id - A2->id 
 ;  }
 
 
@@ -522,7 +525,8 @@ void mcxOptAnchorSortByTag
 (  mcxOptAnchor *anchors
 ,  dim n_anchors
 )
-   {  qsort(anchors, n_anchors, sizeof(mcxOptAnchor), mcxOptAnchorCmpTag)
+   {  if (n_anchors)
+      qsort(anchors, n_anchors, sizeof(mcxOptAnchor), mcxOptAnchorCmpTag)
 ;  }
 
 
@@ -530,7 +534,8 @@ void mcxOptAnchorSortById
 (  mcxOptAnchor *anchors
 ,  dim n_anchors
 )
-   {  qsort(anchors, n_anchors, sizeof(mcxOptAnchor), mcxOptAnchorCmpId)
+   {  if (n_anchors)
+      qsort(anchors, n_anchors, sizeof(mcxOptAnchor), mcxOptAnchorCmpId)
 ;  }
 
 
@@ -708,6 +713,239 @@ char* mcxOptArgLine
    ;  for (i=1;i<argc;i++)
       mcxTingPrintAfter(cl, " [%s]", argv[i])
    ;  return mcxTinguish(cl)
+;  }
+
+
+
+mcxOptAnchor mcxDispGiraffe[] =
+{  {  "--version"
+   ,  MCX_OPT_DEFAULT
+   ,  MCX_DISP_GIRAFFE_VERSION
+   ,  NULL
+   ,  "output version information, exit"
+   }
+,  {  "--test"
+   ,  MCX_OPT_HIDDEN
+   ,  MCX_DISP_GIRAFFE_TEST
+   ,  NULL
+   ,  "test"
+   }
+,  {  "-debug"
+   ,  MCX_OPT_HIDDEN
+   ,  MCX_DISP_GIRAFFE_DEBUG
+   ,  "<int>"
+   ,  "set debug level or bits"
+   }
+,  {  "-set"
+   ,  MCX_OPT_HASARG | MCX_OPT_HIDDEN
+   ,  MCX_DISP_GIRAFFE_SET
+   ,  "key=val"
+   ,  "set key to val in ENV"
+   }
+,  {  "--nop"
+   ,  MCX_OPT_DEFAULT
+   ,  MCX_DISP_GIRAFFE_NOP
+   ,  NULL
+   ,  "this option has no affect but changing the argument count"
+   }
+,  {  "-h"
+   ,  MCX_OPT_DEFAULT
+   ,  MCX_DISP_GIRAFFE_HELP
+   ,  NULL
+   ,  "this"
+   }
+,  {  "--apropos"
+   ,  MCX_OPT_DEFAULT
+   ,  MCX_DISP_GIRAFFE_APROPOS
+   ,  NULL
+   ,  "this"
+   }
+,  {  "--amoixa"
+   ,  MCX_OPT_HIDDEN
+   ,  MCX_DISP_GIRAFFE_AMOIXA
+   ,  NULL
+   ,  "show hidden options too"
+   }
+,  {  NULL ,  0 ,  0 ,  NULL, NULL}
+}  ;
+
+
+dim mcxDispGiraffeCount = sizeof(mcxDispGiraffe) / sizeof(mcxOptAnchor) -1;
+
+mcxbits mcx_disp_giraffe_debug =  0;
+mcxbool mcx_disp_giraffe_test  =  FALSE;
+
+
+int mcxDispatch
+(  int                  argc
+,  const char*          argv[]
+,  const char*          me
+,  const char*          syntax
+,  mcxOptAnchor*        dispatcher_options
+,  dim                  n_options
+,  mcxDispEntry*        entry_dir
+,  void                 (*report_version)(const char* me)
+)
+   {  const char* mode_str
+   ;  mcxDispHook* hk = NULL
+
+   ;  mcxOption* opts, *opt
+   ;  int n_arg_read = 0
+   ;  mcxstatus parseStatus = STATUS_FAIL
+   ;  mcxHash *clmOpts, *delgOpts, *mergedOpts
+   ;  mcxTing* me_and_it
+   ;  mcxDispEntry* entry
+   ;  int help = argc <= 1 || !strcmp(argv[1], "-h") ? 1 : 0
+   ;  int delg_id_max
+   ;  int a
+
+   ;  mcxOptAnchorSortById(dispatcher_options, n_options)
+   ;  clmOpts = mcxOptHash(dispatcher_options, NULL)
+   ;  delg_id_max = dispatcher_options[n_options-1].id
+
+   ;  if (argc > 1 && !strcmp(argv[1], "--amoixa"))
+      help = 2
+
+   ;  if (help)
+      {  entry = entry_dir+0
+      ;  fprintf(stdout, "%s\n\n", syntax)
+      ;  while(entry->id >= 0)
+         {  hk = entry->get_hk()
+         ;  if ((hk->flags & MCX_DISP_HIDDEN) && help < 2)
+            NOTHING
+         ;  else
+            fprintf(stdout, "%s %s\n", me, hk->syntax)
+         ;  entry++
+      ;  }
+         exit(0)
+   ;  }
+      else if (!strcmp(argv[1], "--version"))
+         report_version(me)
+      ,  exit(0)
+
+   ;  mode_str = argv[1]
+
+                  /* Find the mode in which we are invoked */
+   ;  {  const char* name
+      ;  entry = entry_dir+0
+      ;  while (entry->id >= 0)
+         {  hk = entry->get_hk()
+         ;  name = hk->name
+         ;  if (!strcmp(name, mode_str))
+            break
+         ;  entry++
+      ;  }
+         if (entry->id < 0)
+         mcxDie(1, me, "unknown mode <%s>", mode_str)
+   ;  }
+
+      me_and_it = mcxTingPrint(NULL, "%s %s", me, hk->syntax)
+   ;  mcxOptAnchorSortById(hk->options, hk->n_options)
+
+   ;  if (delg_id_max >= hk->options[0].id)
+      mcxDie(1, me, "PBD option merge is pointless")
+
+   ;  delgOpts    =  mcxOptHash(hk->options, NULL)
+   ;  mergedOpts  =  mcxHashMerge(clmOpts, delgOpts, NULL, NULL)
+   ;  opts        =  mcxHOptExhaust
+                     (mergedOpts, (char**) argv, argc, 2, &n_arg_read, &parseStatus)
+
+   ;  if (parseStatus != STATUS_OK)
+      {  mcxErr(me, "initialization failed")
+      ;  exit(1)
+   ;  }
+
+      if (hk->init())
+      mcxDie(1, me, "initialization failed for <%s>", hk->name)
+
+   ;  for (opt=opts;opt->anch;opt++)
+      {  mcxOptAnchor* anch = opt->anch
+      ;  if
+         (  anch->id == MCX_DISP_GIRAFFE_HELP
+         || anch->id == MCX_DISP_GIRAFFE_APROPOS
+         || anch->id == MCX_DISP_GIRAFFE_AMOIXA
+         )
+         {  mcxOptApropos
+            (  stdout
+            ,  hk->name
+            ,  me_and_it->str
+            ,  15
+            ,  0
+            ,  dispatcher_options
+            )
+         ;  mcxOptApropos
+            (  stdout
+            ,  hk->name
+            ,  NULL
+            ,  15
+            ,     MCX_OPT_DISPLAY_SKIP
+               |  (  anch->id == MCX_DISP_GIRAFFE_AMOIXA
+                  ?  MCX_OPT_DISPLAY_HIDDEN
+                  :  0
+                  )
+            ,  hk->options
+            )
+         ;  mcxExit(0)
+      ;  }
+         else if (anch->id == MCX_DISP_GIRAFFE_VERSION)
+            report_version(me)
+         ,  mcxExit(0)
+
+      ;  else if (anch->id == MCX_DISP_GIRAFFE_NOP)
+         NOTHING
+
+      ;  else if (anch->id == MCX_DISP_GIRAFFE_TEST)
+         mcx_disp_giraffe_test = TRUE
+
+      ;  else if (anch->id == MCX_DISP_GIRAFFE_DEBUG)
+         mcx_disp_giraffe_debug = atoi(opt->val)
+
+      ;  else if (anch->id == MCX_DISP_GIRAFFE_SET)
+         {  if (!strchr(opt->val, '='))
+            mcxErr(me, "expect key=val format, ignoring <%s>", opt->val)
+         ;  else
+            {  char* e = mcxStrDup(opt->val)
+            ;  putenv(e)
+         ;  }
+         }
+
+         else if (hk->arg_cb(anch->id, opt->val))
+         mcxDie(1, me, "curtains")
+   ;  }
+
+      a = 2 + n_arg_read
+
+   ;  if (argc == 2)
+         mcxOptApropos
+         (  stdout
+         ,  hk->name
+         ,  me_and_it->str
+         ,  15
+         ,  0
+         ,  hk->options
+         )
+      ,  mcxExit(0)
+
+   ;  if
+      (  a + hk->n_at_least > argc
+      || (hk->n_at_most >= 0 && a + hk->n_at_most < argc)
+      )
+      {  mcxTing* t
+         =  mcxTingPrint
+            (  NULL
+            ,  "mode %s needs %s %d trailing arguments"
+            ,  mode_str
+            ,  hk->n_at_least == hk->n_at_most ? "exactly" : "at least"
+            ,  hk->n_at_least
+            )
+      ;  if (hk->n_at_most > hk->n_at_most)
+         mcxTingPrintAfter(t, " and at most %d", hk->n_at_most)
+
+      ;  mcxDie(1, me, t->str)
+   ;  }
+
+      return hk->main(argc-a, argv+a)
+   ;  return 0
 ;  }
 
 

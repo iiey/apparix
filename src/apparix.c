@@ -1,7 +1,7 @@
-/* (c) Copyright 2005 Stijn van Dongen
+/* (c) Copyright 2005, 2006, 2007 Stijn van Dongen
  *
  * This file is part of apparix.  You can redistribute and/or modify apparix
- * under the terms of the GNU General Public License; either version 2 of the
+ * under the terms of the GNU General Public License; either version 3 of the
  * License or (at your option) any later version.  You should have received a
  * copy of the GPL along with apparix, in the file COPYING.
 */
@@ -45,6 +45,7 @@ enum
 ,  MY_OPT_LIST
 ,  MY_OPT_UNDO
 ,  MY_OPT_FAVOUR
+,  MY_OPT_QUIETJUMP
 ,  MY_OPT_SQUASH_MARK
 ,  MY_OPT_SQUASH_MARK2
 ,  MY_OPT_SQUASH_DEST
@@ -60,6 +61,7 @@ enum
 }  ;
 
 
+static mcxbool quietjump =  FALSE;
 
 static const char* us    =  "apparix";
 
@@ -173,6 +175,12 @@ mcxOptAnchor options[] =
    ,  MY_OPT_BACKUP_NAMED
    ,  "fname"
    ,  "copy .apparixrc to fname"
+   }
+,  {  "--quiet-jump"
+   ,  MCX_OPT_DEFAULT
+   ,  MY_OPT_QUIETJUMP
+   ,  NULL
+   ,  "be quiet when jump fails"
    }
 ,  {  "-v"
    ,  MCX_OPT_DEFAULT | MCX_OPT_INFO
@@ -547,10 +555,12 @@ folder* expand_portal
    ;  mcxTing* fqname = mcxTingEmpty(NULL, 512)
    ;  mcxTing* dname = mcxTingEmpty(NULL, 512)
    ;  folder* fl = folder_new(20)
+   ;  const char* s_exclude = getenv("APPARIXEXCLUDE")
    ;  int ct = 0
 
    ;  while (1)
-      {  if (!dir)
+      {  mcxbool syntaxerror = FALSE
+      ;  if (!dir)
          {  mcxErr(us, "cannot open directory %s", dest)
          ;  break
       ;  }
@@ -560,9 +570,34 @@ folder* expand_portal
          ;  mcxTingPrint(fqname, "%s/%s", dest, de->d_name)
          ;  if ((unsigned char) dname->str[0] == '.')
             continue
-         ;  if (!strncmp(dname->str, "CVS", 3))      /* fixme: env variable */
-            continue
-         ;  if (lstat(fqname->str, &fstat) < 0)
+         ;  if (s_exclude && !syntaxerror)
+            {  const char* p = s_exclude
+            ;  mcxTing* check = mcxTingEmpty(NULL, 20)
+
+            ;  while (p)
+               {  const char* pp = strpbrk(p+1, ":,")
+               ;  unsigned char t = p[0]
+               ;  if (pp)
+                  mcxTingNWrite(check, p+1, pp-1-p)
+               ;  else
+                  mcxTingWrite(check, p+1)
+
+               ;  if (t == ':' && !strcmp(check->str, dname->str))
+                  break
+               ;  else if (t == ',' && strstr(dname->str, check->str))
+                  break
+               ;  else if (t != ':' && t != ',')
+                  {  mcxErr(us, "syntax error in APPARIXEXCLUDE")
+                  ;  syntaxerror = TRUE
+                  ;  break
+               ;  }
+                  p = pp
+            ;  }
+               mcxTingFree(&check)
+            ;  if (!syntaxerror && p)   /* we hit an APPARIXEXCLUDE match */
+               continue
+         ;  }
+            if (lstat(fqname->str, &fstat) < 0)
             {  mcxErr(us, "error accessing node %s", fqname->str)
             ;  break
          ;  }
@@ -931,7 +966,7 @@ folder*  bookmark_parse
       ;  mcxTingFree(&typeting)
       ;  root->val = NULL
 
-      ;  mcxLinkFree(&root, mcxTingFree_v)
+      ;  mcxListFree(&root, mcxTingFree_v)
    ;  }
 
       if (flportpp)
@@ -1246,6 +1281,7 @@ mcxstatus show_or_jump
       if
       (  STATUS_FAIL
       == (status = attempt_jump(flreg, flexp, mark, sub))
+      && !quietjump
       )
       mcxErr(us, "I don't know how to go to %s", mark->str)
    ;  return status
@@ -1312,6 +1348,11 @@ int main
          :  case MY_OPT_APROPOS
          :  mcxOptApropos(stdout, us, syntax, 20, MCX_OPT_DISPLAY_SKIP, options)
          ;  return 0
+         ;
+
+            case  MY_OPT_QUIETJUMP
+         :  quietjump = TRUE
+         ;  break
          ;
 
             case  MY_OPT_VERSION

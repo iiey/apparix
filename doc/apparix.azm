@@ -1,7 +1,5 @@
 \import{man.zmm}
 
-\: all options.
-
 \setx{"man::year"}{\zinsert{stamp.year}}
 \setx{"man::month"}{\zinsert{stamp.month}}
 \setx{"man::day"}{\zinsert{stamp.day}}
@@ -34,10 +32,17 @@
 \sec{synopsis}{SYNOPSIS}
 
 \par{
-   Apparix allows you to bookmark directories and later jump to
-   them using the mark. When jumping, the contributed bash completion code
-   allows one to complete on bookmarks and on subdirectories of
-   the target directory.}
+   Apparix allows you to bookmark directories and later jump to them using the
+   mark. It is possible to directly jump to subdirectories of the target
+   directory. The contributed bash completion code facilitates completion both
+   on bookmarks and subdirectories.}
+
+\par{
+   This manual page suffers of an excess in verbosity due to the many examples,
+   explanations of the bells and whistles, and comparisons with other
+   approaches to bookmarking. The fundamental idea is simply
+   that typing a string of your own choosing takes you
+   to the directory associated with it.}
 
 \cpar{GETTING STARTED}{
    Install apparix. This should be as easy as \it{./configure
@@ -199,7 +204,7 @@ added: foo -> /home/eez/cvs/xyz/tfa/faq/zut/bar/foo}
    similar to adding the parent directory to the CDPATH environment variable,
    except that apparix bookmarks are not part of the cd namespace. It is
    argued in \secref{notes} that this is a good thing.
-   Consider this.}
+   Consider this:}
 
 \verbatim{\:/
 /home/cvs/bagger/boemel/mcl/mcl/src> \bf{ls}
@@ -210,7 +215,7 @@ contrib/     gmon.out     Makefile     mcl/         shmcl/       taurus/}
 \car{
    Some of the subdirectories have not-so-distinct names such as \it{contrib} and
    \it{attic}, but they happen to be the directories least visited.
-   Issuing}
+   Issuing:}
 
 \verbatim{\:/
 /home/cvs/bagger/boemel/mcl/mcl/src> \bf{portal}
@@ -219,7 +224,13 @@ contrib/     gmon.out     Makefile     mcl/         shmcl/       taurus/}
 \car{
    yields all of the subdirectories as destinations bookmarked by the last
    component of their path name.
-   Note that bookmarks resulting from portal expansion are kept in a separate
+   Incidentally, directory names such as \v{CVS} can be explicitly excluded
+   from expansion by setting the environment variable \v{APPARIXEXCLUDE}
+   appropriately \- refer to section \secref{environment}.
+   }
+
+\par{
+   Bookmarks resulting from portal expansion are kept in a separate
    resource file (see \secref{files}). Portal expansions can be recreated
    by issuing}
 
@@ -312,7 +323,7 @@ contrib/     gmon.out     Makefile     mcl/         shmcl/       taurus/}
    It is probably easiest to simply bookmark the OpusMagnum directory
    in some way (say with bookmark \v{om}). You can then issue
    \vq{to om v2} to jump to \v{OpusMagnum/v2}. This is more flexible
-   and maintainable then creating bookmarks \v{om1}, \v{om2}, \v{om3}.
+   and maintainable than creating bookmarks \v{om1}, \v{om2}, \v{om3}.
    One could add OpusMagnum as a portal, but with generic names such
    as \v{v1} this is not a very extendible approach.}
 
@@ -376,7 +387,7 @@ CSH and variants
    portals that were most recently added.}
 
 \par{
-   Use \genoptref{-l} two list all available jumps without their destinations.
+   Use \genoptref{-l} to list all available jumps without their destinations.
    The jumps are grouped into expansions resulting from portals and
    regular bookmarks.}
 
@@ -404,7 +415,7 @@ CSH and variants
    rehasing bookmarks. These are best issued by invoking apparix directly.}
 
 \par{
-   If you are intested in marks or destinations matching a certain pattern,
+   If you are interested in marks or destinations matching a certain pattern,
    simply issue apparix without arguments and pipe it through
    your program of choice.}
 
@@ -438,19 +449,18 @@ CSH and variants
 
 \item{\defopt{--squash-mark}{squash repeated marks}}
 \car{
-   Apparix will squash identical marks, keeping the first (\it{under the employed
-   sorting}) it encounters.
-   It does not consider the corresponding destinations and will by default keep
-   the last one occurring in the resource file (corresponding with
-   \useopt{-favour}{O}).  This option respects the \genoptref{-favour} option if
-   given.  Duplicating an already existing mark can be useful when it
-   identifies a project for which the underlying directory changes every once
-   in a while (e.g. the project is downloaded from external sources and comes
-   with version information). It is not strictly necessary to squash bookmarks
-   since \bf{to} functions/macros that are equipped with the \genoptref{-favour}
-   option will generally resolve duplicate matches.  This option supplies an
-   easy way to declutter the apparix resource file every once in a while.
-   Portal specifications are never affected.}
+   Apparix will squash identical marks.  It does not consider the corresponding
+   destinations and will by default keep the last one occurring in the resource
+   file (corresponding with \useopt{-favour}{O}).  This option respects the
+   \genoptref{-favour} option if given.  Duplicating an already existing mark
+   can be useful when it identifies a project for which the underlying
+   directory changes every once in a while (e.g. the project is downloaded from
+   external sources and comes with version information). It is not strictly
+   necessary to squash bookmarks since \bf{to} functions/macros that are
+   equipped with the \genoptref{-favour} option will generally resolve
+   duplicate matches.  This option supplies an easy way to declutter the
+   apparix resource file every once in a while.  Portal specifications are
+   never affected.}
    
 
 \item{\defopt{-sm}{squash repeated marks}}
@@ -495,7 +505,8 @@ CSH and variants
 \car{
    Apparix will reread the resource file and reexpand portal
    locations. Useful if directories have been added, renamed,
-   or removed.}
+   or removed. Refer to section \secref{environment} for  the effect
+   that the environment variable \v{APPARIXEXCLUDE} has on portal expansion.}
 
 \item{\defopt{-favour}{<list>}{set duplicat resolution policy}}
 \car{
@@ -531,6 +542,38 @@ CSH and variants
    print synopsis of all options}
 
 \end{itemize}
+
+
+\sec{environment}{ENVIRONMENT}
+
+\par{
+   The environment variable APPARIXENCLUDE specifies exlusion behaviour
+   when portals are expanded with the \v{--rehash} option.
+   This variable has the following syntax:
+   }
+
+\verbatim{\:/
+   <[:,][<string>]>+}
+
+\car{
+   That is, a list of names with each name preceded by a colon or a comma.
+   A colon indicates that \v{<string>} triggers exclusion of directory names
+   for which the trailing component is identical to \v{<string>}.
+   A comma indicates that \v{<string>} triggers exclusion of directory names
+   for which the trailing component contains \v{<string>} as a substring.
+   Consider:
+   }
+
+\verbatim{\:/
+   export APPARIXEXCLUDE=:CVS:lib,tmp        # A - example
+   export APPARIXEXCLUDE=,                   # B - curiosity}
+
+\car{
+   The first excludes directory names \v{CVS} and \v{lib} and any directory
+   name having \v{tmp} as a substring.
+   The second example will effectively disable portals,
+   as it speficies the empty string which is a substring of all strings.
+   }
 
 
 \sec{files}{FILES}
@@ -653,7 +696,7 @@ by hand to remove an unwanted bookmark; refer to \secref{edit}.}
 }
 
 \par{
-   Then apparix (and cdargs) have another use besides jumping, namely
+   Apparix (and cdargs) have another use besides jumping, namely
    annotation. Whenever I end up in an esoteric part of the file system and
    need to make a quick note of the location, I simply bookmark  it.
 }

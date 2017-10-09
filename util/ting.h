@@ -1,7 +1,7 @@
 /*   (C) Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
- * under the terms of the GNU General Public License; either version 2 of the
+ * under the terms of the GNU General Public License; either version 3 of the
  * License or (at your option) any later version.  You should have received a
  * copy of the GPL along with tingea, in the file COPYING.
 */
@@ -31,10 +31,11 @@ typedef struct
 
  * Some philosophy
  *    Do not mind the overhead of 2*sizeof(int) bytes per ting.
- *    If you have humongous amounts of small strings, use C-strings; optionally
- *    you can do the needed char manipulation in a ting used as scratch-space,
- *    then create a normal string once you are done.
- *
+ *    If you have humongous amounts of small strings, use C-strings. Optionally
+ *    you can do the needed char manipulation in a ting used as scratch-space
+ *    using the ting interface, then create a normal string once you are done.
+ *    Use mcxTinguish to avoid copying if needed.
+
  *    Feel free to use the str member with routines from <string.h>
  *    or perhaps from ding.h. Just remember to treat it as a const object
  *    when doing so.

@@ -1,7 +1,7 @@
-/*   (C) Copyright 2004, 2005, 2006 Stijn van Dongen
+/*   (C) Copyright 2004, 2005, 2006, 2007 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
- * under the terms of the GNU General Public License; either version 2 of the
+ * under the terms of the GNU General Public License; either version 3 of the
  * License or (at your option) any later version.  You should have received a
  * copy of the GPL along with tingea, in the file COPYING.
 */
@@ -91,9 +91,8 @@ mcxLink* mcx_list_shift
 ;  }
 
 
-mcxLink*  mcxLinkNew
+mcxLink*  mcxListSource
 (  dim  capacity_start
-,  void* val
 ,  mcxbits  options
 )
    {  mcx_list*   ls
@@ -113,7 +112,7 @@ mcxLink*  mcxLinkNew
       )
       return NULL
 
-   ;  return mcx_list_shift(ls, val)
+   ;  return mcx_list_shift(ls, NULL)
 ;  }
 
 
@@ -126,19 +125,14 @@ mcxLink*  mcxLinkSpawn
 ;  }
 
 
-
-mcxstatus mcxLinkClose
-(  mcxLink* need_next
-,  mcxLink* need_prev
+void mcxLinkClose
+(  mcxLink* left
+,  mcxLink* right
 )
-   {  if
-      (  !need_next || !need_next->prev || need_next->next
-      || !need_prev || !need_prev->next || need_prev->prev
-      )
-      return STATUS_FAIL
-   ;  need_next->next = need_prev
-   ;  need_prev->prev = need_next
-   ;  return STATUS_OK
+   {  if (left)
+      left->next = right
+   ;  if (right)
+      right->prev = left
 ;  }
 
 
@@ -190,6 +184,14 @@ mcxLink*  mcxLinkAfter
 ;  }
 
 
+void mcxLinkRemove
+(  mcxLink*    lk
+)
+   {  mcx_list* ls   =  mcx_list_find(lk)
+   ;  mcxGrimLet(ls->grim, ((char*) lk) - sizeof(lsptr))
+;  }
+
+
 mcxLink* mcxLinkDelete
 (  mcxLink*    lk
 )
@@ -213,7 +215,7 @@ mcxGrim* mcxLinkGrim
 ;  }
 
 
-void  mcxLinkFree
+void  mcxListFree
 (  mcxLink**   lkp
 ,  void        freeval(void* valpp) cpl__unused  /* (yourtype1** valpp)     */
 )

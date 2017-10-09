@@ -1,8 +1,8 @@
 /*   (C) Copyright 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
- *   (C) Copyright 2006 Stijn van Dongen
+ *   (C) Copyright 2006, 2007 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
- * under the terms of the GNU General Public License; either version 2 of the
+ * under the terms of the GNU General Public License; either version 3 of the
  * License or (at your option) any later version.  You should have received a
  * copy of the GPL along with tingea, in the file COPYING.
 */
@@ -30,6 +30,9 @@ typedef  unsigned char  u8  ;       /* at least  8 bits */
 #  define ulong unsigned long
 #endif
 
+            /*  dim     is garantueed to be an unsigned type.
+             *  ofs     is garantueed to be the corresponding signed type.
+            */
 #if 0
 #  define  dim          size_t
 #  define  ofs         ssize_t
@@ -37,6 +40,25 @@ typedef  unsigned char  u8  ;       /* at least  8 bits */
    typedef  size_t         dim;
    typedef  ssize_t        ofs;
 #endif
+
+#ifdef SIZE_MAX
+#  define   DIM_MAX        SIZE_MAX
+#else
+#  define   DIM_MAX        ((size_t)-1)
+#endif
+
+#ifdef SSIZE_MAX
+#  define   OFS_MAX        SSIZE_MAX
+#else
+#  define   OFS_MAX        LONG_MAX    /* lame, reasonable stopgap */
+#endif
+
+#ifdef SSIZE_MIN
+#  define   OFS_MIN        SSIZE_MIN
+#else
+#  define   OFS_MIN        LONG_MIN    /* lame, reasonable stopgap */
+#endif
+
 
                      /* annotate 'unsigned due to prototype'
                       * and related messages

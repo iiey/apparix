@@ -1,8 +1,8 @@
 /*   (C) Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
- *   (C) Copyright 2006 Stijn van Dongen
+ *   (C) Copyright 2006, 2007 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
- * under the terms of the GNU General Public License; either version 2 of the
+ * under the terms of the GNU General Public License; either version 3 of the
  * License or (at your option) any later version.  You should have received a
  * copy of the GPL along with tingea, in the file COPYING.
 */
@@ -12,6 +12,7 @@
 
 #include <string.h>
 #include "types.h"
+#include "ting.h"
 
 
 char* mcxStrDup
@@ -52,6 +53,30 @@ char* mcxStrRChrAint
 ,  int          (*fbool)(int c)
 ,  ofs            offset         /* -1 for don't know */
 )  ;
+
+
+#define MCX_MEMPRINT_REVERSE  1
+#define MCX_MEMPRINT_NOSPACE  2
+
+
+/* Strides in char units, treats/truncates each unit
+ * as/to an 8-bit entity.
+*/
+
+mcxTing* mcxMemPrint
+(  mcxTing* ting
+,  void*    p
+,  dim      n_bytes
+,  mcxbits  flags
+)  ;
+
+
+int mcxEditDistance
+(  const char* s1
+,  const char* s2
+,  int* lcs
+)  ;
+
 
 #endif
 

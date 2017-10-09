@@ -1,30 +1,61 @@
 
 
+Wed 3 Jul 2007
+
+   *  apparix-07-184 released.
+
+   *  Apparix is now licensed under the GNU General Public License version 3.
+
+   *  Added --quiet-jump option. By default apparix will emit an error
+      message and set the exit status to 1 when looking up a mark and not
+      finding it. With this option, it is silent. It will still exit
+      with status 1.
+
+   *  For portal expansion apparix would exclude the destination 'CVS',
+      and this was hardcoded.  Exclusion behaviour is now specified using the
+      environment variable APPARIXEXCLUDE. This variable has the following
+      syntax:
+
+      <[:,][<string>]>+
+
+      That is, a list of names with each name preceded by a colon or a comma.
+      A colon indicates that <string> triggers exclusion of directory names
+      for which the trailing component is identical to <string>.
+      A comma indicates that <string> triggers exclusion of directory names
+      for which the trailing component contains <string> as a substring.
+      Example:
+            export APPARIXEXCLUDE=:CVS:lib,tmp
+      Curiosity:
+            export APPARIXEXCLUDE=,
+
+      will exclude everything from expansion, as it specifies the empty
+      string.
+
 Fri 10 Nov 2006
 
-	*	apparix-06-314 released.
+   *  apparix-06-314 released.
 
-	*	Fixed Yet Another Bug that Boggles the Mind. In the last two releases
-		bookmarks could not be added at all, due to the addition of a status
-		check that triggers an erroneous status initialization.
-		This was a bad month.
+   *  Fixed Yet Another Bug that Boggles the Mind. In the last two releases
+      bookmarks could not be added at all, due to the addition of a status
+      check that triggers an erroneous status initialization.
+      This was a bad month.
 
 Wed  8 Nov 2006
 
-	*	apparix-06-312 released.
+   *  apparix-06-312 released.
 
-	*	Fix dumb realloc-related apparix crash (n_old and n_new were in
-		the wrong order) that manifests itself with bookmark nr 100.
+   *  Fix dumb realloc-related apparix crash (n_old and n_new were in
+      the wrong order) that manifests itself with bookmark nr 100.
 
 Fri 20 Oct 2006
 
-	*	apparix-06-293 released.
+   *  apparix-06-293 released.
 
-	*	Fix dumb apparix crash when .apparixrc is not present.
-		(This bug would occur only once as apparix created .apparixrc
-		before crashing).
+   *  Fix dumb apparix crash when .apparixrc is not present.
+      (This bug would occur only once as apparix created .apparixrc
+      before crashing).
 
-	*	Warn when commas are found in mark or target.
+   *  Warn when commas are found in mark or target.
 
 Tue 23 May 2006
 
