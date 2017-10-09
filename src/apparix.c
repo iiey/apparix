@@ -1129,10 +1129,10 @@ mcxstatus bookmark_add_jump
 ,  int argc
 ,  int n_arg_trailing
 )
-   {  mcxTing* pwd
+   {  mcxTing* pwd = NULL
    ;  const char* newmark
    ;  const char* dest
-   ;  mcxstatus status = STATUS_FAIL
+   ;  mcxstatus status = STATUS_OK
    
    ;  dest = n_arg_trailing >= 2 ? argv[argc-1] : NULL
 

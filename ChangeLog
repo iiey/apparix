@@ -1,5 +1,14 @@
 
 
+Fri 10 Nov 2006
+
+	*	apparix-06-314 released.
+
+	*	Fixed Yet Another Bug that Boggles the Mind. In the last two releases
+		bookmarks could not be added at all, due to the addition of a status
+		check that triggers an erroneous status initialization.
+		This was a bad month.
+
 Wed  8 Nov 2006
 
 	*	apparix-06-312 released.

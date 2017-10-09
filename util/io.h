@@ -36,7 +36,7 @@
 #include "types.h"
 
 
-/* Uh, the thing below seems a reasonable test for seekability.
+/* The thing below seems a reasonable test for seekability.
  * I tried to look for a common idiom, but so far no luck.
  * Let's agree that the main thing is the encapsulation.
  *
@@ -321,7 +321,7 @@ int mcxIOskipSpace
  *    streams, (using reads of size pagesize) and then reposition the stream
  *    after searching.
  *
- *    That raises the questions: is ftell *garantueed* to set EBADF for
+ *    That raise the questions: is ftell *garantueed* to set EBADF for
  *    non-seekable streams?
 */
 
