@@ -1,0 +1,432 @@
+\import{man.zmm}
+
+\: todo: resolution of conflicts.
+\: all options.
+
+\setx{"man::year"}{\zinsert{stamp.year}}
+\setx{"man::month"}{\zinsert{stamp.month}}
+\setx{"man::day"}{\zinsert{stamp.day}}
+\setx{"man::tag"}{\zinsert{stamp.tag}}
+\setx{"man::stamp"}{\zinsert{stamp.stamp}}
+
+\setx{"man::year"}{\tr{}{\012}{}{\"man::year"}}
+\setx{"man::month"}{\tr{}{\012}{}{\"man::month"}}
+\setx{"man::day"}{\tr{}{\012}{}{\"man::day"}}
+\setx{"man::stamp"}{\tr{}{\012}{}{\"man::stamp"}}
+\setx{"man::tag"}{\tr{}{\012}{}{\"man::tag"}, \"man::stamp"}
+
+\set{"man::name"}{apparix}
+\set{"man::html-title"}{apparix}
+\set{"man::author"}{Stijn van Dongen}
+\set{"man::section"}{1}
+
+
+\"man::preamble"
+\${html}{\"man::maketoc"}
+
+\def{apparix}{\bf{apparix}}
+
+\sec{name}{NAME}
+\NAME{apparix}{bookmark directories and apparate inside them}
+
+
+\sec{synopsis}{SYNOPSIS}
+
+\par{Below, \bf{to}, \bf{bm} and \bf{portal} are shell aliases or
+functions that can be changed to have any name the user desires.}
+
+\verbatim{\:/
+> \bf{pwd}
+/home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+> \bf{ls}
+src/ doc/ CVS/ bin/
+> \bf{bm xkr}          # bookmark as xkr (funny name though)
+(later)
+> \bf{to xkr}          # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+(alternatively)
+> \bf{to xkr src}      # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo/src
+
+
+(later)
+> \bf{ls}
+aap pyu/ qua tim/ zut/
+> \bf{pwd}
+/home/eez/another/branch/deep/down/under
+> \bf{portal}          # bookmark as portal, imports tim zut pyu bookmarks
+
+(later)
+> \bf{to zut}          # cd to /home/eez/another/branch/deep/down/under/zut}
+
+
+\sec{description}{DESCRIPTION}
+
+\par{
+   Apparix combines the properties of the
+   \aref{http://www.skamphausen.de/software/cdargs/}{cdargs} utility
+   and the \bf{CDPATH} shell mechanism for fast navigation through
+   the file system. It is especially useful for visiting and documenting
+   both often- and rarely-used locations.  Apparix enables you to attach marks
+   to locations and jump to those locations by loading the mark. Marking,
+   unmarking and jumping are simple operations that are performed in the
+   current shell. By setting up convenient aliases for marking and jumping the
+   file system can be navigated in a fast and intuitive manner.
+}
+
+\par{
+   This section contains some examples of the most common uses
+   of apparix.
+   \secref{options} contains a list of additional options available
+   for pruning and squashing bookmarks.
+}
+
+\par{
+   \secref{notes} features a brief discussion of the advantages
+   of apparix over other approaches such as setting up aliases for
+   often visited directories, using symlinks, CDPATH, or a combination
+   of these. \secref{history} explains the difference between
+   \bf{cdargs} and \bf{apparix}.
+}
+
+\par{
+   Apparix works in a manner very similar to \bf{cdargs}. One usually invokes
+   apparix by using pre-defined aliases. Here they will be called \bf{bm} for
+   bookmark, \bf{portal} for a CPPATH-style bookmark and \bf{to} for initiating
+   an apparition (aka jump) .  These aliases are found below in the \secref{files}
+   section and can also be obtained by issuing
+}
+
+\verbatim{apparix --shell-examples}
+
+\car{
+   Apparix works by aliases for two reasons, necessity and convenience.
+   When bookmarking, it is convenient to be able to do it with just a few
+   keystrokes. When jumping, apparix cannot change the current
+   directory in the current shell. It writes the result destination in a
+   results file $HOME/.apparixresult - necessity.  An alias or function with a
+   conveniently short name such as \bf{to} achieves the desired change of
+   directory.
+}
+
+\par{
+   Suppose your user name is \it{eez} and your home directory is \v{/home/eez}.
+   You often visit a directory called
+   \v{/home/eez/cvs/xyz/tfa/faq/zut/bar/foo}.
+   This is how to create and use a bookmark for foo
+}
+
+\verbatim{\:/
+/home/eez/cvs/xyz/tfa/faq/zut/bar/foo> \bf{bm foo}
+added: foo -> /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+/home/eez/cvs/xyz/tfa/faq/zut/bar/foo> \bf{cd}
+/home/eez> \bf{to foo}
+/home/eez/cvs/xyz/tfa/faq/zut/bar/foo>}
+
+
+\par{
+   Another scenario is where you have some directory that contains a largish
+   number of subdirectories, all of which you would like to have bookmarked.
+   If the subdirectories have distinctive names this can be achieved in
+   one fell swoop by marking the parent directory as a \it{portal}. This is
+   identical to adding the parent directory to the CDPATH environment variable,
+   except that apparix bookmarks are not part of the cd namespace. It is
+   argued in \secref{notes} that this is a good thing.
+   Consider this.
+}
+
+\verbatim{\:/
+/home/cvs/bagger/boemel/mcl/mcl/src> \bf{ls}
+alien/       CVS/         impala/      Makefile.am  README       shmcx/
+attic/       giraffe/     lib/         Makefile.in  shcl/        shmx/
+contrib/     gmon.out     Makefile     mcl/         shmcl/       taurus/}
+
+\car{Some of the subdirectories have not-so-distinct names such as \it{contrib} and
+\it{attic}, but they happen to be the directories least visited.
+Issuing}
+
+\verbatim{\:/
+/home/cvs/bagger/boemel/mcl/mcl/src> \bf{portal}
+[apparix] expanded 1 portal to 12 destinations}
+
+\car{
+yields all of the subdirectories as destinations bookmarked by the last
+component of their path name.
+Note that bookmarks resulting from portal expansion are kept in a separate
+resource file (see \secref{files}). Portal expansions can be recreated
+by issuing}
+
+\verbatim{apparix --rehash}
+
+\car{This is useful to reflect a change in the directory naming structure
+underneath a portal.}
+
+
+\cpar{Conflict resolution}{
+   Apparix allows identical bookmarks to point to different locations.
+   When asked to visit such a bookmark it will present a list of
+   options.
+}
+
+
+\cpar{Subdirectory specification}{
+   When jumping (apparating) you can specify an additional subdirectory
+   after the bookmark. Apparix will append the subdirectory to
+   the destination. This does require you know the exact name of
+   the subdirectory you want to visit.
+}
+
+
+\: hierverder: portal example, mention rehash.
+
+
+\: \car{
+\:    Apparix currently uses \it{getcwd}(3) to obtain the path name
+\:    of the current directory. On some machines this may include
+\:    funny mount components, e.g.
+\: }
+\: 
+\: \verbatim{\:/
+\: \bf{/.automount/eek/root}/home/eez/cvs/xyz/tfa/faq/zut/bar/foo}
+\: 
+\: \car{
+\:    Until apparix obtains a 
+\: }
+
+
+\sec{options}{OPTIONS}
+
+\par{
+   For bookmarking and jumping apparix is best invoked by using the aliases
+   (tcsh-variants) or functions (sh/bash) listed in \secref{files}.
+   Apparix has a few options that are useful for pruning, squashing and
+   rehasing bookmarks. These are best issued by invoking apparix directly.
+}
+
+\begin{itemize}
+
+\item{\defopt{--add-mark}{add jump bookmark}}
+\car{
+   This options expects trailing \it{mark [destination]} argument(s).
+   The first argument is the bookmark name. The optional second argument
+   is the target directory. If the target directory is not given, apparix
+   assumes the current directory should be bookmarked.
+}
+\item{\defopt{--add-portal}{add portal bookmark}}
+\car{
+   This option enlists a directory as a portal and adds all subdirectories
+   as bookmarks. The name of the bookmark is simply the name of the
+   subdirectory. By default the current directory is added as a portal.
+   An optional trailing argument will override this behaviour and
+   instead be interpreted as the portal location.
+}
+
+\item{\defopt{--squash-mark}{squash repeated marks}}
+\car{
+   Apparix will squash identical marks.
+   It does not consider the corresponding destinations and will
+   simply keep the last one occurring in the resource file.
+}
+
+\item{\defopt{--squash-dest}{squash repeated destinations}}
+\car{
+   Apparix will squash identical destinations.
+   It does not consider the corresponding marks and will
+   simply keep the last one occurring in the resource file.
+}
+
+\item{\defopt{-rid}{pat}{delete bookmarks}}
+\car{
+   This deletes bookmarks where destination matches \genarg{pat}.
+}
+
+\item{\defopt{-rid-mark}{pat}}
+\car{
+   This deletes bookmarks where mark matches \genarg{pat}.
+}
+
+\item{\defopt{--rehash}{re-expand portal bookmarks}}
+\car{
+   Apparix will reread the resource file and reexpand portal
+   locations. Useful if directories have been added, renamed,
+   or removed.
+}
+
+\item{\defopt{--quo}{dump bookmarks}}
+\car{
+   Apparix dumps it bookmarks. It does so as well if it is
+   invoked without arguments.
+}
+
+\item{\defopt{--cwd}{use getcwd(3), not pwd(1)}}
+\car{
+   By default aparix uses the program \it{pwd}(1) rather than
+   the system call \it{getcwd}(3). On some systems it was found
+   that the latter results in paths that contain machine-specific
+   mount components.
+   Appparix will use \it{getcwd}(3) when \genopt{--cwd} is used.
+}
+
+\item{\defopt{--shell-examples}{output example macros}}
+\car{
+   This outputs example macros. They are also listed in the
+   \secref{files} section though.
+}
+
+\items{
+   {\defopt{-h}}
+   {\defopt{--apropos}}
+}
+\car{print synopsis of all options}
+
+\end{itemize}
+
+
+\sec{files}{FILES}
+
+\par{
+   You should use aliases or functions to make apparix really useful.
+   Get them from apparix by giving it the --shell-examples option,
+   or from further below.
+}
+
+\begin{itemize}{}
+\item{$HOME/.apparixrc}
+\car{This is the primary resource file. There is usually no
+need to edit it by hand.}
+
+\item{$HOME/.apparixexpand}
+\car{This contains bookmarks that are expanded from portals.
+A portal is simply some directory. The names of all subdirectories
+are taken as bookmarks that point to those subdirectories.
+This file can be recreated by issuing}
+
+\verbatim{apparix --rehash}
+
+\item{$HOME/.apparixrc}
+\car{This contains the result when apparix is prodded to give
+the destination corresponding with a given bookmark. The macros
+and functions below use this file to point \it{cd}(1) in the right
+direction.}
+\end{itemize}
+
+
+\verbatim{\protect{BASH-style functions
+---
+function to () {
+   apparix "$1" && cd "`cat "$HOME/.apparixresult"`" ;
+}
+function bm () {
+   if test "$2"; then
+      apparix --add-mark "$1" "$2" && cd "`cat "$HOME/.apparixresult"`" ;
+   elif test "$1"; then
+      apparix --add-mark "$1" && cd "`cat "$HOME/.apparixresult"`" ;
+   else
+      apparix --add-mark && cd "`cat "$HOME/.apparixresult"`" ;
+   fi
+}
+function portal () {
+   if test "$1"; then
+      apparix --add-portal "$1" && cd "`cat "$HOME/.apparixresult"`" ;
+   else
+      apparix --add-portal && cd "`cat "$HOME/.apparixresult"`" ;
+   fi
+}
+---
+CSH-style aliases
+---
+alias to   'apparix \!* && cd `cat $HOME/.apparixresult`'
+alias bm   'apparix --add-jump \!*'
+alias portal 'apparix --add-portal \!*'
+}}
+
+
+\sec{notes}{NOTES}
+\par{
+   Below follow some comments on other approaches to file system navigation.
+   \secref{history} explains the difference between the venerable \bf{cdargs}
+   program and \bf{apparix}.
+}
+
+\par{
+   CDPATH is only useful in cases where a given directory has subdirectories
+   with very distinctive names. It does not usually scale well when there are
+   more than a few paths in CDPATH.
+}
+
+\par{
+   Some people use aliases to jump to often visited directories.
+   I was one of them for a period of ten years. The fact is,
+   those aliases are cumbersome to create and remove and they
+   clutter up the alias namespace. They can clash with
+   executables when the alias includes the \it{cd} part. This sometimes
+   prohibits one from assigning the logical bookmark to a given
+   location, especially when one has a lot of source code locations
+   They can clash with directory names when
+   the aliases just expand to the location. This again means that
+   sometimes a location cannot be assigned its logical bookmark.
+   I have found that setting \it{cd} jumps aside in their own namespace
+   improves file system navigation by a large factor.
+}
+
+\par{
+   It is also possible to create symlinks to often
+   visited files. Again, creation and removal of these are cumbersome.
+   One could of course create shell functions with a similar interface
+   to apparix or cdargs to handle the symlink lifecycle.
+   On Linux Weekly News \it{nix} suggested to put these symlinks
+   in a single directory and add that directory to CDPATH.
+   This is quite a neat trick and effectively creates a bookmark
+   navigation system.
+}
+
+\par{
+   Still there are problems with the above approach.
+
+   One problem with the symlink approach is that they are a bit
+   awkward to edit. One could make a utility to wrap around the problem,
+   but in the end the directory-with-symlinks would
+   functionally be the same as apparix's \bf{.apparixrc} resource file,
+   only more of a kludge.
+
+   Another problem is that symlinks are awkard when traversing
+   the file system. They confuse the notion of parent directory
+   and '\v{cd ..}' mostly does the unexpected. Sometimes '\v{..}'
+   has a different meaning to \bf{cd} than it has to another application,
+   as one will trace back symlinks and the other will not.
+
+   Finally, a minor objection
+   is that I find it convenient to have bookmarks in a separate
+   namespace than that of \it{cd}(1). Jumps are magical and it is
+   natural to invoke them by a different method. This is in fact
+   how apparix acquired its CDPATH behaviour. I used CDPATH to
+   jump to a few particular source directories with distinct names
+   that lay deeply hidden in some CVS directory. Once I started using
+   apparix however, I would mistakenly issue \it{to} rather than \it{cd}
+   to jump to those locations. My brain classified both types of jump
+   in the same category.
+}
+
+\par{
+   Finally apparix (and cdargs) have another use besides jumping, namely
+   annotation. Whenever I end up in an esoteric part of the file system and
+   need to make a quick note of the location, I simply bookmark  it.
+}
+
+
+\sec{author}{AUTHOR}
+\par{
+   Stijn van Dongen.
+}
+
+\sec{history}{HISTORY}
+\par{
+   Apparix was created to optimize a scenario that
+   \aref{http://www.skamphausen.de/software/cdargs/}{cdargs} does not support
+   very well, namely where the mark (called \it{needle} in cdargs) is always
+   known. As an additional feature apparix supports CDPATH-style behaviour and
+   subdirectory specification. In other respects apparix is a much simpler
+   application.  \bf{cdargs} offers menu-based navigation of the file system
+   and the bookmark list, which apparix does not.
+}
+
+\"man::postamble"
+

@@ -1,0 +1,17 @@
+
+Additional change since initial release.
+
+   *  apparix --add-jump without any arguments will take the trailing component
+      of the current directory as the bookmark, with the directory itself as
+      the destination.
+
+      With the shorthand alias/function bm that means simply entering
+         bm
+      does the trick.
+
+Mon, 10 Oct 2005
+
+   *  apparix-05-283 released
+
+   *  initial release.
+

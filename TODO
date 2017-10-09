@@ -1,0 +1,46 @@
+
+-  -v for version number.
+
+-  Joost pointed out that $HOME/apparix/{rc,expand,result} would be
+   neater.
+
+-  issuing --add-mark should take the trailing component of the path
+   as the bookmark.
+
+?
+-? option where regular bookmarks are prefered over expansion bookmarks.
+?
+
+-  for a portal, optionally add a bookmark for the portal itself?
+   could do this with a two-argument invocation.
+
+-  when a subdirectory is given it could be used to resolve
+   multiple hits.
+
+#  make a mode (maybe -a) to simply list all matching occurrences
+   without going into the menue if multiple matches.
+
+   hum ho, that's what grep is for.
+
+
+?  if no exact match, make menu for strstr occurrences.
+      (e.g. strcmp/strstr callback to attempt_jump)
+
+?  do not write trailing '\n' if stdout is not a terminal.
+   enable vi `apparix foo`/Makefile.am
+   except that this does not work with multiple matches.
+   could kludge by checking for isatty(fileno(stdout)) ..
+
+-   clean up all the bookmark_* that don't return (close IO)
+
+   clean up all the dies to close IO etc.
+<?
+   add xf to fl as a member, so routines can close it.
+   provide CLOSE_XF argument to bookmark routines.
+
+?  -quo t  (show all marks)
+   -quo e  (show all portals)
+   -quo a  (show all marks + expansions)
+
+-  analysis/warning modes for duplicates etc.
+

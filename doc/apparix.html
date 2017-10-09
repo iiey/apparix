@@ -1,0 +1,444 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<!-- Copyright (c) 2005 Stijn van Dongen -->
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<style type="text/css">
+body {
+text-align: justify;
+color: #001111;
+background: white;
+margin-left: 8%;
+margin-right: 8%;
+font-family: Helvetica, Univers, Verdana, sans-serif;
+text-align: justify;
+}
+p.default {
+font-family: Helvetica, Univers, Verdana, sans-serif;
+text-align: justify;
+}
+p.L53 { font-size: 30pt; }
+p.L52 { font-size: 20pt; }
+p.L51 { font-size: 15pt; }
+p.L50 { font-size: 12pt; }
+p.L49 { font-size: 10pt; }
+p.L48 { font-size: 9pt; }
+p.L47 { font-size: 8pt; }
+td {
+font-family: Helvetica, Univers, Verdana, sans-serif;
+text-align: justify;
+}
+h3 { margin-top:1em; }
+h2 { margin-top:2em; }
+.left { text-align: left; align: left; }
+.right { text-align: right; align: right; }
+.center { text-align: center; align: center; }
+a:link { text-decoration: none; }
+a:active { text-decoration: none; }
+a:visited { text-decoration: none; }
+a:link { color: #1111aa; }
+a:active { color: #1111aa; }
+a:visited { color: #111166; }
+a.local:link { color: #11aa11; }
+a.local:active { color: #11aa11; }
+a.local:visited { color: #116611; }
+a.intern:link { color: #1111aa; }
+a.intern:active { color: #1111aa; }
+a.intern:visited { color: #111166; }
+a.extern:link { color: #aa1111; }
+a.extern:active { color: #aa1111; }
+a.extern:visited { color: #661111; }
+a.quiet:link { color: black; }
+a.quiet:active { color: black; }
+a.quiet:visited { color: black; }
+div.copy
+{ font-size: 12pt;
+font-family: monospace;
+text-align: left;
+white-space: pre;
+margin-left: 2em;
+margin-top: 1em;
+margin-bottom: 1em;
+}
+div.indent
+{ margin-left: 8%;
+margin-right: 0%;
+}
+</style>
+<title>apparix</title>
+</head>
+<body>
+<p style="text-align:right">
+11 Oct 2005&nbsp;&nbsp;&nbsp;
+<a class="local" href="apparix.ps"><b>apparix</b></a>
+1.001, 05-284
+</p>
+<div style="margin-top:1em">
+<table
+cellspacing="0" border=0
+cellpadding="0" summary="itemize">
+<tr><td width=48 valign="top" class=left>1.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<a class="intern" href="#name">NAME</a>
+</div></td></tr><tr><td width=48 valign="top" class=left>2.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<a class="intern" href="#synopsis">SYNOPSIS</a>
+</div></td></tr><tr><td width=48 valign="top" class=left>3.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<a class="intern" href="#description">DESCRIPTION</a>
+</div></td></tr><tr><td width=48 valign="top" class=left>4.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<a class="intern" href="#options">OPTIONS</a>
+</div></td></tr><tr><td width=48 valign="top" class=left>5.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<a class="intern" href="#files">FILES</a>
+</div></td></tr><tr><td width=48 valign="top" class=left>6.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<a class="intern" href="#notes">NOTES</a>
+</div></td></tr><tr><td width=48 valign="top" class=left>7.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<a class="intern" href="#author">AUTHOR</a>
+</div></td></tr><tr><td width=48 valign="top" class=left>8.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<a class="intern" href="#history">HISTORY</a>
+</div></td></tr>
+</table>
+
+</div>
+
+<a name="name"></a>
+<h2>NAME</h2>
+<p class="default L50" style="margin-bottom:0">
+apparix - bookmark directories and apparate inside them</p>
+
+<a name="synopsis"></a>
+<h2>SYNOPSIS</h2>
+<p class="default L50" style="margin-bottom:0">Below, <b>to</b>, <b>bm</b> and <b>portal</b> are shell aliases or
+functions that can be changed to have any name the user desires.</p>
+<pre>&gt; <b>pwd</b>
+/home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+&gt; <b>ls</b>
+src/ doc/ CVS/ bin/
+&gt; <b>bm xkr</b>          # bookmark as xkr (funny name though)
+(later)
+&gt; <b>to xkr</b>          # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+(alternatively)
+&gt; <b>to xkr src</b>      # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo/src
+
+
+(later)
+&gt; <b>ls</b>
+aap pyu/ qua tim/ zut/
+&gt; <b>pwd</b>
+/home/eez/another/branch/deep/down/under
+&gt; <b>portal</b>          # bookmark as portal, imports tim zut pyu bookmarks
+
+(later)
+&gt; <b>to zut</b>          # cd to /home/eez/another/branch/deep/down/under/zut</pre>
+
+<a name="description"></a>
+<h2>DESCRIPTION</h2>
+<p class="default L50" style="margin-bottom:0">
+Apparix combines the properties of the
+<a class="extern" href="http://www.skamphausen.de/software/cdargs/">cdargs</a> utility
+and the <b>CDPATH</b> shell mechanism for fast navigation through
+the file system. It is especially useful for visiting and documenting
+both often- and rarely-used locations. Apparix enables you to attach marks
+to locations and jump to those locations by loading the mark. Marking,
+unmarking and jumping are simple operations that are performed in the
+current shell. By setting up convenient aliases for marking and jumping the
+file system can be navigated in a fast and intuitive manner.
+</p>
+<p class="default L50" style="margin-bottom:0">
+This section contains some examples of the most common uses
+of apparix.
+<a class="intern" href="#options">OPTIONS</a> contains a list of additional options available
+for pruning and squashing bookmarks.
+</p>
+<p class="default L50" style="margin-bottom:0">
+<a class="intern" href="#notes">NOTES</a> features a brief discussion of the advantages
+of apparix over other approaches such as setting up aliases for
+often visited directories, using symlinks, CDPATH, or a combination
+of these. <a class="intern" href="#history">HISTORY</a> explains the difference between
+<b>cdargs</b> and <b>apparix</b>.
+</p>
+<p class="default L50" style="margin-bottom:0">
+Apparix works in a manner very similar to <b>cdargs</b>. One usually invokes
+apparix by using pre-defined aliases. Here they will be called <b>bm</b> for
+bookmark, <b>portal</b> for a CPPATH-style bookmark and <b>to</b> for initiating
+an apparition (aka jump) . These aliases are found below in the <a class="intern" href="#files">FILES</a>
+section and can also be obtained by issuing
+</p>
+<pre>apparix --shell-examples</pre>
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+Apparix works by aliases for two reasons, necessity and convenience.
+When bookmarking, it is convenient to be able to do it with just a few
+keystrokes. When jumping, apparix cannot change the current
+directory in the current shell. It writes the result destination in a
+results file $HOME/.apparixresult - necessity. An alias or function with a
+conveniently short name such as <b>to</b> achieves the desired change of
+directory.
+</p>
+<p class="default L50" style="margin-bottom:0">
+Suppose your user name is <i>eez</i> and your home directory is <tt>/home/eez</tt>.
+You often visit a directory called
+<tt>/home/eez/cvs/xyz/tfa/faq/zut/bar/foo</tt>.
+This is how to create and use a bookmark for foo
+</p>
+<pre>/home/eez/cvs/xyz/tfa/faq/zut/bar/foo&gt; <b>bm foo</b>
+added: foo -&gt; /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+/home/eez/cvs/xyz/tfa/faq/zut/bar/foo&gt; <b>cd</b>
+/home/eez&gt; <b>to foo</b>
+/home/eez/cvs/xyz/tfa/faq/zut/bar/foo&gt;</pre>
+<p class="default L50" style="margin-bottom:0">
+Another scenario is where you have some directory that contains a largish
+number of subdirectories, all of which you would like to have bookmarked.
+If the subdirectories have distinctive names this can be achieved in
+one fell swoop by marking the parent directory as a <i>portal</i>. This is
+identical to adding the parent directory to the CDPATH environment variable,
+except that apparix bookmarks are not part of the cd namespace. It is
+argued in <a class="intern" href="#notes">NOTES</a> that this is a good thing.
+Consider this.
+</p>
+<pre>/home/cvs/bagger/boemel/mcl/mcl/src&gt; <b>ls</b>
+alien/       CVS/         impala/      Makefile.am  README       shmcx/
+attic/       giraffe/     lib/         Makefile.in  shcl/        shmx/
+contrib/     gmon.out     Makefile     mcl/         shmcl/       taurus/</pre>
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">Some of the subdirectories have not-so-distinct names such as <i>contrib</i> and
+<i>attic</i>, but they happen to be the directories least visited.
+Issuing</p>
+<pre>/home/cvs/bagger/boemel/mcl/mcl/src&gt; <b>portal</b>
+[apparix] expanded 1 portal to 12 destinations</pre>
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+yields all of the subdirectories as destinations bookmarked by the last
+component of their path name.
+Note that bookmarks resulting from portal expansion are kept in a separate
+resource file (see <a class="intern" href="#files">FILES</a>). Portal expansions can be recreated
+by issuing</p>
+<pre>apparix --rehash</pre>
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">This is useful to reflect a change in the directory naming structure
+underneath a portal.</p>
+<p class="default L50" style="margin-bottom:0"><b>Conflict resolution</b><br>
+Apparix allows identical bookmarks to point to different locations.
+When asked to visit such a bookmark it will present a list of
+options.
+</p>
+<p class="default L50" style="margin-bottom:0"><b>Subdirectory specification</b><br>
+When jumping (apparating) you can specify an additional subdirectory
+after the bookmark. Apparix will append the subdirectory to
+the destination. This does require you know the exact name of
+the subdirectory you want to visit.
+</p>
+
+<a name="options"></a>
+<h2>OPTIONS</h2>
+<p class="default L50" style="margin-bottom:0">
+For bookmarking and jumping apparix is best invoked by using the aliases
+(tcsh-variants) or functions (sh/bash) listed in <a class="intern" href="#files">FILES</a>.
+Apparix has a few options that are useful for pruning, squashing and
+rehasing bookmarks. These are best issued by invoking apparix directly.
+</p>
+<div style="margin-top:1em">
+<table
+cellspacing="0" border=0
+cellpadding="0" summary="itemize">
+<tr><td colspan=3><a name="opt--add-mark"></a><b>--add-mark</b> (<i>add jump bookmark</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+This options expects trailing <i>mark [destination]</i> argument(s).
+The first argument is the bookmark name. The optional second argument
+is the target directory. If the target directory is not given, apparix
+assumes the current directory should be bookmarked.
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt--add-portal"></a><b>--add-portal</b> (<i>add portal bookmark</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+This option enlists a directory as a portal and adds all subdirectories
+as bookmarks. The name of the bookmark is simply the name of the
+subdirectory. By default the current directory is added as a portal.
+An optional trailing argument will override this behaviour and
+instead be interpreted as the portal location.
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt--squash-mark"></a><b>--squash-mark</b> (<i>squash repeated marks</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+Apparix will squash identical marks.
+It does not consider the corresponding destinations and will
+simply keep the last one occurring in the resource file.
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt--squash-dest"></a><b>--squash-dest</b> (<i>squash repeated destinations</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+Apparix will squash identical destinations.
+It does not consider the corresponding marks and will
+simply keep the last one occurring in the resource file.
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt-rid"></a><b>-rid</b> pat (<i>delete bookmarks</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+This deletes bookmarks where destination matches <i>pat</i>.
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt-rid-mark"></a><b>-rid-mark</b> (<i>pat</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+This deletes bookmarks where mark matches <i>pat</i>.
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt--rehash"></a><b>--rehash</b> (<i>re-expand portal bookmarks</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+Apparix will reread the resource file and reexpand portal
+locations. Useful if directories have been added, renamed,
+or removed.
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt--quo"></a><b>--quo</b> (<i>dump bookmarks</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+Apparix dumps it bookmarks. It does so as well if it is
+invoked without arguments.
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt--cwd"></a><b>--cwd</b> (<i>use getcwd(3), not pwd(1)</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+By default aparix uses the program <i>pwd</i>(1) rather than
+the system call <i>getcwd</i>(3). On some systems it was found
+that the latter results in paths that contain machine-specific
+mount components.
+Appparix will use <i>getcwd</i>(3) when <b>--cwd</b> is used.
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt--shell-examples"></a><b>--shell-examples</b> (<i>output example macros</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+This outputs example macros. They are also listed in the
+<a class="intern" href="#files">FILES</a> section though.
+</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3 class=left><a name="opt-h"></a></td></tr><tr><td colspan=3 class=left><a name="opt--apropos"></a></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">print synopsis of all options</p>
+</div></td></tr>
+</table>
+
+</div>
+
+<a name="files"></a>
+<h2>FILES</h2>
+<p class="default L50" style="margin-bottom:0">
+You should use aliases or functions to make apparix really useful.
+Get them from apparix by giving it the --shell-examples option,
+or from further below.
+</p>
+<div style="margin-top:1em">
+<table
+cellspacing="0" border=0
+cellpadding="0" summary="itemize">
+<tr><td colspan=3>$HOME/.apparixrc</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">This is the primary resource file. There is usually no
+need to edit it by hand.</p>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3>$HOME/.apparixexpand</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">This contains bookmarks that are expanded from portals.
+A portal is simply some directory. The names of all subdirectories
+are taken as bookmarks that point to those subdirectories.
+This file can be recreated by issuing</p>
+<pre>apparix --rehash</pre>
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3>$HOME/.apparixrc</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">This contains the result when apparix is prodded to give
+the destination corresponding with a given bookmark. The macros
+and functions below use this file to point <i>cd</i>(1) in the right
+direction.</p>
+</div></td></tr>
+</table>
+
+</div>
+<pre>BASH-style functions
+---
+function to () {
+   apparix "$1" &amp;&amp; cd "`cat "$HOME/.apparixresult"`" ;
+}
+function bm () {
+   if test "$2"; then
+      apparix --add-mark "$1" "$2" &amp;&amp; cd "`cat "$HOME/.apparixresult"`" ;
+   elif test "$1"; then
+      apparix --add-mark "$1" &amp;&amp; cd "`cat "$HOME/.apparixresult"`" ;
+   else
+      apparix --add-mark &amp;&amp; cd "`cat "$HOME/.apparixresult"`" ;
+   fi
+}
+function portal () {
+   if test "$1"; then
+      apparix --add-portal "$1" &amp;&amp; cd "`cat "$HOME/.apparixresult"`" ;
+   else
+      apparix --add-portal &amp;&amp; cd "`cat "$HOME/.apparixresult"`" ;
+   fi
+}
+---
+CSH-style aliases
+---
+alias to   'apparix \!* &amp;&amp; cd `cat $HOME/.apparixresult`'
+alias bm   'apparix --add-jump \!*'
+alias portal 'apparix --add-portal \!*'
+</pre>
+
+<a name="notes"></a>
+<h2>NOTES</h2>
+<p class="default L50" style="margin-bottom:0">
+Below follow some comments on other approaches to file system navigation.
+<a class="intern" href="#history">HISTORY</a> explains the difference between the venerable <b>cdargs</b>
+program and <b>apparix</b>.
+</p>
+<p class="default L50" style="margin-bottom:0">
+CDPATH is only useful in cases where a given directory has subdirectories
+with very distinctive names. It does not usually scale well when there are
+more than a few paths in CDPATH.
+</p>
+<p class="default L50" style="margin-bottom:0">
+Some people use aliases to jump to often visited directories.
+I was one of them for a period of ten years. The fact is,
+those aliases are cumbersome to create and remove and they
+clutter up the alias namespace. They can clash with
+executables when the alias includes the <i>cd</i> part. This sometimes
+prohibits one from assigning the logical bookmark to a given
+location, especially when one has a lot of source code locations
+They can clash with directory names when
+the aliases just expand to the location. This again means that
+sometimes a location cannot be assigned its logical bookmark.
+I have found that setting <i>cd</i> jumps aside in their own namespace
+improves file system navigation by a large factor.
+</p>
+<p class="default L50" style="margin-bottom:0">
+It is also possible to create symlinks to often
+visited files. Again, creation and removal of these are cumbersome.
+One could of course create shell functions with a similar interface
+to apparix or cdargs to handle the symlink lifecycle.
+On Linux Weekly News <i>nix</i> suggested to put these symlinks
+in a single directory and add that directory to CDPATH.
+This is quite a neat trick and effectively creates a bookmark
+navigation system.
+</p>
+<p class="default L50" style="margin-bottom:0">
+Still there are problems with the above approach.
+One problem with the symlink approach is that they are a bit
+awkward to edit. One could make a utility to wrap around the problem,
+but in the end the directory-with-symlinks would
+functionally be the same as apparix's <b>.apparixrc</b> resource file,
+only more of a kludge.
+Another problem is that symlinks are awkard when traversing
+the file system. They confuse the notion of parent directory
+and '<tt>cd ..</tt>' mostly does the unexpected. Sometimes '<tt>..</tt>'
+has a different meaning to <b>cd</b> than it has to another application,
+as one will trace back symlinks and the other will not.
+Finally, a minor objection
+is that I find it convenient to have bookmarks in a separate
+namespace than that of <i>cd</i>(1). Jumps are magical and it is
+natural to invoke them by a different method. This is in fact
+how apparix acquired its CDPATH behaviour. I used CDPATH to
+jump to a few particular source directories with distinct names
+that lay deeply hidden in some CVS directory. Once I started using
+apparix however, I would mistakenly issue <i>to</i> rather than <i>cd</i>
+to jump to those locations. My brain classified both types of jump
+in the same category.
+</p>
+<p class="default L50" style="margin-bottom:0">
+Finally apparix (and cdargs) have another use besides jumping, namely
+annotation. Whenever I end up in an esoteric part of the file system and
+need to make a quick note of the location, I simply bookmark it.
+</p>
+
+<a name="author"></a>
+<h2>AUTHOR</h2>
+<p class="default L50" style="margin-bottom:0">
+Stijn van Dongen.
+</p>
+
+<a name="history"></a>
+<h2>HISTORY</h2>
+<p class="default L50" style="margin-bottom:0">
+Apparix was created to optimize a scenario that
+<a class="extern" href="http://www.skamphausen.de/software/cdargs/">cdargs</a> does not support
+very well, namely where the mark (called <i>needle</i> in cdargs) is always
+known. As an additional feature apparix supports CDPATH-style behaviour and
+subdirectory specification. In other respects apparix is a much simpler
+application. <b>cdargs</b> offers menu-based navigation of the file system
+and the bookmark list, which apparix does not.
+</p>
+</body>
+</html>
