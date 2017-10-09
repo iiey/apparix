@@ -7,8 +7,6 @@
 # be verbose
 set -x
 
-exit 0
-
 TAG=1.004
 
 VERSION=`date '+%y-%j'`

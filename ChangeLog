@@ -1,6 +1,17 @@
 
+Wed 26 Nov 2008
 
-Thu 24 Jul 2007
+   *  apparix-08-331 released.
+
+   *  The bash completion code was changed to improve tab completion on
+      subdirectories of the mark.  First, a bug was fixed where this completion
+      would include subdirectories of the current directory. Second,
+      patterns with no matching subdirectories will never generate an error
+      but simply stall completion, utilizing the bash nullglob option.
+
+   *  Fixed a bug in the string library - unlikely to affect apparix.
+
+Thu 24 Jul 2008
 
    *  apparix-08-206 released.
 

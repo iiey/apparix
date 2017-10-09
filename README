@@ -3,3 +3,10 @@
    see INSTALL for generic installation instructions, see doc/ for
    documentation.
 
+   If you get an error message such as
+      util/ting.c:164: undefined reference to `va_copy'
+
+   Try configuring apparix with CFLAGS=-DHAVE_VA_COPY=0, e.g.
+
+   ./configure --prefix=$HOME CFLAGS=-DHAVE_VA_COPY=0
+

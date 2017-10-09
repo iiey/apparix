@@ -1,5 +1,10 @@
 
+$  option to change prefix (reflecting different mount points).
+
 $  change to tab separated resource files.
+
+$  prepend relative pathname with $HOME.
+   when bookmarking, optionally leave out $HOME.
 
 -  make backup mechanism where date tag is automatically added.
 

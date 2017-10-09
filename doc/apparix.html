@@ -11,10 +11,10 @@ color: #001111;
 background: white;
 margin-left: 8%;
 margin-right: 8%;
-font-family: Helvetica, Univers, Verdana, sans-serif;
+font-family: Garamond, Univers, Verdana, sans-serif;
 }
 p.default {
-font-family: Helvetica, Univers, Verdana, sans-serif;
+font-family: Garamond, Univers, Verdana, sans-serif;
 text-align: justify;
 }
 p.L53 { font-size: 30pt; }
@@ -25,14 +25,14 @@ p.L49 { font-size: 10pt; }
 p.L48 { font-size: 9pt; }
 p.L47 { font-size: 8pt; }
 td {
-font-family: Helvetica, Univers, Verdana, sans-serif;
+font-family: Garamond, Univers, Verdana, sans-serif;
 text-align: justify;
 }
 h3 { margin-top:1em; }
 h2 { margin-top:2em; }
-.left { text-align: left; align: left; }
-.right { text-align: right; align: right; }
-.center { text-align: center; align: center; }
+.left { text-align: left; }
+.right { text-align: right; }
+.center { text-align: center; }
 .nowrap { white-space: nowrap; }
 a:link { text-decoration: none; }
 a:active { text-decoration: none; }
@@ -70,9 +70,9 @@ margin-right: 0%;
 </head>
 <body>
 <p style="text-align:right">
-24 Jul 2008&nbsp;&nbsp;&nbsp;
+26 Nov 2008&nbsp;&nbsp;&nbsp;
 <a class="local" href="apparix.ps"><b>apparix</b></a>
-1.004, 08-206
+1.004, 08-331
 </p>
 <div style="margin-top:1em">
 <table
@@ -736,61 +736,66 @@ below point <i>cd</i>(1) in the right direction.</p>
 <pre>BASH-style functions
 ---
 function to () {
-   if test "$2"; then
-     cd "$(apparix --try-current-first -favour rOl "$1" "$2" || echo .)"
-   elif test "$1"; then
-     if test "$1" == '-'; then
-       cd -
-     else
-       cd "$(apparix --try-current-first -favour rOl "$1" || echo .)"
-     fi
-   else
-     cd $HOME
-   fi
+  if test "$2"; then
+    cd "$(apparix --try-current-first -favour rOl "$1" "$2" || echo .)"
+  elif test "$1"; then
+    if test "$1" == '-'; then
+      cd -
+    else
+      cd "$(apparix --try-current-first -favour rOl "$1" || echo .)"
+    fi
+  else
+    cd $HOME
+  fi
 }
 function bm () {
-   if test "$2"; then
-      apparix --add-mark "$1" "$2";
-   elif test "$1"; then
-      apparix --add-mark "$1";
-   else
-      apparix --add-mark;
-   fi
+  if test "$2"; then
+    apparix --add-mark "$1" "$2";
+  elif test "$1"; then
+    apparix --add-mark "$1";
+  else
+    apparix --add-mark;
+  fi
 }
 function portal () {
-   if test "$1"; then
-      apparix --add-portal "$1";
-   else
-      apparix --add-portal;
-   fi
+  if test "$1"; then
+    apparix --add-portal "$1";
+  else
+    apparix --add-portal;
+  fi
 }
 # function to generate list of completions from .apparixrc
 function _apparix_aliases ()
-{   cur=$2
-    dir=$3
-    COMPREPLY=()
-    if let $(($COMP_CWORD == 1)); then
-        # Below will not complete on subdirectories. swap if so desired.
-        # COMPREPLY=( $( cat $HOME/.apparix{rc,expand} | grep "j,.*$cur.*," | cut -f2 -d, ) )
-        COMPREPLY=( $( (cat $HOME/.apparix{rc,expand} | cut -f2 -d, ; ls -1p | grep '/$' | tr -d /) | grep ".*$cur.*" ))
-    else
-        dir=`apparix --try-current-first -favour rOl $dir 2&gt;/dev/null` || return 0
-        eval_compreply="COMPREPLY=( $(
-            cd "$dir"
-            \ls -d *$cur* | while read r
-            do
-                [[ -d "$r" ]] &amp;&amp;
-                [[ $r == *$cur* ]] &amp;&amp;
-                    echo \"${r// /\\ }\"
-            done
-            ) )"
-        eval $eval_compreply
-    fi
-    return 0
+{ cur=$2
+  dir=$3
+  COMPREPLY=()
+  nullglobsa=$(shopt -p nullglob)
+  shopt -s nullglob
+  if let $(($COMP_CWORD == 1)); then
+    # now cur=&lt;apparix mark&gt; (completing on this) and dir='to'
+    # Below will not complete on subdirectories. swap if so desired.
+    # COMPREPLY=( $( cat $HOME/.apparix{rc,expand} | grep "j,.*$cur.*," | cut -f2 -d, ) )
+    COMPREPLY=( $( (cat $HOME/.apparix{rc,expand} | grep "\&lt;j," | cut -f2 -d, ; ls -1p | grep '/$' | tr -d /) | grep "\&lt;$cur.*" ) )
+  else
+    # now dir=&lt;apparix mark&gt; and cur=&lt;subdirectory-of-mark&gt; (completing on this)
+    dir=`apparix --try-current-first -favour rOl $dir 2&gt;/dev/null` || return 0
+    eval_compreply="COMPREPLY=( $(
+      cd "$dir"
+      \ls -d $cur* | while read r
+      do
+        [[ -d "$r" ]] &amp;&amp;
+        [[ $r == *$cur* ]] &amp;&amp;
+          echo \"${r// /\\ }\"
+      done
+    ) )"
+  eval $eval_compreply
+  fi
+  $nullglobsa
+  return 0
 }
 # command to register the above to expand when the 'to' command's args are
 # being expanded
-complete -d -F _apparix_aliases to
+complete -F _apparix_aliases to
 ---
 CSH-style aliases
 ---
