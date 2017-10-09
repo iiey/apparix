@@ -17,14 +17,35 @@
 
 
 /*
- * dst and src specifications must have identical range patterns,
- * unless there is no matching part in dst because dst is truncated.
+ * README
+ *    This interface is not at all POSIX compliant. It might evolve to
+ *    optionally be indeed.
+ *    However, given some of the braindeadliness of POSIX tr compliance,
+ *    I don't think the worlds needs another tr implementation.
+ *    My gripe is mainly about derailed syntax such as '[:alpha:0'.
+ *    It should go down in a ball of flames, not happily parse.
+ *    To be honest, I don't know for sure whether this is a POSIX
+ *    lack of requirement or an implementation choice.
  *
- * excepts concatenation of single characters or ranges.
- * ranges can be of the form
- *    a-z
- *    \040-\177
- *    \x20-\x80
+ *    I did choose to follow most of the POSIX syntax. It is probably
+ *    a sign of weakness.
+ *    This interface should be able to do everything a POSIX interface can,
+ *    possibly more.
+ *
+ * -  It allows separate specification of src, dst, del and squash sets.
+ * -  Provisionally we accept "^spec" to indicate complement,
+ *       for any of src dst del squash sets.
+ * -  It uses [*c*20] to denote repeats, rather than [c*20].
+ *       rationale: do not slam door shut on new syntax.
+ * -  It does not recognize '[a-z]' ranges, only 'a-z'.
+ *       rationale: none. If ever, notation will be [-a-z] or similar.
+ * -  The magic repeat operator [*c#] stops on boundaries
+ *       rationale: I like it.
+ *       A boundary is introduced by stop/start of ranges and classes.
+ * -  The magic repeat operator [*c*] does not stop on boundaries.
+ * -  For now, the interface does 1) deletion, 2) translation, 3) squashing.
+ *       in the future it may provide a custom order of doing things.
+ * 
  *
  * Apart from the fact that you cannot have '\0' in C strings, everything
  * here should work for '\0' as well - specifically the mcxTrTable structure.
@@ -35,6 +56,9 @@
  *
 */
 
+extern const char* mcx_tr_err;
+extern mcxbool     mcx_tr_debug;
+
 
 typedef struct
 {  u32      tlt[256]
@@ -43,58 +67,39 @@ typedef struct
 }  mcxTR    ;
 
 
-#define MCX_TR_DEFAULT          0
-#define MCX_TR_SQUASH_C    1 << 0
-#define MCX_TR_DELETE_C    1 << 1
-#define MCX_TR_SRC_C       1 << 2
-#define MCX_TR_DST_C       1 << 3
+#define MCX_TR_DEFAULT           0
+#define MCX_TR_TRANSLATE   1 <<  1
+
+#define MCX_TR_SOURCE      1 <<  2
+#define MCX_TR_DEST        1 <<  3
+#define MCX_TR_SQUASH      1 <<  4
+#define MCX_TR_DELETE      1 <<  5
+
+#define MCX_TR_SOURCE_C    1 <<  6
+#define MCX_TR_DEST_C      1 <<  7
+#define MCX_TR_DELETE_C    1 <<  8
+#define MCX_TR_SQUASH_C    1 <<  9
 
 
-#define MCX_TR_SQUASH      1 << 4
-#define MCX_TR_DELETE      1 << 5
-#define MCX_TR_COMPLEMENT  1 << 6
+#define MCX_TR_COMPLEMENT  1 << 10
 
 
-mcxstatus mcx_tr_load
-(  const char* src
+mcxstatus mcxTRloadTable
+(  mcxTR*      tr
+,  const char* src
 ,  const char* dst
 ,  const char* delete
 ,  const char* squash
-,  mcxTR*      tr
 ,  mcxbits     modes
-)  ;
-
-
-mcxbool mcxTRLoadTable
-(  const char*    src
-,  const char*    dst
-,  mcxTR*         tr
-,  mcxbits        flags
 )  ;
 
 
   /*  returns new length of string.
    *  fixme: document map/squash semantics.
   */
-int mcxTRTranslate
+int mcxTRtranslate
 (  char*    src
 ,  mcxTR*   tr
-)  ;
-
-
-
-   /* excepts only MCX_TR_COMPLEMENT.
-    * returns a string in native character set
-    * order, except that
-    *    1) a hyphen is put in front.
-    *    2) a backslash is put at the end,
-    * so that the result can be used as a valid specification.
-    *
-    * This interface is still subject to change.
-   */
-mcxTing* mcxTRExpandSpec
-(  const char* spec
-,  mcxbits  bits
 )  ;
 
 
@@ -107,12 +112,57 @@ int mcxTingTr
 (  mcxTing*       txt
 ,  const char*    src
 ,  const char*    dst
+,  const char*    delete
+,  const char*    squash
 ,  mcxbits        flags
 )  ;
 
 
-mcxTing* mcxTRLoadSpec
-(  const char*    src
+/* Accepts e.g. \012 and sets *value to 10.
+ * idem \xa0 and \n (\t, \r, \b etc)
+ * Does *not* yet accept \0xa0
+ *
+ * Returns next parsable character.
+ *
+ * This interface should be moved to ding.
+*/
+
+char* mcxStrEscapedValue
+(  const char* p
+,  const char* z
+,  int   *value
+)  ;
+
+
+
+/* 
+ * returns a ting containing all the characters according to bits.
+ * bits accept
+ *    MCX_TR_SOURCE
+ *    MCX_TR_SOURCE_C
+ *    MCX_TR_SQUASH
+ *    MCX_TR_SQUASH_C
+ *    MCX_TR_DELETE
+ *    MCX_TR_DELETE_C
+ *
+ * NOTE
+ *    MCX_TR_DEST
+ *    MCX_TR_DEST_C
+ *    are not yet implemented.
+ *
+ * NOTE DANGER SIGN
+ *    tr no longer contains information on complements that were
+ *    used in constructing it.
+ *    The complements that bits refer to is simply the information
+ *    present in tr.
+ *    So a   source of "^a-z"  given to mcxTRloadTable
+ *    and    MCX_TR_SOURCE_C given to mcxTRsplash
+ *    result in a string containing all of a-z.
+*/
+
+mcxTing* mcxTRsplash
+(  mcxTR*   tr
+,  mcxbits  bits
 )  ;
 
 

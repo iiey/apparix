@@ -1,4 +1,4 @@
-/*            Copyright (C) 2005 Stijn van Dongen
+/* (c) Copyright 2005 Stijn van Dongen
  *
  * This file is part of apparix.  You can redistribute and/or modify apparix
  * under the terms of the GNU General Public License; either version 2 of the
@@ -12,10 +12,12 @@
 #include <ctype.h>
 #include <errno.h>
 
-#include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
+
+#include "version.h"
 
 #include "util/io.h"
 #include "util/alloc.h"
@@ -23,6 +25,8 @@
 #include "util/err.h"
 #include "util/tok.h"
 #include "util/ding.h"
+#include "util/ting.h"
+#include "util/types.h"
 
 enum
 {  MY_OPT_ADD_JUMP
@@ -36,6 +40,7 @@ enum
 ,  MY_OPT_SHOW
 ,  MY_OPT_CWD
 ,  MY_OPT_SHELL
+,  MY_OPT_VERSION
 ,  MY_OPT_HELP
 ,  MY_OPT_APROPOS
 }  ;
@@ -46,7 +51,11 @@ static const char* me    =  "apparix";
 const char* shell_examples[] =
 {  "BASH-style functions\n---"
 ,  "function to () {"
-,  "   apparix \"$1\" && cd \"`cat \"$HOME/.apparixresult\"`\" ;"
+,  "   if test \"$2\"; then"
+,  "     apparix \"$1\" \"$2\" && cd \"`cat \"$HOME/.apparixresult\"`\" ;"
+,  "   else"
+,  "     apparix \"$1\" && cd \"`cat \"$HOME/.apparixresult\"`\" ;"
+,  "   fi"
 ,  "}"
 ,  "function bm () {"
 ,  "   if test \"$2\"; then"
@@ -64,7 +73,18 @@ const char* shell_examples[] =
 ,  "      apparix --add-portal && cd \"`cat \"$HOME/.apparixresult\"`\" ;"
 ,  "   fi"
 ,  "}"
-,  "CSH-style aliases\n---"
+,  "# function to generate list of completions from .apparixrc"
+,  "function _apparix_aliases () {"
+,  "   cur=$2"
+,  "   COMPREPLY=()"
+,  "   COMPREPLY=( $( (echo $cur ; cat $HOME/.apparix{rc,expand}) | \\"
+,  "   grep \"j,$cur\" | cut -f2 -d, ) )"
+,  "   return 0"
+,  "}"
+,  "# command to register the above to expand when the 'to' command's args are"
+,  "# being expanded"
+,  "complete -F _apparix_aliases to"
+,  "---\nCSH-style aliases\n---"
 ,  "alias to   'apparix \\!* && cd `cat $HOME/.apparixresult`'"
 ,  "alias bm   'apparix --add-mark \\!*'"
 ,  "alias portal 'apparix --add-portal \\!*'"
@@ -81,6 +101,18 @@ mcxOptAnchor options[] =
    ,  NULL
    ,  "print this help"
    }
+,  {  "--version"
+   ,  MCX_OPT_DEFAULT | MCX_OPT_INFO
+   ,  MY_OPT_VERSION
+   ,  NULL
+   ,  "print version and exit"
+   }
+,  {  "-v"
+   ,  MCX_OPT_DEFAULT | MCX_OPT_INFO
+   ,  MY_OPT_VERSION
+   ,  NULL
+   ,  "print version and exit"
+   }
 ,  {  "-h"
    ,  MCX_OPT_DEFAULT | MCX_OPT_INFO
    ,  MY_OPT_HELP
@@ -91,13 +123,13 @@ mcxOptAnchor options[] =
    ,  MCX_OPT_DEFAULT
    ,  MY_OPT_ADD_JUMP
    ,  NULL
-   ,  "add jump bookmark, expects trailing <mark> [destination]"
+   ,  "add jump bookmark, accepts trailing [mark [destination]]"
    }
 ,  {  "--add-portal"
    ,  MCX_OPT_DEFAULT
    ,  MY_OPT_ADD_PORTAL
    ,  NULL
-   ,  "add portal bookmark, optionally accepts [destination]"
+   ,  "add portal bookmark, accepts trailing [destination]"
    }
 ,  {  "--squash-mark"
    ,  MCX_OPT_DEFAULT
@@ -160,6 +192,22 @@ mcxOptAnchor options[] =
    ,  NULL
    }
 }  ;
+
+
+void show_version
+(  void
+)
+   {  fprintf
+      (  stdout
+      ,
+"apparix %s, %s\n"
+"(c) Copyright 2005, Stijn van Dongen. apparix comes with NO WARRANTY\n"
+"to the extent permitted by law. You may redistribute copies of apparix under\n"
+"the terms of the GNU General Public License.\n"
+      ,  apxNumTag
+      ,  apxDateTag
+      )
+;  }
 
 
 
@@ -781,6 +829,11 @@ int main
          ;  return 0
          ;
 
+            case  MY_OPT_VERSION
+         :  show_version()
+         ;  exit(0)
+         ;
+
             case  MY_OPT_ADD_JUMP
          :  add_jump = TRUE
          ;  break
@@ -853,8 +906,6 @@ int main
    ;  if (rehash)
       return bookmark_resync_portal(flrc, xfport)
 
-   ;  mcxIOopen(xfresult, EXIT_ON_FAIL)
-
    ;  if (!(flport = resource_prepare(xfport, "expansion")))
       return STATUS_FAIL
 
@@ -887,14 +938,19 @@ int main
 /* ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** */
       if (add_jump)
       {  const char* dest, *newmark
+      ;  mcxTing* pwd
       
-      ;  dest     =     n_arg_trailing == 2 ? argv[argc-1] : NULL
+      ;  dest     =     n_arg_trailing >= 2 ? argv[argc-1] : NULL
+
+      ;  if (n_arg_trailing > 2)
+         mcxErr(me, "ignoring trailing arguments")
+
       ;  newmark  =     dest
                      ?  argv[argc-2]
                      :     n_arg_trailing == 1
                         ?  argv[argc-1]
                         :  NULL
-      ;  mcxTing* pwd  =  mcxTingEmpty(NULL, 256)
+      ;  pwd  =  mcxTingEmpty(NULL, 256)
 
       ;  if (!dest)
          {  if (use_cwd)
@@ -905,10 +961,12 @@ int main
          ;  }
             else
             {  mcxIO* xfpipe = mcxIOnew("dummy-file-name", "r")
-            ;  FILE*  p       =  popen("pwd", "r")
+            ;  FILE*  p =  popen("pwd", "r")
             ;  if (p)
-               {  xfpipe->fp = p       /* (donot) fixme (yet) warning danger sign todo */
-               ;  mcxIOreadLine(xfpipe, pwd, MCX_READLINE_CHOMP) /* fixme check status */
+               {  xfpipe->fp = p       /* its a hack */
+               ;  mcxIOreadLine(xfpipe, pwd, MCX_READLINE_CHOMP)
+                     /* xfpipe: (donot) fixme (yet) warning danger sign todo */
+                     /* readline: fixme check status */
                ;  pclose(p)
                ;  xfpipe->fp = NULL
                ;  dest = pwd->str
@@ -922,7 +980,7 @@ int main
          if (!newmark)
          {  const char* sep = strrchr(dest, '/')
          ;  if (!sep)
-               mcxErr(me, "strangeî€€- no separator in %s", dest)
+               mcxErr(me, "strangeî - no separator in %s", dest)
             ,  newmark = dest
          ;  else
             newmark = sep+1
@@ -961,7 +1019,8 @@ int main
       ;  return bookmark_show(flrc, showarg)
    ;  }
 
-      if
+      mcxIOopen(xfresult, EXIT_ON_FAIL)
+   ;  if
       (  STATUS_FAIL
       == (status = attempt_jump(flrc, flport, xfresult, mark, sub))
       )

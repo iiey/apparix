@@ -1,27 +1,39 @@
 
--  -v for version number.
+-  warn when a new bm is a duplicate.
+
+=  change to tab separated resource files.
+
+=  when a subdirectory is given it could be used to resolve
+   multiple hits.
+
+?  exclusion line in apparix.rc; specify certain names not
+   to bookmark; eg src CVS etc.
+
+?  additional clues for resolution: longest path or sth.
+   to mcl -d   deepest path   
+   to mcl -s   shortest path
+   to mcl -c   closest path (to current directory)
+   to mcl -1    option 1
+   to mcl +foobar  to option matching foobar
+
+?  option --rename-tag foo bar
+   |
+-  make separate routine that lists a number of choices and
+   returns a number.
+
+?  automatic affixing option for deduplication?
 
 -  Joost pointed out that $HOME/apparix/{rc,expand,result} would be
    neater.
 
--  issuing --add-mark should take the trailing component of the path
-   as the bookmark.
-
-?
--? option where regular bookmarks are prefered over expansion bookmarks.
-?
-
 -  for a portal, optionally add a bookmark for the portal itself?
    could do this with a two-argument invocation.
 
--  when a subdirectory is given it could be used to resolve
-   multiple hits.
-
 #  make a mode (maybe -a) to simply list all matching occurrences
-   without going into the menue if multiple matches.
-
+   without going into the menu if multiple matches.
    hum ho, that's what grep is for.
 
+   note that simply 'apparix' lists all the bookmarks.
 
 ?  if no exact match, make menu for strstr occurrences.
       (e.g. strcmp/strstr callback to attempt_jump)
@@ -31,16 +43,15 @@
    except that this does not work with multiple matches.
    could kludge by checking for isatty(fileno(stdout)) ..
 
--   clean up all the bookmark_* that don't return (close IO)
+-  clean up all the bookmark_* that don't return (close IO)
 
    clean up all the dies to close IO etc.
 <?
    add xf to fl as a member, so routines can close it.
    provide CLOSE_XF argument to bookmark routines.
 
-?  -quo t  (show all marks)
+#  -quo t  (show all marks)
    -quo e  (show all portals)
    -quo a  (show all marks + expansions)
-
--  analysis/warning modes for duplicates etc.
+   again, use grep.
 

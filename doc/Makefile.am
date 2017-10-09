@@ -18,8 +18,8 @@ EXTRA_DIST = $(azms) $(docdoc_DATA)  $(man_MANS)
 SUFFIXES = .1 .7 .azm .html .ps
 
 .azm.1:
-	$(ZOEM) -d roff -i $< -o $@
-	$(ZOEM) -d roff -i $< -o $@
+	$(ZOEM) --allow=../src/apparix -d roff -i $< -o $@
+	$(ZOEM) --allow=../src/apparix -d roff -i $< -o $@
 
 .azm.7:
 	$(ZOEM) -d roff -i $< -o $@
@@ -32,7 +32,7 @@ SUFFIXES = .1 .7 .azm .html .ps
 	$(TROFF) -man $< > $@
 
 .azm.html:
-	$(ZOEM) -d html -i $< -o $@
-	$(ZOEM) -d html -i $< -o $@
+	$(ZOEM) --allow=../src/apparix -d html -i $< -o $@
+	$(ZOEM) --allow=../src/apparix -d html -i $< -o $@
 	- $(TIDY) -e $@
 

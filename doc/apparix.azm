@@ -9,11 +9,11 @@
 \setx{"man::tag"}{\zinsert{stamp.tag}}
 \setx{"man::stamp"}{\zinsert{stamp.stamp}}
 
-\setx{"man::year"}{\tr{}{\012}{}{\"man::year"}}
-\setx{"man::month"}{\tr{}{\012}{}{\"man::month"}}
-\setx{"man::day"}{\tr{}{\012}{}{\"man::day"}}
-\setx{"man::stamp"}{\tr{}{\012}{}{\"man::stamp"}}
-\setx{"man::tag"}{\tr{}{\012}{}{\"man::tag"}, \"man::stamp"}
+\setx{"man::year"}{\tr{{delete}{[:space:]}}{\"man::year"}}
+\setx{"man::month"}{\tr{{delete}{[:space:]}}{\"man::month"}}
+\setx{"man::day"}{\tr{{delete}{[:space:]}}{\"man::day"}}
+\setx{"man::stamp"}{\tr{{delete}{[:space:]}}{\"man::stamp"}}
+\setx{"man::tag"}{\tr{{delete}{[:space:]}}{\"man::tag"}}
 
 \set{"man::name"}{apparix}
 \set{"man::html-title"}{apparix}
@@ -41,10 +41,13 @@ functions that can be changed to have any name the user desires.}
 > \bf{ls}
 src/ doc/ CVS/ bin/
 > \bf{bm xkr}          # bookmark as xkr (funny name though)
+> \bf{bm}              # bookmark as foo (trailing component is default)
 (later)
 > \bf{to xkr}          # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 (alternatively)
 > \bf{to xkr src}      # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo/src
+(alternatively)
+> \bf{to foo}          # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 
 
 (later)
@@ -55,7 +58,33 @@ aap pyu/ qua tim/ zut/
 > \bf{portal}          # bookmark as portal, imports tim zut pyu bookmarks
 
 (later)
-> \bf{to zut}          # cd to /home/eez/another/branch/deep/down/under/zut}
+> \bf{to zut}          # cd to /home/eez/another/branch/deep/down/under/zut
+
+(later)
+> \bf{apparix}         # show all bookmarks
+j pyu    /home/eez/another/branch/deep/down/under/tim
+j tim    /home/eez/another/branch/deep/down/under/pyu
+j zut    /home/eez/another/branch/deep/down/under/zut
+---
+e        /home/eez/another/branch/deep/down/under/zut
+j xkr    /home/eez/cvs/xyz/tfa/faq/zut/bar/foo}
+
+\car{In the last example apparix simply shows all its bookmarks.
+The first batch shows secondary bookmarks expanded from portals. The second
+batch shows all primary bookmarks and portals.}
+
+\cpar{Further options}{
+\synoptopt{--add-mark}{add jump bookmark}
+\synoptopt{--add-portal}{add portal bookmark}
+\synoptopt{--squash-mark}{squash repeated marks}
+\synoptopt{--squash-dest}{squash repeated destinations}
+\synoptopt{-rid}{pat}{delete bookmarks}
+\synoptopt{-rid-mark}{pat}
+\synoptopt{--rehash}{re-expand portal bookmarks}
+\synoptopt{--quo}{dump bookmarks}
+\synoptopt{--cwd}{use getcwd(3), not pwd(1)}
+\synoptopt{--shell-examples}{output example macros}
+}
 
 
 \sec{description}{DESCRIPTION}
@@ -70,6 +99,9 @@ aap pyu/ qua tim/ zut/
    unmarking and jumping are simple operations that are performed in the
    current shell. By setting up convenient aliases for marking and jumping the
    file system can be navigated in a fast and intuitive manner.
+   The \secref{files} section lists aliases for csh-type shells and
+   functions for bash, including the setup to equip the \bf{to} function
+   with argument completion in bash.
 }
 
 \par{
@@ -91,7 +123,8 @@ aap pyu/ qua tim/ zut/
    Apparix works in a manner very similar to \bf{cdargs}. One usually invokes
    apparix by using pre-defined aliases. Here they will be called \bf{bm} for
    bookmark, \bf{portal} for a CPPATH-style bookmark and \bf{to} for initiating
-   an apparition (aka jump) .  These aliases are found below in the \secref{files}
+   an apparition (aka jump).
+   These aliases are found below in the \secref{files}
    section and can also be obtained by issuing
 }
 
@@ -121,6 +154,17 @@ added: foo -> /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 /home/eez> \bf{to foo}
 /home/eez/cvs/xyz/tfa/faq/zut/bar/foo>}
 
+\car{
+   If one bookmarks a directory by its trailing component as happened in
+   this case, it is not necessary to specify the mark. By default apparix
+   will use the trailing component as the mark. So
+}
+
+\verbatim{\:/
+/home/eez/cvs/xyz/tfa/faq/zut/bar/foo> \bf{bm}
+added: foo -> /home/eez/cvs/xyz/tfa/faq/zut/bar/foo}
+
+\car{gives the same result.}
 
 \par{
    Another scenario is where you have some directory that contains a largish
@@ -194,12 +238,17 @@ underneath a portal.}
 
 \sec{options}{OPTIONS}
 
-\par{
+\car{
    For bookmarking and jumping apparix is best invoked by using the aliases
    (tcsh-variants) or functions (sh/bash) listed in \secref{files}.
    Apparix has a few options that are useful for pruning, squashing and
-   rehasing bookmarks. These are best issued by invoking apparix directly.
-}
+   rehasing bookmarks. These are best issued by invoking apparix directly.}
+
+\par{
+   If you are intested in marks or destinations matching a certain pattern,
+   simply issue \bf{apparix} without arguments and pipe it through
+   your program of choice.}
+
 
 \begin{itemize}
 
@@ -236,6 +285,8 @@ underneath a portal.}
 \item{\defopt{-rid}{pat}{delete bookmarks}}
 \car{
    This deletes bookmarks where destination matches \genarg{pat}.
+   All deleted bookmarks are printed to STDOUT. Thus if you regret
+   deleting a bookmark it is easy to add it back.
 }
 
 \item{\defopt{-rid-mark}{pat}}
@@ -272,8 +323,8 @@ underneath a portal.}
 }
 
 \items{
-   {\defopt{-h}}
-   {\defopt{--apropos}}
+   {\defopt{-h}{show synopsis}}
+   {\defopt{--apropos}{show synopsis}}
 }
 \car{print synopsis of all options}
 
@@ -286,6 +337,7 @@ underneath a portal.}
    You should use aliases or functions to make apparix really useful.
    Get them from apparix by giving it the --shell-examples option,
    or from further below.
+   Note the fragment that provides \bf{to} argument complemetion in bash.
 }
 
 \begin{itemize}{}
@@ -308,35 +360,9 @@ and functions below use this file to point \it{cd}(1) in the right
 direction.}
 \end{itemize}
 
+\setx{"examples"}{\system{../src/apparix}{{--shell-examples}}}
 
-\verbatim{\protect{BASH-style functions
----
-function to () {
-   apparix "$1" && cd "`cat "$HOME/.apparixresult"`" ;
-}
-function bm () {
-   if test "$2"; then
-      apparix --add-mark "$1" "$2" && cd "`cat "$HOME/.apparixresult"`" ;
-   elif test "$1"; then
-      apparix --add-mark "$1" && cd "`cat "$HOME/.apparixresult"`" ;
-   else
-      apparix --add-mark && cd "`cat "$HOME/.apparixresult"`" ;
-   fi
-}
-function portal () {
-   if test "$1"; then
-      apparix --add-portal "$1" && cd "`cat "$HOME/.apparixresult"`" ;
-   else
-      apparix --add-portal && cd "`cat "$HOME/.apparixresult"`" ;
-   fi
-}
----
-CSH-style aliases
----
-alias to   'apparix \!* && cd `cat $HOME/.apparixresult`'
-alias bm   'apparix --add-jump \!*'
-alias portal 'apparix --add-portal \!*'
-}}
+\apply{_#1{\!{\verbatim{\1}}}}{{\"examples"}}
 
 
 \sec{notes}{NOTES}
@@ -406,14 +432,44 @@ alias portal 'apparix --add-portal \!*'
 }
 
 \par{
-   Finally apparix (and cdargs) have another use besides jumping, namely
+   Then apparix (and cdargs) have another use besides jumping, namely
    annotation. Whenever I end up in an esoteric part of the file system and
    need to make a quick note of the location, I simply bookmark  it.
 }
 
+\par{
+   On SlashDot, that eternal source of wisdom or alternatively
+   the geek wheel of suffering, Clueless Moron offered the following gems.}
+
+\verbatim{\:/
+   mk() { eval ${1:-MKPWD}=\\"`pwd`\\"; }
+   rt() { eval cd \\"\\$${1:-MKPWD}\\";pwd; }
+
+   # type "mk" (as in "mark") and "rt" (as in "return") to mark
+   # a directory and later go back to it.
+   # Or give it a name: do "mk foo", and later on "rt foo"}
+
+\par{
+   This of course is a per-session mechanism, but noteworthy
+   for its simplicity. I am not sure whether csh-style shells
+   could offer an equivalent.}
+
+\par{
+   A feature shared by apparix and cdargs is that adding a bookmark
+   immediately takes effect in all shells. There is no need to
+   source some resource file, as the applications do this everytime
+   they are invoked. It is fast, do not worry.
+}
+
+\sec{bugs}{BUGS}
+
+\car{The resource file parsing code thinks that parentheses are special.
+Also records are currently separated by commas.
+Accordingly, apparix will hitch if a path name contains an opening parenthesis
+or a comma.}
 
 \sec{author}{AUTHOR}
-\par{
+\car{
    Stijn van Dongen.
 }
 

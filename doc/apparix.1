@@ -1,5 +1,5 @@
 .\" Copyright (c) 2005 Stijn van Dongen
-.TH "apparix" 1 "11 Oct 2005" "apparix 1\&.001, 05-284" "USER COMMANDS "
+.TH "apparix" 1 "2 Nov 2005" "apparix 1\&.001" "USER COMMANDS "
 .po 2m
 .de ZI
 .\" Zoem Indent/Itemize macro I.
@@ -42,10 +42,13 @@ functions that can be changed to have any name the user desires\&.
 > \fBls\fP
 src/ doc/ CVS/ bin/
 > \fBbm xkr\fP          # bookmark as xkr (funny name though)
+> \fBbm\fP              # bookmark as foo (trailing component is default)
 (later)
 > \fBto xkr\fP          # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 (alternatively)
 > \fBto xkr src\fP      # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo/src
+(alternatively)
+> \fBto foo\fP          # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 
 
 (later)
@@ -57,6 +60,15 @@ aap pyu/ qua tim/ zut/
 
 (later)
 > \fBto zut\fP          # cd to /home/eez/another/branch/deep/down/under/zut
+
+(later)
+> \fBapparix\fP         # show all bookmarks
+j pyu    /home/eez/another/branch/deep/down/under/tim
+j tim    /home/eez/another/branch/deep/down/under/pyu
+j zut    /home/eez/another/branch/deep/down/under/zut
+---
+e        /home/eez/another/branch/deep/down/under/zut
+j xkr    /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 .fi \fR
 .in
 .di
@@ -65,6 +77,22 @@ aap pyu/ qua tim/ zut/
 .ZV
 .fi \fR
 
+In the last example apparix simply shows all its bookmarks\&.
+The first batch shows secondary bookmarks expanded from portals\&. The second
+batch shows all primary bookmarks and portals\&.
+
+\fBFurther options\fP
+.br
+\fB[--add-mark\fP (\fIadd jump bookmark\fP)\fB]\fP
+\fB[--add-portal\fP (\fIadd portal bookmark\fP)\fB]\fP
+\fB[--squash-mark\fP (\fIsquash repeated marks\fP)\fB]\fP
+\fB[--squash-dest\fP (\fIsquash repeated destinations\fP)\fB]\fP
+\fB[-rid\fP pat (\fIdelete bookmarks\fP)\fB]\fP
+\fB[-rid-mark\fP (\fIpat\fP)\fB]\fP
+\fB[--rehash\fP (\fIre-expand portal bookmarks\fP)\fB]\fP
+\fB[--quo\fP (\fIdump bookmarks\fP)\fB]\fP
+\fB[--cwd\fP (\fIuse getcwd(3), not pwd(1)\fP)\fB]\fP
+\fB[--shell-examples\fP (\fIoutput example macros\fP)\fB]\fP
 .SH DESCRIPTION
 
 Apparix combines the properties of the
@@ -76,6 +104,9 @@ to locations and jump to those locations by loading the mark\&. Marking,
 unmarking and jumping are simple operations that are performed in the
 current shell\&. By setting up convenient aliases for marking and jumping the
 file system can be navigated in a fast and intuitive manner\&.
+The \fBFILES\fP section lists aliases for csh-type shells and
+functions for bash, including the setup to equip the \fBto\fP function
+with argument completion in bash\&.
 
 This section contains some examples of the most common uses
 of apparix\&.
@@ -91,7 +122,8 @@ of these\&. \fBHISTORY\fP explains the difference between
 Apparix works in a manner very similar to \fBcdargs\fP\&. One usually invokes
 apparix by using pre-defined aliases\&. Here they will be called \fBbm\fP for
 bookmark, \fBportal\fP for a CPPATH-style bookmark and \fBto\fP for initiating
-an apparition (aka jump) \&. These aliases are found below in the \fBFILES\fP
+an apparition (aka jump)\&.
+These aliases are found below in the \fBFILES\fP
 section and can also be obtained by issuing
 
 .di ZV
@@ -134,6 +166,25 @@ added: foo -> /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 .nf \fC
 .ZV
 .fi \fR
+
+If one bookmarks a directory by its trailing component as happened in
+this case, it is not necessary to specify the mark\&. By default apparix
+will use the trailing component as the mark\&. So
+
+.di ZV
+.in 0
+.nf \fC
+/home/eez/cvs/xyz/tfa/faq/zut/bar/foo> \fBbm\fP
+added: foo -> /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+.fi \fR
+.in
+.di
+.ne \n(dnu
+.nf \fC
+.ZV
+.fi \fR
+
+gives the same result\&.
 
 Another scenario is where you have some directory that contains a largish
 number of subdirectories, all of which you would like to have bookmarked\&.
@@ -210,11 +261,14 @@ after the bookmark\&. Apparix will append the subdirectory to
 the destination\&. This does require you know the exact name of
 the subdirectory you want to visit\&.
 .SH OPTIONS
-
 For bookmarking and jumping apparix is best invoked by using the aliases
 (tcsh-variants) or functions (sh/bash) listed in \fBFILES\fP\&.
 Apparix has a few options that are useful for pruning, squashing and
 rehasing bookmarks\&. These are best issued by invoking apparix directly\&.
+
+If you are intested in marks or destinations matching a certain pattern,
+simply issue \fBapparix\fP without arguments and pipe it through
+your program of choice\&.
 
 .ZI 3m "\fB--add-mark\fP (\fIadd jump bookmark\fP)"
 \&
@@ -255,6 +309,8 @@ simply keep the last one occurring in the resource file\&.
 \&
 .br
 This deletes bookmarks where destination matches \fIpat\fP\&.
+All deleted bookmarks are printed to STDOUT\&. Thus if you regret
+deleting a bookmark it is easy to add it back\&.
 .in -3m
 
 .ZI 3m "\fB-rid-mark\fP (\fIpat\fP)"
@@ -295,10 +351,10 @@ This outputs example macros\&. They are also listed in the
 \fBFILES\fP section though\&.
 .in -3m
 
-.ZI 3m ""
+.ZI 3m "\fB-h\fP (\fIshow synopsis\fP)"
 \&
 'in -3m
-.ZI 3m ""
+.ZI 3m "\fB--apropos\fP (\fIshow synopsis\fP)"
 \&
 'in -3m
 'in +3m
@@ -311,6 +367,7 @@ print synopsis of all options
 You should use aliases or functions to make apparix really useful\&.
 Get them from apparix by giving it the --shell-examples option,
 or from further below\&.
+Note the fragment that provides \fBto\fP argument complemetion in bash\&.
 
 .ZI 3m "$HOME/\&.apparixrc"
 \&
@@ -356,7 +413,11 @@ direction\&.
 BASH-style functions
 ---
 function to () {
-   apparix "$1" && cd "\&`cat "$HOME/\&.apparixresult"\&`" ;
+   if test "$2"; then
+     apparix "$1" "$2" && cd "\&`cat "$HOME/\&.apparixresult"\&`" ;
+   else
+     apparix "$1" && cd "\&`cat "$HOME/\&.apparixresult"\&`" ;
+   fi
 }
 function bm () {
    if test "$2"; then
@@ -374,12 +435,24 @@ function portal () {
       apparix --add-portal && cd "\&`cat "$HOME/\&.apparixresult"\&`" ;
    fi
 }
+# function to generate list of completions from \&.apparixrc
+function _apparix_aliases () {
+   cur=$2
+   COMPREPLY=()
+   COMPREPLY=( $( (echo $cur ; cat $HOME/\&.apparix{rc,expand}) | \e
+   grep "j,$cur" | cut -f2 -d, ) )
+   return 0
+}
+# command to register the above to expand when the \&'to\&' command\&'s args are
+# being expanded
+complete -F _apparix_aliases to
 ---
 CSH-style aliases
 ---
 alias to   \&'apparix \e!* && cd \&`cat $HOME/\&.apparixresult\&`\&'
-alias bm   \&'apparix --add-jump \e!*\&'
+alias bm   \&'apparix --add-mark \e!*\&'
 alias portal \&'apparix --add-portal \e!*\&'
+---
 .fi \fR
 .in
 .di
@@ -442,11 +515,44 @@ apparix however, I would mistakenly issue \fIto\fP rather than \fIcd\fP
 to jump to those locations\&. My brain classified both types of jump
 in the same category\&.
 
-Finally apparix (and cdargs) have another use besides jumping, namely
+Then apparix (and cdargs) have another use besides jumping, namely
 annotation\&. Whenever I end up in an esoteric part of the file system and
 need to make a quick note of the location, I simply bookmark it\&.
-.SH AUTHOR
 
+On SlashDot, that eternal source of wisdom or alternatively
+the geek wheel of suffering, Clueless Moron offered the following gems\&.
+
+.di ZV
+.in 0
+.nf \fC
+   mk() { eval ${1:-MKPWD}=\e"\&`pwd\&`\e"; }
+   rt() { eval cd \e"\e$${1:-MKPWD}\e";pwd; }
+
+   # type "mk" (as in "mark") and "rt" (as in "return") to mark
+   # a directory and later go back to it\&.
+   # Or give it a name: do "mk foo", and later on "rt foo"
+.fi \fR
+.in
+.di
+.ne \n(dnu
+.nf \fC
+.ZV
+.fi \fR
+
+This of course is a per-session mechanism, but noteworthy
+for its simplicity\&. I am not sure whether csh-style shells
+could offer an equivalent\&.
+
+A feature shared by apparix and cdargs is that adding a bookmark
+immediately takes effect in all shells\&. There is no need to
+source some resource file, as the applications do this everytime
+they are invoked\&. It is fast, do not worry\&.
+.SH BUGS
+The resource file parsing code thinks that parentheses are special\&.
+Also records are currently separated by commas\&.
+Accordingly, apparix will hitch if a path name contains an opening parenthesis
+or a comma\&.
+.SH AUTHOR
 Stijn van Dongen\&.
 .SH HISTORY
 

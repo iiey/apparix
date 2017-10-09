@@ -140,7 +140,8 @@ mcxIO* mcxIOrenew
       ;  xf->fp   =  NULL
       ;  xf->mode =  NULL
    ;  }
-      else if (mcxIOwarnOpenfp(xf, "mcxIOrenew"))
+      else if (xf->stdio)
+   ;  else if (mcxIOwarnOpenfp(xf, "mcxIOrenew"))
       mcxIOclose(xf)
 
    ;  mcxIOreset(xf)
@@ -738,9 +739,11 @@ mcxbool mcxIOwriteCookie
 )
    {  int n_written = fwrite(&number, sizeof(int), 1, xf->fp)
    ;  if (n_written != 1)
-      return FALSE
+      {  mcxErr("mcxIOwriteCookie", "failed to write <%d>", number)
+      ;  return FALSE
+   ;  }
 
-   ;  return TRUE
+      return TRUE
 ;  }
 
 

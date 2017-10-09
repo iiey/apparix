@@ -1,5 +1,7 @@
 
-Additional change since initial release.
+Wed, 2 Nov 2005
+
+   *  apparix-05-306 released.
 
    *  apparix --add-jump without any arguments will take the trailing component
       of the current directory as the bookmark, with the directory itself as
@@ -8,6 +10,13 @@ Additional change since initial release.
       With the shorthand alias/function bm that means simply entering
          bm
       does the trick.
+
+   *  The bash to() function was wrongly documented. It would not pass through
+      subdirectory specification. Now updated.
+
+   *  added -v option to show version information.
+
+   *  more documentation.
 
 Mon, 10 Oct 2005
 

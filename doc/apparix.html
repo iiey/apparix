@@ -11,7 +11,6 @@ background: white;
 margin-left: 8%;
 margin-right: 8%;
 font-family: Helvetica, Univers, Verdana, sans-serif;
-text-align: justify;
 }
 p.default {
 font-family: Helvetica, Univers, Verdana, sans-serif;
@@ -69,9 +68,9 @@ margin-right: 0%;
 </head>
 <body>
 <p style="text-align:right">
-11 Oct 2005&nbsp;&nbsp;&nbsp;
+2 Nov 2005&nbsp;&nbsp;&nbsp;
 <a class="local" href="apparix.ps"><b>apparix</b></a>
-1.001, 05-284
+1.001
 </p>
 <div style="margin-top:1em">
 <table
@@ -90,8 +89,10 @@ cellpadding="0" summary="itemize">
 </div></td></tr><tr><td width=48 valign="top" class=left>6.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
 <a class="intern" href="#notes">NOTES</a>
 </div></td></tr><tr><td width=48 valign="top" class=left>7.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
-<a class="intern" href="#author">AUTHOR</a>
+<a class="intern" href="#bugs">BUGS</a>
 </div></td></tr><tr><td width=48 valign="top" class=left>8.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+<a class="intern" href="#author">AUTHOR</a>
+</div></td></tr><tr><td width=48 valign="top" class=left>9.</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
 <a class="intern" href="#history">HISTORY</a>
 </div></td></tr>
 </table>
@@ -112,10 +113,13 @@ functions that can be changed to have any name the user desires.</p>
 &gt; <b>ls</b>
 src/ doc/ CVS/ bin/
 &gt; <b>bm xkr</b>          # bookmark as xkr (funny name though)
+&gt; <b>bm</b>              # bookmark as foo (trailing component is default)
 (later)
 &gt; <b>to xkr</b>          # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 (alternatively)
 &gt; <b>to xkr src</b>      # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo/src
+(alternatively)
+&gt; <b>to foo</b>          # cd to /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 
 
 (later)
@@ -126,7 +130,31 @@ aap pyu/ qua tim/ zut/
 &gt; <b>portal</b>          # bookmark as portal, imports tim zut pyu bookmarks
 
 (later)
-&gt; <b>to zut</b>          # cd to /home/eez/another/branch/deep/down/under/zut</pre>
+&gt; <b>to zut</b>          # cd to /home/eez/another/branch/deep/down/under/zut
+
+(later)
+&gt; <b>apparix</b>         # show all bookmarks
+j pyu    /home/eez/another/branch/deep/down/under/tim
+j tim    /home/eez/another/branch/deep/down/under/pyu
+j zut    /home/eez/another/branch/deep/down/under/zut
+---
+e        /home/eez/another/branch/deep/down/under/zut
+j xkr    /home/eez/cvs/xyz/tfa/faq/zut/bar/foo</pre>
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">In the last example apparix simply shows all its bookmarks.
+The first batch shows secondary bookmarks expanded from portals. The second
+batch shows all primary bookmarks and portals.</p>
+<p class="default L50" style="margin-bottom:0"><b>Further options</b><br>
+<a class="intern" href="#opt--add-mark"><b>[--add-mark</b> (<i>add jump bookmark</i>)<b>]</b></a>
+<a class="intern" href="#opt--add-portal"><b>[--add-portal</b> (<i>add portal bookmark</i>)<b>]</b></a>
+<a class="intern" href="#opt--squash-mark"><b>[--squash-mark</b> (<i>squash repeated marks</i>)<b>]</b></a>
+<a class="intern" href="#opt--squash-dest"><b>[--squash-dest</b> (<i>squash repeated destinations</i>)<b>]</b></a>
+<a class="intern" href="#opt-rid"><b>[-rid</b> pat (<i>delete bookmarks</i>)<b>]</b></a>
+<a class="intern" href="#opt-rid-mark"><b>[-rid-mark</b> (<i>pat</i>)<b>]</b></a>
+<a class="intern" href="#opt--rehash"><b>[--rehash</b> (<i>re-expand portal bookmarks</i>)<b>]</b></a>
+<a class="intern" href="#opt--quo"><b>[--quo</b> (<i>dump bookmarks</i>)<b>]</b></a>
+<a class="intern" href="#opt--cwd"><b>[--cwd</b> (<i>use getcwd(3), not pwd(1)</i>)<b>]</b></a>
+<a class="intern" href="#opt--shell-examples"><b>[--shell-examples</b> (<i>output example macros</i>)<b>]</b></a>
+</p>
 
 <a name="description"></a>
 <h2>DESCRIPTION</h2>
@@ -140,6 +168,9 @@ to locations and jump to those locations by loading the mark. Marking,
 unmarking and jumping are simple operations that are performed in the
 current shell. By setting up convenient aliases for marking and jumping the
 file system can be navigated in a fast and intuitive manner.
+The <a class="intern" href="#files">FILES</a> section lists aliases for csh-type shells and
+functions for bash, including the setup to equip the <b>to</b> function
+with argument completion in bash.
 </p>
 <p class="default L50" style="margin-bottom:0">
 This section contains some examples of the most common uses
@@ -158,7 +189,8 @@ of these. <a class="intern" href="#history">HISTORY</a> explains the difference 
 Apparix works in a manner very similar to <b>cdargs</b>. One usually invokes
 apparix by using pre-defined aliases. Here they will be called <b>bm</b> for
 bookmark, <b>portal</b> for a CPPATH-style bookmark and <b>to</b> for initiating
-an apparition (aka jump) . These aliases are found below in the <a class="intern" href="#files">FILES</a>
+an apparition (aka jump).
+These aliases are found below in the <a class="intern" href="#files">FILES</a>
 section and can also be obtained by issuing
 </p>
 <pre>apparix --shell-examples</pre>
@@ -182,6 +214,14 @@ added: foo -&gt; /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 /home/eez/cvs/xyz/tfa/faq/zut/bar/foo&gt; <b>cd</b>
 /home/eez&gt; <b>to foo</b>
 /home/eez/cvs/xyz/tfa/faq/zut/bar/foo&gt;</pre>
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
+If one bookmarks a directory by its trailing component as happened in
+this case, it is not necessary to specify the mark. By default apparix
+will use the trailing component as the mark. So
+</p>
+<pre>/home/eez/cvs/xyz/tfa/faq/zut/bar/foo&gt; <b>bm</b>
+added: foo -&gt; /home/eez/cvs/xyz/tfa/faq/zut/bar/foo</pre>
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">gives the same result.</p>
 <p class="default L50" style="margin-bottom:0">
 Another scenario is where you have some directory that contains a largish
 number of subdirectories, all of which you would like to have bookmarked.
@@ -224,12 +264,15 @@ the subdirectory you want to visit.
 
 <a name="options"></a>
 <h2>OPTIONS</h2>
-<p class="default L50" style="margin-bottom:0">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
 For bookmarking and jumping apparix is best invoked by using the aliases
 (tcsh-variants) or functions (sh/bash) listed in <a class="intern" href="#files">FILES</a>.
 Apparix has a few options that are useful for pruning, squashing and
-rehasing bookmarks. These are best issued by invoking apparix directly.
-</p>
+rehasing bookmarks. These are best issued by invoking apparix directly.</p>
+<p class="default L50" style="margin-bottom:0">
+If you are intested in marks or destinations matching a certain pattern,
+simply issue <b>apparix</b> without arguments and pipe it through
+your program of choice.</p>
 <div style="margin-top:1em">
 <table
 cellspacing="0" border=0
@@ -264,6 +307,8 @@ simply keep the last one occurring in the resource file.
 </div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt-rid"></a><b>-rid</b> pat (<i>delete bookmarks</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
 <p class="default L50" style="margin-top:0em; margin-bottom:0em">
 This deletes bookmarks where destination matches <i>pat</i>.
+All deleted bookmarks are printed to STDOUT. Thus if you regret
+deleting a bookmark it is easy to add it back.
 </p>
 </div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3><a name="opt-rid-mark"></a><b>-rid-mark</b> (<i>pat</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
 <p class="default L50" style="margin-top:0em; margin-bottom:0em">
@@ -293,7 +338,7 @@ Appparix will use <i>getcwd</i>(3) when <b>--cwd</b> is used.
 This outputs example macros. They are also listed in the
 <a class="intern" href="#files">FILES</a> section though.
 </p>
-</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3 class=left><a name="opt-h"></a></td></tr><tr><td colspan=3 class=left><a name="opt--apropos"></a></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
+</div></td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td></td></tr><tr><td colspan=3 class=left><a name="opt-h"></a><b>-h</b> (<i>show synopsis</i>)</td></tr><tr><td colspan=3 class=left><a name="opt--apropos"></a><b>--apropos</b> (<i>show synopsis</i>)</td></tr><tr><td width=32>&nbsp;</td><td width=8>&nbsp;</td><td><div style="text-align:justify">
 <p class="default L50" style="margin-top:0em; margin-bottom:0em">print synopsis of all options</p>
 </div></td></tr>
 </table>
@@ -306,6 +351,7 @@ This outputs example macros. They are also listed in the
 You should use aliases or functions to make apparix really useful.
 Get them from apparix by giving it the --shell-examples option,
 or from further below.
+Note the fragment that provides <b>to</b> argument complemetion in bash.
 </p>
 <div style="margin-top:1em">
 <table
@@ -332,7 +378,11 @@ direction.</p>
 <pre>BASH-style functions
 ---
 function to () {
-   apparix "$1" &amp;&amp; cd "`cat "$HOME/.apparixresult"`" ;
+   if test "$2"; then
+     apparix "$1" "$2" &amp;&amp; cd "`cat "$HOME/.apparixresult"`" ;
+   else
+     apparix "$1" &amp;&amp; cd "`cat "$HOME/.apparixresult"`" ;
+   fi
 }
 function bm () {
    if test "$2"; then
@@ -350,12 +400,24 @@ function portal () {
       apparix --add-portal &amp;&amp; cd "`cat "$HOME/.apparixresult"`" ;
    fi
 }
+# function to generate list of completions from .apparixrc
+function _apparix_aliases () {
+   cur=$2
+   COMPREPLY=()
+   COMPREPLY=( $( (echo $cur ; cat $HOME/.apparix{rc,expand}) | \
+   grep "j,$cur" | cut -f2 -d, ) )
+   return 0
+}
+# command to register the above to expand when the 'to' command's args are
+# being expanded
+complete -F _apparix_aliases to
 ---
 CSH-style aliases
 ---
 alias to   'apparix \!* &amp;&amp; cd `cat $HOME/.apparixresult`'
-alias bm   'apparix --add-jump \!*'
+alias bm   'apparix --add-mark \!*'
 alias portal 'apparix --add-portal \!*'
+---
 </pre>
 
 <a name="notes"></a>
@@ -418,14 +480,40 @@ to jump to those locations. My brain classified both types of jump
 in the same category.
 </p>
 <p class="default L50" style="margin-bottom:0">
-Finally apparix (and cdargs) have another use besides jumping, namely
+Then apparix (and cdargs) have another use besides jumping, namely
 annotation. Whenever I end up in an esoteric part of the file system and
 need to make a quick note of the location, I simply bookmark it.
 </p>
+<p class="default L50" style="margin-bottom:0">
+On SlashDot, that eternal source of wisdom or alternatively
+the geek wheel of suffering, Clueless Moron offered the following gems.</p>
+<pre>   mk() { eval ${1:-MKPWD}=\"`pwd`\"; }
+   rt() { eval cd \"\$${1:-MKPWD}\";pwd; }
+
+   # type "mk" (as in "mark") and "rt" (as in "return") to mark
+   # a directory and later go back to it.
+   # Or give it a name: do "mk foo", and later on "rt foo"</pre>
+<p class="default L50" style="margin-bottom:0">
+This of course is a per-session mechanism, but noteworthy
+for its simplicity. I am not sure whether csh-style shells
+could offer an equivalent.</p>
+<p class="default L50" style="margin-bottom:0">
+A feature shared by apparix and cdargs is that adding a bookmark
+immediately takes effect in all shells. There is no need to
+source some resource file, as the applications do this everytime
+they are invoked. It is fast, do not worry.
+</p>
+
+<a name="bugs"></a>
+<h2>BUGS</h2>
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">The resource file parsing code thinks that parentheses are special.
+Also records are currently separated by commas.
+Accordingly, apparix will hitch if a path name contains an opening parenthesis
+or a comma.</p>
 
 <a name="author"></a>
 <h2>AUTHOR</h2>
-<p class="default L50" style="margin-bottom:0">
+<p class="default L50" style="margin-top:0em; margin-bottom:0em">
 Stijn van Dongen.
 </p>
 

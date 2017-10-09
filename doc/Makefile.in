@@ -366,8 +366,8 @@ uninstall-man: uninstall-man1
 
 
 .azm.1:
-	$(ZOEM) -d roff -i $< -o $@
-	$(ZOEM) -d roff -i $< -o $@
+	$(ZOEM) --allow=../src/apparix -d roff -i $< -o $@
+	$(ZOEM) --allow=../src/apparix -d roff -i $< -o $@
 
 .azm.7:
 	$(ZOEM) -d roff -i $< -o $@
@@ -380,8 +380,8 @@ uninstall-man: uninstall-man1
 	$(TROFF) -man $< > $@
 
 .azm.html:
-	$(ZOEM) -d html -i $< -o $@
-	$(ZOEM) -d html -i $< -o $@
+	$(ZOEM) --allow=../src/apparix -d html -i $< -o $@
+	$(ZOEM) --allow=../src/apparix -d html -i $< -o $@
 	- $(TIDY) -e $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -49,7 +49,7 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_apparix_OBJECTS = apparix.$(OBJEXT)
+am_apparix_OBJECTS = apparix.$(OBJEXT) version.$(OBJEXT)
 apparix_OBJECTS = $(am_apparix_OBJECTS)
 apparix_LDADD = $(LDADD)
 apparix_DEPENDENCIES = ../util/libutil.a
@@ -142,7 +142,9 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-apparix_SOURCES = apparix.c
+INCLUDES = -I$(top_srcdir)
+apparix_SOURCES = apparix.c version.c
+EXTRA_DIST = version.h
 LDADD = ../util/libutil.a
 all: all-am
 
@@ -211,6 +213,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/apparix.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/version.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

@@ -7,3 +7,7 @@ Thanks to:
    Stefan Kamphausen
       for writing cdargs which begat apparix.
 
+   Sitaram Chamarty
+      contributed the bash completion mechanism for apparix,
+      modelled after the cdargs equivalent.
+
