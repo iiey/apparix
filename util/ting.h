@@ -1,4 +1,4 @@
-/* (c) Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -9,17 +9,12 @@
 #ifndef util_ting
 #define util_ting
 
-#include <string.h>
-
-#include "alloc.h"
 #include "types.h"
-#include "hash.h"
-
 
 typedef struct
 {  char     *str
-;  int      len
-;  int      mxl
+;  dim      len
+;  dim      mxl
 ;
 }  mcxTing  ;
 
@@ -50,7 +45,7 @@ typedef struct
  *    module.
 
  * Caveat
- *    Nearly all routines return a NULL pointer indicating malloc failure.
+ *    Nearly all routines return a NULL pointer to indicate malloc failure.
 
  * Data structure
  *    str:  array of chars
@@ -114,7 +109,7 @@ mcxTing* mcxTingInstantiate
                           */
 mcxTing* mcxTingEnsure
 (  mcxTing*    ting
-,  int         length
+,  dim         length
 )  ;  
                           /*     Accepts NULL argument. The string part is
                            *     set to the empty string.
@@ -122,7 +117,7 @@ mcxTing* mcxTingEnsure
                           */
 mcxTing* mcxTingEmpty
 (  mcxTing*    ting
-,  int         length
+,  dim         length
 )  ;
 
 
@@ -177,7 +172,7 @@ mcxTing* mcxTingNew
                           */
 mcxTing* mcxTingNNew
 (  const char* str
-,  int         n
+,  dim         n
 )  ;
                           /*     accepts NULL argument.
                           */
@@ -190,7 +185,7 @@ mcxTing* mcxTingWrite
 mcxTing* mcxTingNWrite
 (  mcxTing*    ting
 ,  const char* str
-,  int         n
+,  dim         n
 )  ;
 
 
@@ -235,24 +230,24 @@ char* mcxTinguish
 mcxstatus mcxTingSplice
 (  mcxTing*    ting
 ,  const char* pstr
-,  int         d_offset
-,  int         n_delete
-,  int         n_copy
+,  ofs         d_offset   /*     negative offset refers to end     */
+,  ofs         n_delete   /*     special modes as documented above */
+,  dim         n_copy
 )  ;
                           /*     accepts NULL argument.
                           */
 mcxTing* mcxTingInsert
 (  mcxTing*    ting
 ,  const char* str
-,  int         offset
+,  ofs         offset
 )  ;
                           /*     accepts NULL argument.
                           */
 mcxTing* mcxTingNInsert
 (  mcxTing*    ting
 ,  const char* str
-,  int         offset     /*  of ting->str */
-,  int         length     /*  of str       */
+,  ofs         offset     /*  of ting->str */
+,  dim         length     /*  of str       */
 )  ;
 
                           /*     accepts NULL argument.
@@ -267,27 +262,27 @@ mcxTing* mcxTingAppend
 mcxTing* mcxTingKAppend
 (  mcxTing*    ting
 ,  const char* str
-,  int         n
+,  dim         n
 )  ;
                           /*     accepts NULL argument.
                           */
 mcxTing* mcxTingNAppend
 (  mcxTing*    ting
 ,  const char* str
-,  int         n
+,  dim         n
 )  ;
                           /*     accepts NULL argument.
                           */
 mcxTing* mcxTingDelete
 (  mcxTing*    ting
-,  int         offset
-,  int         width
+,  ofs         offset
+,  dim         width
 )  ;
                           /*     accepts NULL argument.
                           */
 mcxTing* mcxTingShrink
 (  mcxTing*    ting
-,  int         length
+,  ofs         length
 )  ;
 
 
@@ -341,8 +336,8 @@ __attribute__ ((format (printf, 2, 3)))
                           */
 mcxTing*  mcxTingPrintSplice
 (  mcxTing*    dst
-,  int offset
-,  int delete              /* count of chars to delete */
+,  ofs         offset
+,  ofs         n_delete   /* count of chars to delete, special modes */
 ,  const char* fmt
 ,  ...
 )
@@ -361,17 +356,18 @@ char*  mcxTingStr
 (  const mcxTing* ting
 )  ;
 
+
 char* mcxTingSubStr
 (  const mcxTing* ting
-,  int            offset
-,  int            length
+,  ofs            offset
+,  ofs            length  /*     use -1 to indicate remainder of string */
 )  ;
 
                           /*     accepts NULL argument.
                           */
 mcxTing*  mcxTingRoman
 (  mcxTing*    dst
-,  int         x
+,  long        x
 ,  mcxbool     ucase
 )  ;
                           /*     accepts NULL argument.

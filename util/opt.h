@@ -1,4 +1,5 @@
-/* (c) Copyright 2002, 2003, 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 2002, 2003, 2004, 2005 Stijn van Dongen
+ *   (C) Copyright 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -55,7 +56,7 @@ enum
 /*  struct mcxOptAnchor
  *
  * id
- *    When using mcxOptApropos, ifthe option MCX_OPT_DISPLAY_SKIP is used,
+ *    When using mcxOptApropos, if the option MCX_OPT_DISPLAY_SKIP is used,
  *    an increment larger then one between successive ids (from the structs
  *    in the array presented to mcxOptApropos) causes an additional newline
  *    to be output before the option synopsis.
@@ -149,6 +150,11 @@ void mcxOptFree
 (  mcxOption**    optpp
 )  ;
 
+mcxbool mcxOptIsInfo
+(  const char*  arg
+,  mcxOptAnchor* options
+)  ;
+
 #define MCX_OPT_DISPLAY_DEFAULT       0
 #define MCX_OPT_DISPLAY_BREAK_HARD    1 << 4   /* break overly long lines */
 #define MCX_OPT_DISPLAY_BREAK_SOFT    1 << 6   /* break overly long lines */
@@ -217,18 +223,38 @@ void mcxUsage
 )  ;
 
 
-
 extern int mcxOptPrintDigits;
 
 mcxbool mcxOptCheckBounds
 (  const char*    caller
 ,  const char*    flag
-,  char           type
+,  unsigned char  type
 ,  void*          var
 ,  int            (*lftRlt) (const void*, const void*)
 ,  void*          lftBound
 ,  int            (*rgtRlt) (const void*, const void*)
 ,  void*          rgtBound
+)  ;
+
+
+/* TODO
+ * provide escape mechanisms for delim;
+ * e.g. mcx tilde, UNIX backslash, or SGML percent sign based.
+ *
+ * NOTE
+ *    src is modified ('\0' are written throughout).
+ *    the char* members 'char* argv[]' all point to within src.
+*/
+
+char** mcxOptParseString
+(  char* src
+,  int*  argc
+,  unsigned char delim
+)  ;
+
+char* mcxOptArgLine
+(  const char** argv
+,  int argc
 )  ;
 
 

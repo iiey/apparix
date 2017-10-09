@@ -1,4 +1,4 @@
-/* (c) Copyright 2005 Stijn van Dongen
+/*   (C) Copyright 2005, 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea under
  * the terms of the GNU General Public License; either version 2 of the License
@@ -11,9 +11,9 @@
 
 #include <string.h>
 
-#include "alloc.h"
-#include "types.h"
 #include "ting.h"
+#include "types.h"
+#include "inttypes.h"
 
 
 /*
@@ -88,8 +88,8 @@ mcxstatus mcxTRloadTable
 (  mcxTR*      tr
 ,  const char* src
 ,  const char* dst
-,  const char* delete
-,  const char* squash
+,  const char* set_delete
+,  const char* set_squash
 ,  mcxbits     modes
 )  ;
 
@@ -97,23 +97,23 @@ mcxstatus mcxTRloadTable
   /*  returns new length of string.
    *  fixme: document map/squash semantics.
   */
-int mcxTRtranslate
+ofs mcxTRtranslate
 (  char*    src
 ,  mcxTR*   tr
 )  ;
 
 
-int mcxTingTranslate
+ofs mcxTingTranslate
 (  mcxTing*       src
 ,  mcxTR*         tr
 )  ;
 
-int mcxTingTr
+ofs mcxTingTr
 (  mcxTing*       txt
 ,  const char*    src
 ,  const char*    dst
-,  const char*    delete
-,  const char*    squash
+,  const char*    set_delete
+,  const char*    set_squash
 ,  mcxbits        flags
 )  ;
 

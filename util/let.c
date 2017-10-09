@@ -1,4 +1,5 @@
-/* (c) Copyright 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+ *   (C) Copyright 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -26,6 +27,7 @@
 #include "err.h"
 #include "types.h"
 #include "ding.h"
+#include "compile.h"
 
 
 /*  **************************************************************************
@@ -224,7 +226,7 @@ typedef enum
 ,  TOKEN_OPEN  =  6     /* like fun, 6 = (                              */
 ,  TOKEN_CLOSE =  9     /* like fun, 9 = )                              */
 ,  TOKEN_COMMA =  13579 /* gaps                                         */
-,  TOKEN_CONST =  314159/* PI                                           */
+,  TOKEN_CONST =  31415 /* PI                                           */
 ,  TOKEN_USER  =  981   /* G, variable                                  */
 }  tokentype   ;
 
@@ -293,7 +295,7 @@ double letround
 
 
 double letlog2
-(double f) { return f > 0 ? log(f) / log(2) : 0.0 ;  }
+(double f) { return f > 0 ? log(f) / log(2.0) : 0.0 ;  }
 
 
 typedef struct fun1Hook
@@ -806,7 +808,7 @@ int getatoken
       else if
       (  user_char_g == *p
       && (len = user_parse_g(raam->text, p-raam->text->str)) > 0
-      )
+      )                               /* ^truncintok */
       {  p += len
       ;  toktype = TOKEN_USER
    ;  }
@@ -817,7 +819,7 @@ int getatoken
       ;  toktype = TOKEN_BINOP
       ;  p = q
    ;  }
-      mcxTingNWrite(raam->token, raam->p, p-raam->p)
+      mcxTingNWrite(raam->token, raam->p, (dim) (p-raam->p))
    ;  raam->p = p
    ;  return toktype
 ;  }
@@ -976,9 +978,9 @@ mcxstatus flatten
 
          ;  if (op->opid & OPTYPE_BIT)
             {  if (!tn_isint(lft))
-               ilft = lft->fval
+               ilft = lft->fval        /* fixme: why the reassign? */
             ;  if (!tn_isint(rgt))
-               irgt = rgt->fval
+               irgt = rgt->fval        /* fixme: why the reassign? */
             ;  if (!tn_isint(rgt) || !tn_isint(lft))
                mcxErr
                (  "let"
@@ -1717,7 +1719,7 @@ mcxstatus trmParse
 
 
 void trmRegister
-(  telRaam* raam
+(  telRaam* raam  cpl__unused
 ,  int      (user_parse)(mcxTing* txt, int offset)
 ,  mcxenum  (user_eval)(const char* token, long *ival, double *fval)
 ,  char     user_char

@@ -1,4 +1,4 @@
-/* (c) Copyright 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 2004, 2005, 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -12,15 +12,15 @@
 
 #include "rand.h"
 
-unsigned int mcxSeed
-(  unsigned int i
+unsigned long mcxSeed
+(  unsigned long i
 )
    {  pid_t   p  = getpid()
    ;  pid_t   pp = getppid()
 
    ;  time_t  t  = time(NULL)
 
-   ;  unsigned int  s  =      (p ^ p << 4 ^ p << 16 ^ p << 28)
+   ;  unsigned long  s  =     (p ^ p << 4 ^ p << 16 ^ p << 28)
                            ^  (pp ^ pp << 8 ^ pp << 24)
                            ^  (t ^ t << 12 ^ t << 20)
                            ^  (i ^ i << 3 ^ i << 23 ^ i << 26)

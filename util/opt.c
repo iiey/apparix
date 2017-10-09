@@ -1,4 +1,5 @@
-/* (c) Copyright 2002, 2003, 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 2002, 2003, 2004, 2005 Stijn van Dongen
+ *   (C) Copyright 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -12,10 +13,21 @@
 
 
 #include "opt.h"
+#include "alloc.h"
 #include "types.h"
+#include "ding.h"
 #include "err.h"
 #include "equate.h"
 #include "minmax.h"
+#include "compile.h"
+
+
+static int strcmp_void
+(  const void* s1
+,  const void* s2
+)
+   {  return strcmp(s1, s2)
+;  }
 
 
 mcxHash* mcxOptHash
@@ -29,7 +41,7 @@ mcxHash* mcxOptHash
                :  mcxHashNew
                   (  8
                   ,  mcxStrHash
-                  ,  (int (*)(const void*, const void*))strcmp
+                  ,  strcmp_void
                   )
    ;  if (!hash)
       return NULL
@@ -96,7 +108,8 @@ mcxOption* mcxOptParse__
                                   /* fixme: very ugly internal iface*/
 
    ;  mcxOption* opts
-         =  mcxNAlloc(argc+1, sizeof(mcxOption), mcxOptInit, RETURN_ON_FAIL)
+      =  mcxNAlloc(argc+1, sizeof(mcxOption), mcxOptInit, RETURN_ON_FAIL)
+
    ;  mcxOption* opt = opts
 
    ;  if (!opts)
@@ -137,12 +150,10 @@ mcxOption* mcxOptParse__
                kv = NULL
                ;
             }
+            else
+            {  /* fimxe do sth */
+            }
          }
-         else if
-         (  !strcmp(arg, "--")
-         && do_exhaust
-         )
-         (*n_elems_read)++
 
       ;  if (kv)
          {  opt->anch = anch
@@ -292,8 +303,8 @@ const char* rltSigns[8] =
 */
 
 static int checkBoundsUsage
-(  char        type
-,  void*       var
+(  unsigned char type
+,  void*       var   cpl__unused
 ,  int         (*lftRlt) (const void*, const void*)
 ,  void*       lftBound
 ,  int         (*rgtRlt) (const void*, const void*)
@@ -345,7 +356,7 @@ static int checkBoundsUsage
 enum { STATUS_CB_PBD = STATUS_UNUSED + 1 } ;
 
 static mcxstatus checkBounds
-(  char        type
+(  unsigned char type
 ,  void*       var
 ,  int         (*lftRlt) (const void*, const void*)
 ,  void*       lftBound
@@ -365,8 +376,8 @@ static mcxstatus checkBounds
 
 
 static mcxTing* checkBoundsRange
-(  char        type
-,  void*       var
+(  unsigned char type
+,  void*       var   cpl__unused
 ,  int         (*lftRlt) (const void*, const void*)
 ,  void*       lftBound
 ,  int         (*rgtRlt) (const void*, const void*)
@@ -438,7 +449,7 @@ static mcxTing* checkBoundsRange
 mcxbool mcxOptCheckBounds
 (  const char*    caller
 ,  const char*    flag
-,  char           type
+,  unsigned char  type
 ,  void*          var
 ,  int            (*lftRlt) (const void*, const void*)
 ,  void*          lftBound
@@ -529,7 +540,7 @@ void parse_descr
    ;  const char* d = strstr(field, "\tD")
 
    ;  if (m && n)
-         *mark_width = n - m - 2
+         *mark_width =  n - m - 2      /* truncintok */
       ,  *markp = m + 2
    ;  else
          *markp = ""
@@ -541,7 +552,7 @@ void parse_descr
 
 void mcxOptApropos
 (  FILE* fp
-,  const char* me                /* unused currently */
+,  const char* me cpl__unused
 ,  const char* syntax
 ,  int width
 ,  mcxbits display
@@ -558,9 +569,9 @@ void mcxOptApropos
       fprintf(fp, "%s\n\n", syntax)
 
    ;  for (opt = baseopt; opt->tag; opt++)
-      {  int thislen = strlen(opt->tag)
+      {  int thislen = strlen(opt->tag)            /* truncintok */
       ;  if (opt->descr_arg)
-         thislen += 1 + strlen(opt->descr_arg)
+         thislen += 1 + strlen(opt->descr_arg)     /* truncintok */
       ;  if
          (  !(opt->flags & MCX_OPT_HIDDEN)
          || display & MCX_OPT_DISPLAY_HIDDEN
@@ -628,5 +639,70 @@ void mcxOptApropos
       }
    }
 
+
+char** mcxOptParseString
+(  char* src
+,  int*  argc
+,  unsigned char delim
+)
+   {  dim srclen  =  strlen(src)
+   ;  dim n_delim =  mcxStrCountChar(src, delim, srclen)
+   ;  dim n_args  =  0
+   ;  char** argv
+   ;  char *z  =  src + srclen
+   ;  char *p = src, *os
+
+   ;  *argc = 0
+
+   ;  if (!srclen)
+      return NULL
+
+   ;  if (!(argv = mcxAlloc(sizeof(char*) * (n_delim+1), RETURN_ON_FAIL)))
+      return NULL
+
+   ;  while (p<z)
+      {  while ((unsigned char) p[0] == delim)
+         p++
+      ;  if (p>=z)
+         break
+      ;  os = p
+      ;  if (!(p = strchr(os, delim)))
+         p = z
+      ;  *p = '\0'
+      ;  argv[n_args++] = os
+      ;  p++
+   ;  }
+
+      *argc = n_args
+   ;  return argv
+;  }
+
+
+mcxbool mcxOptIsInfo
+(  const char*  arg
+,  mcxOptAnchor* options
+)
+   {  mcxOptAnchor* opt
+   ;  for (opt = options; opt->tag; opt++)
+      if (!strcmp(opt->tag, arg))
+      break
+   ;  return (opt->tag && opt->flags  & MCX_OPT_INFO) ? TRUE : FALSE
+;  }
+
+
+char* mcxOptArgLine
+(  const char** argv
+,  int argc
+)
+   {  mcxTing* cl = mcxTingEmpty(NULL, 80)
+   ;  int i
+
+   ;  if (argc)
+      mcxTingPrint(cl, "[%s]", argv[0])
+
+   ;  for (i=1;i<argc;i++)
+      mcxTingPrintAfter(cl, " [%s]", argv[i])
+   ;  return mcxTinguish(cl)
+;  }
 
 

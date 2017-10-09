@@ -1,10 +1,52 @@
 
+Tue 23 May 2006
+
+   *  apparix-06-142 released.
+
+   *  --squash-mark was badly implemented and would generally not work. It now
+      works and preserves newer entries (those occurring later in the file
+      .apparixrc) over older entries by default. To change this behaviour use
+      -favour <mode>.
+
+   *  If a new bookmark already exists either as a regular bookmark or
+      as a portal destination apparix will emit a short message when the
+      bookmark is created.
+
+   *  Added -l option for paragraph listing of all available jumps.
+
+   *  Added -d option for dumping the resource file to STDOUT.
+
+   *  Added -u <num> option for undoing the last k bookmarks.
+
+   *  The -favour default in to() functions/macros is set to rOl, implying:
+         1) regular bookmarks are prefered over expansions
+         2) younger bookmarks are prefered over older bookmarks
+         3) paths with fewer components are prefered.
+      With this setting 3) is never reached as 2) will never be a tie.
+
+   *  Added alias -sm for -squash-mark
+
+   *  The -favour default with --squash-mark and -sm
+      is set to Olr implying that younger bookmarks will be preserved.
+
+   *  Squashing and purging currently only works on regular style bookmarks
+      due to finally specified semantics. Edit .apparixrc to do things
+      to portals. They are 'special' and quite likely you have only few.
+
+   *  The output format when simply listing bookmarks has slightly changed.
+      There are now three consecutive sections: portals, expansions,
+      bookmarks.
+
+   *  --add-portal uses the same getcwd/pwd code as --add-jump does
+      (rather than unconditionally using getcwd).
+
+   *  Changed -rid to -purge, -rid-mark to -purge-mark.
 
 Thu 5 Jan 2006
 
-	*	apparix-06-005 released.
+   *  apparix-06-005 released.
 
-	*	Documentation changes. Added GETTING STARTED paragraph.
+   *  Documentation changes. Added GETTING STARTED paragraph.
 
 Thu, 10 Nov 2005
 

@@ -1,30 +1,22 @@
 
-$$ squashing dest seems to lump portals and boommarks together.
+-  add a time stamp to bookmarks? for sentimental reasons.
 
-$$ when a subdirectory is given it could be used to resolve
-   multiple hits.
--> with duplicates completion works due to -favour, but then apparix 
-   asks which directory you want anyway.
--> and/or, allow some specification of index.
+-  enable sorting with 'apparix -l', 'apparix', possibly 'apparix -d'
+
+-  sorting for jumping can first grep the bookmark into a mini-folder.
+
+?  when a subdirectory is given it could be used to resolve
+   multiple hits (bit too fancy though).
+
+-  change to tab separated resource files.
+
+?  portal exclusion with env variable?  CVS src doc
+   perhaps do a couple within the program.
 
 ?  portal: option to prepend prefix to all bookmarks.
    This would require change of rc format (because of rehashing)
 
--  warn when a new bm is a duplicate, either in mark or in dest.
-
-?  exclusion line in apparix.rc; specify certain names not
-   to expand; eg src CVS etc.
-
-
-
-?  change to tab separated resource files.
-
-?  option --rename-tag foo bar
-   |
--  make separate routine that lists a number of choices and
-   returns a number.
-
-?  for a portal, optionally add a bookmark for the portal itself?
+?  for a portal, optionally add a bookmark for the portal itself.
    could do this with a two-argument invocation.
 
 #  make a mode (maybe -a) to simply list all matching occurrences
@@ -37,7 +29,7 @@ $$ when a subdirectory is given it could be used to resolve
       (e.g. strcmp/strstr callback to attempt_jump)
    bash tab completion does this nicely.
 
-?  do not write trailing '\n' if stdout is not a terminal.
-   enable vi `apparix foo`/Makefile.am
-   via function/alias using -favour.
+#  a 'rename' option.
+   apparix -r foo bar
+   difficult with duplicates: use editor.
 

@@ -1,4 +1,4 @@
-/* (c) Copyright 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 2004, 2005, 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -33,7 +33,7 @@ typedef struct memnext
 
 typedef struct grim_buf
 {  char*             units       /* n_units * (sizeof(memnext) + sz_unit)     */
-;  long              n_units     /* number of units available for this struct */
+;  dim               n_units     /* number of units available for this struct */
 ;  struct grim_buf*  prev
 ;
 }  grim_buf          ;
@@ -42,22 +42,22 @@ typedef struct grim_buf
 
 struct mcxGrim
 {  grim_buf*         buf
-;  long              sz_unit     /* size of one unit                          */
+;  dim               sz_unit     /* size of one unit                          */
+;  dim               ct          /* number in use                             */
 ;  memnext*          na          /* next available                            */
-;  long              ct          /* number in use                             */
 ;  mcxbits           flags       /* allocation strategy, numbers              */
 ;
 }  ;
 
 
 grim_buf* grim_buf_new
-(  long      sz_unit
-,  long      n_units
+(  dim      sz_unit
+,  dim      n_units
 )
-   {  long i
+   {  dim sz_load = sizeof(memnext) + sz_unit
+   ;  dim i
    ;  grim_buf* buf
    ;  char* units
-   ;  long sz_load = sizeof(memnext) + sz_unit
       
    ;  if (!(buf = mcxAlloc(sizeof(grim_buf), RETURN_ON_FAIL)))
       return NULL
@@ -74,8 +74,9 @@ grim_buf* grim_buf_new
       buf->prev =  NULL
    ;  buf->n_units =  n_units
 
-;if (DEBUG)
-fprintf (stderr, "Extending grim with <%ld> units\n", n_units);
+#if DEBUG
+;  fprintf (stderr, "Extending grim with <%ld> units\n", n_units);
+#endif
 
    ;  for (i=0;i<n_units-1;i++)
          ((memnext*) (units + i * sz_load))->next
@@ -88,8 +89,8 @@ fprintf (stderr, "Extending grim with <%ld> units\n", n_units);
 
 
 mcxGrim* mcxGrimNew
-(  long sz_unit
-,  long n_units
+(  dim  sz_unit
+,  dim  n_units
 ,  mcxbits options
 )  
    {  mcxGrim* src = mcxAlloc(sizeof(mcxGrim), RETURN_ON_FAIL)
@@ -116,8 +117,8 @@ mcxbool mcx_grim_extend
 (  mcxGrim*  src
 )
    {  grim_buf* prevbuf = src->buf->prev
-   ;  long diff         =  prevbuf->n_units - prevbuf->prev->n_units
-   ;  long n_units      =     (src->flags & MCX_GRIM_GEOMETRIC) || !diff
+   ;  ofs  diff         =  prevbuf->n_units - prevbuf->prev->n_units
+   ;  dim  n_units      =     (src->flags & MCX_GRIM_GEOMETRIC) || !diff
                            ?     2 * prevbuf->n_units
                            :     prevbuf->n_units + (diff > 0 ? diff : -diff)
    ;  grim_buf* newbuf  =  grim_buf_new(src->sz_unit, n_units)
@@ -172,7 +173,7 @@ void* mcxGrimGet
 ;  }
 
 
-long mcxGrimCount
+dim mcxGrimCount
 (  mcxGrim* src
 )
    {  return src->ct

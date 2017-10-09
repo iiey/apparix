@@ -1,4 +1,5 @@
-/* (c) Copyright 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+ *   (C) Copyright 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -17,8 +18,12 @@ typedef unsigned long mcxenum  ;
          /* mcxstatus   defined below */
          /* mcxbool     defined below */
 
-#define BIT_ON(var, bits)   (var) |= (bits)
+#define BIT_ON(var,bits)   (var) |= (bits)
 #define BIT_OFF(var, bits)  (var) |= (bits), (var) ^= (bits)
+
+#define VOID_TO_UINT (unsigned)
+#define UINT_TO_VOID (void*)
+
 
 /*  **************************************************************************
  * *

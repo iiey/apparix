@@ -1,4 +1,5 @@
-/* (c) Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+ *   (C) Copyright 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -24,7 +25,7 @@ const char* trGetToken
 char* mcxStrDup
 (  const char* str
 )
-   {  int len = strlen(str)
+   {  dim len = strlen(str)
    ;  char* rts = mcxAlloc(len+1, RETURN_ON_FAIL)
    ;  if (rts)
       memcpy(rts, str, len+1)
@@ -32,30 +33,31 @@ char* mcxStrDup
 ;  }
 
 
-int mcxStrCountChar
+dim mcxStrCountChar
 (  const char*    p
 ,  char           c
-,  int            len
+,  ofs            len
 )
    {  const char* z = p
-   ;  int ct =  0
+   ;  dim      ct =  0
 
    ;  z += (len >= 0) ? len : strlen(p)
 
-   ;  while (p<z)
+   ;  while (p<z)       /* ho hum will pass embedded nil bytes */
       if (*p++ == c)
       ct++
+
    ;  return ct
 ;  }
 
 
 char* mcxStrChrIs
 (  const char*    p
-,  int    (*fbool)(int c)
-,  int      len
+,  int          (*fbool)(int c)
+,  ofs            len
 )
    {  if (len)
-      while (*p && !fbool((int) *p) && --len && ++p)
+      while (*p && !fbool((unsigned char) *p) && --len && ++p)
       ;
       return (char*) ((len && *p) ?  p : NULL)
 ;  }
@@ -63,11 +65,11 @@ char* mcxStrChrIs
 
 char* mcxStrChrAint
 (  const char*    p
-,  int    (*fbool)(int c)
-,  int      len
+,  int          (*fbool)(int c)
+,  ofs            len
 )
    {  if (len)
-      while (*p && fbool((int) *p) && --len && ++p)
+      while (*p && fbool((unsigned char) *p) && --len && ++p)
       ;
       return (char *) ((len && *p) ?  p : NULL)
 ;  }
@@ -75,8 +77,8 @@ char* mcxStrChrAint
 
 char* mcxStrRChrIs
 (  const char*    p
-,  int    (*fbool)(int c)
-,  int      offset
+,  int          (*fbool)(int c)
+,  ofs            offset
 )
    {  const char* z =  offset >= 0 ? p+offset : p + strlen(p)
    ;  while (--z >= p && !fbool((unsigned char) *z))
@@ -87,8 +89,8 @@ char* mcxStrRChrIs
 
 char* mcxStrRChrAint
 (  const char*    p
-,  int    (*fbool)(int c)
-,  int      offset
+,  int          (*fbool)(int c)
+,  ofs            offset
 )
    {  const char* z  =  offset >= 0 ? p+offset : p + strlen(p)
    ;  while (--z >= p && fbool((unsigned char) *z))

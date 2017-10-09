@@ -1,4 +1,4 @@
-/* (c) Copyright 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 2004, 2005, 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -9,6 +9,7 @@
 #include "list.h"
 #include "alloc.h"
 #include "gralloc.h"
+#include "compile.h"
 
 #define DEBUG 0
 
@@ -91,7 +92,7 @@ mcxLink* mcx_list_shift
 
 
 mcxLink*  mcxLinkNew
-(  long  capacity_start
+(  dim  capacity_start
 ,  void* val
 ,  mcxbits  options
 )
@@ -100,8 +101,11 @@ mcxLink*  mcxLinkNew
    ;  if (!(ls = mcxAlloc(sizeof(mcx_list), RETURN_ON_FAIL)))
       return NULL
 
-;if(DEBUG)
-fprintf(stderr, "new list ptr <%p> capacity <%ld>\n", (void*) ls, capacity_start)
+#if DEBUG
+;  fprintf
+   (stderr, "new list ptr <%p> capacity <%zu>\n", (void*) ls, (ssize_t) capacity_start)
+#endif
+
    ;  if
       (! (ls->grim
       =  mcxGrimNew(sizeof(lsptr) + sizeof(mcxLink), capacity_start, options)
@@ -166,7 +170,9 @@ mcxLink*  mcxLinkAfter
 )
    {  mcx_list* ls  =  mcx_list_find(prev)
    ;  mcxLink* new
-;if(DEBUG)fprintf(stderr, "list ptr <%p>\n", (void*) ls)
+#if DEBUG
+;  fprintf(stderr, "list ptr <%p>\n", (void*) ls)
+#endif
    ;  new = mcx_list_shift(ls, val)
 
    ;  if (!new)
@@ -209,7 +215,7 @@ mcxGrim* mcxLinkGrim
 
 void  mcxLinkFree
 (  mcxLink**   lkp
-,  void        freeval(void* valpp)    /* (yourtype1** valpp)     */
+,  void        freeval(void* valpp) cpl__unused  /* (yourtype1** valpp)     */
 )
    {  if (*lkp)
       {  mcx_list* ls = mcx_list_find(*lkp)

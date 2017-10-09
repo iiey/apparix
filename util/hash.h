@@ -1,4 +1,5 @@
-/* (c) Copyright 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+ *   (C) Copyright 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -68,16 +69,7 @@
 */
 
 #include "types.h"
-#include "alloc.h"
 #include "list.h"
-#include "gralloc.h"
-
-
-
-/* Below is for code that dares to store an unsigned in kv->val */
-
-#define VOID_TO_UINT (unsigned)        /* code tag */
-#define UINT_TO_VOID (void*)           /* code tag */
 
 
 /* The hash struct is hidden. Use mcxHashGetSettings if you need
@@ -102,7 +94,7 @@ typedef struct mcxHLink
 
 
 mcxHash* mcxHashNew
-(  int         n_buckets
+(  dim         n_buckets
 ,  u32         (*hash)  (const void *a)
 ,  int         (*cmp)   (const void *a, const void *b)
 )  ;
@@ -121,12 +113,11 @@ void mcxHashSetOpts
 
 
 typedef struct mcxHashSettings
-{  int         n_buckets
-;  int         n_bits
-;  int         mask
+{  dim         n_buckets
+;  dim         n_entries
 ;  float       load
-;  int         n_entries
-;  int         options
+;  mcxbits     options
+;  u8          n_bits
 ;  
 }  mcxHashSettings   ;
 
@@ -235,7 +226,7 @@ void mcxHashFree
 
 void** mcxHashKeys
 (  mcxHash*    hash
-,  int*        n_entries
+,  dim*        n_entries
 ,  int       (*cmp)(const void*, const void*)
 ,  mcxbits     opts        /* unused yet */
 )  ;
@@ -248,7 +239,7 @@ void** mcxHashKeys
 
 void** mcxHashKVs
 (  mcxHash*    hash
-,  int*        n_entries
+,  dim*        n_entries
 ,  int       (*cmp)(const void*, const void*)
 ,  mcxbits     opts        /* unused yet */
 )  ;
@@ -267,7 +258,7 @@ void mcxHashStats
 
 typedef struct
 {  mcxHash*    hash
-;  int         i_bucket
+;  dim         i_bucket
 ;  mcxLink*    link
 ;
 }  mcxHashWalk ;

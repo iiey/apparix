@@ -1,13 +1,13 @@
 #!/bin/sh -e
 
-# $Id: setversion,v 1.3 2005/11/10 12:31:56 flux Exp $
+# $Id: setversion,v 1.4 2006-05-23 09:11:23 flux Exp $
 
 # called in bootstrap
 
 # be verbose
 set -x
 
-TAG=1.002
+TAG=1.003
 
 VERSION=`date '+%y-%j'`
 echo $VERSION > VERSION

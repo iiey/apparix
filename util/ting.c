@@ -1,4 +1,5 @@
-/* (c) Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+ *   (C) Copyright 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -62,18 +63,23 @@ void mcxTingAbandon
 
 mcxTing* mcxTingShrink
 (  mcxTing*    ting
-,  int         len
+,  ofs         offset
 )
-   {  if (len < 0)
-      len = ting->len + len
+   {  if (offset < 0)
+      offset = ting->len + offset      /* fixme conversion? */
 
-   ;  if (len < 0 || len > ting->len)
-      {  mcxErr("mcxTingShrink","funny len <%d> newlen <%d> combo",ting->len,len)
+   ;  if (offset < 0 || (dim) offset > ting->len)
+      {  mcxErr
+         (  "mcxTingShrink"
+         ,  "funny offset <%zu> newlen <%zu> combo"
+         ,  (size_t) ting->len
+         ,  (size_t) offset
+         )
       ;  return ting
    ;  }
       else
-      {  *(ting->str+len) = '\0'
-      ;  ting->len = len;
+      {  *(ting->str+offset) = '\0'
+      ;  ting->len = offset;
    ;  }
       return ting
 ;  }
@@ -81,16 +87,12 @@ mcxTing* mcxTingShrink
 
 mcxTing* mcxTingEnsure
 (  mcxTing*    ting
-,  int         len
+,  dim         len
 )  
    {  if (!ting && !(ting = (mcxTing*) mcxTingInit(NULL)))
       return NULL
    
-   ;  if (len < 0)
-      {  mcxErr("mcxTingEnsure PBD", "request for negative length <%d>", len)
-      ;  return ting
-   ;  }
-      else if (len <= ting->mxl)
+   ;  if (len <= ting->mxl)
    ;  else
       {  char* t = mcxRealloc(ting->str, len+1, RETURN_ON_FAIL)
       ;  if (!t)
@@ -117,20 +119,25 @@ static mcxTing*  mcx_ting_print
 #define PRINT_BUF_SIZE 200
    {  char buf[PRINT_BUF_SIZE], *src
    ;  mcxTing* txtbuf = NULL
-   ;  int m = PRINT_BUF_SIZE
-   ;  int n
+   ;  dim m = PRINT_BUF_SIZE
+   ;  int npf
 
-   ;  n = vsnprintf(buf, PRINT_BUF_SIZE, fmt, *args)
+   ;  npf = vsnprintf(buf, PRINT_BUF_SIZE, fmt, *args)
 
-   ;  if (n < 0 || n >= PRINT_BUF_SIZE)
-      {  m  =  n >= PRINT_BUF_SIZE ? n : 2 * m
+         /* from reading standards it seems that npf >= PRINT_BUF_SIZE
+          * should be sufficient. However, alpha OSF1 provides
+          * a counterexample. And from reading standard annotations
+          * it also seems that vsnprintf is widely ill-implemented
+         */
+   ;  if (npf < 0 || npf+1 >= PRINT_BUF_SIZE)
+      {  m  =  (dim) npf >= PRINT_BUF_SIZE ? npf : 2 * m
       ;  while (1)
          {  if (!(txtbuf = mcxTingEmpty(txtbuf, m)))
             {  mcxTingFree(&txtbuf)
             ;  return NULL
          ;  }
-            n = vsnprintf(txtbuf->str, m+1, fmt, *args)
-         ;  if (n < 0 || n > m)
+            npf = vsnprintf(txtbuf->str, m+1, fmt, *args)
+         ;  if (npf < 0 || (dim) (npf+1) > m)
             m *= 2
          ;  else
             break
@@ -150,8 +157,8 @@ static mcxTing*  mcx_ting_print
 
 mcxTing*  mcxTingPrintSplice
 (  mcxTing*    dst
-,  int offset
-,  int delete
+,  ofs         offset
+,  ofs         delete
 ,  const char* fmt
 ,  ...
 )
@@ -233,10 +240,10 @@ static const char* roman[40] =
 
 mcxTing*  mcxTingRoman
 (  mcxTing*  dst
-,  int       a
+,  long      a
 ,  mcxbool   ucase
 )
-   {  int i, x, c, m
+   {  long i, x, c, m
    ;  char* p
 
    ;  if (a >= 5000 || a <= 0)
@@ -340,7 +347,7 @@ mcxTing* mcxTingInstantiate
 ,  const char*       string
 )
                                     /* strnotice strlen */
-   {  int length =   string ? strlen(string) : 0
+   {  dim length = string ? strlen(string) : 0
 
                      /* ensure handles ting==NULL and/or length==0  cases */
 
@@ -416,54 +423,62 @@ int mcxPKeyTingRevCmp
 mcxstatus mcxTingSplice
 (  mcxTing*       ting
 ,  const char*    pstr
-,  int            offset
-,  int            n_delete
-,  int            n_copy
+,  ofs            offset
+,  ofs            n_delete
+,  dim            n_copy
 )
-   {  int newlen
+   {  dim newlen
 
    ;  if (!ting)
       {  mcxErr("mcxTingSplice PBD", "void ting argument")
       ;  return STATUS_FAIL
    ;  }
-      
-      if (offset < 0)
-      offset = MAX(0, ting->len + offset + 1)
-     /*
-      * -1 denotes appending at the end,
-      * -2 denotes inserting at the last-but-one position.
-     */
 
-   ;  offset = MIN(ting->len, offset)
-     /*
-      * offset should now be ok.
-     */
+              /* offset -1 denotes appending at the end,
+               * offset -2 denotes inserting at the last-but-one position.
+               * etc
+              */
+      if (offset < 0)
+      {  if ((dim) -offset > ting->len + 1)
+         offset = 0
+      ;  else
+         offset = ting->len + offset + 1
+   ;  }
+      else if ((dim) offset > ting->len)
+      offset = ting->len
 
    ;  if (n_delete == TING_INS_CENTER)
       {  n_delete = MIN(ting->len, n_copy)
-      ;  n_delete = MAX(n_delete, 0)
-      ;  offset = MAX((ting->len - n_delete) / 2, 0)
+      ;  offset = (ting->len - n_delete) / 2    /* n_delete <= ting->len */
    ;  }
 
       else if (n_delete == TING_INS_OVERWRITE)
-      n_delete = MIN(ting->len - offset, n_copy)
+      n_delete = MIN(ting->len - offset, n_copy)  /* offset <= ting->len */
 
    ;  else if (n_delete == TING_INS_OVERRUN || n_delete < 0)
-      n_delete = ting->len - offset
+      n_delete = ting->len - offset               /* offset <= ting->len */
 
-   ;  else if (offset + n_delete > ting->len)
-      n_delete = ting->len - offset
-
-
-   ;  if ((newlen = ting->len - n_delete + n_copy) < 0)
-      {  mcxErr("mcxTingSplice PBD", "arguments result in negative length")
+   ;  else if (n_delete < 0)
+      {  mcxErr
+         (  "mcxTingSplice PBD"
+         ,  "unsupported delete mode %zd"
+         ,  (ssize_t) n_delete
+         )
       ;  return STATUS_FAIL
    ;  }
 
-     /*
-      *  essential: mcxSplice does not know to allocate room for '\0'
-     */
-      if (!mcxTingEnsure(ting, newlen))
+      else if ((dim) (offset + n_delete) > ting->len)
+      n_delete = ting->len - offset
+
+   ;  if (ting->len + n_copy < (dim) n_delete)  /* now spurious? */
+      {  mcxErr("mcxTingSplice PBD", "arguments result in negative length")
+      ;  return STATUS_FAIL
+   ;  }
+           /*
+            *  essential: mcxSplice does not know to allocate room for '\0'
+           */
+      newlen = ting->len - n_delete + n_copy
+   ;  if (!mcxTingEnsure(ting, newlen))
       return STATUS_FAIL
 
    ;  if
@@ -474,7 +489,7 @@ mcxstatus mcxTingSplice
          ,  &(ting->len)
          ,  &(ting->mxl)
          ,  offset
-         ,  n_delete
+         ,  (dim) n_delete
          ,  n_copy
          )
       != STATUS_OK
@@ -487,8 +502,7 @@ mcxstatus mcxTingSplice
    ;  *(ting->str+newlen)  =  '\0'
 
    ;  if (ting->len != newlen)
-      {  mcxErr("mcxTingSplice PBD", "mcxSplice gives unexpected result")
-      ;  mcxErr("mcxTingSplice", "nasal demons might fly")
+      {  mcxErr("mcxTingSplice panic", "mcxSplice gives unexpected result")
       ;  return STATUS_FAIL
    ;  }
       return STATUS_OK
@@ -503,25 +517,25 @@ mcxTing* mcxTingNew
 
 
 mcxTing* mcxTingNNew
-(  const char*       str
-,  int               n
+(  const char* str
+,  dim         sz
 )
-   {  mcxTing* ting = mcxTingEnsure(NULL, n)
+   {  mcxTing* ting = mcxTingEnsure(NULL, sz)
 
    ;  if (!ting)
       return NULL
                                     /* strnotice memcpy */
-   ;  if (str && n)
-      memcpy(ting->str, str, n)
-   ;  *(ting->str+n) = '\0'
-   ;  ting->len = n
+   ;  if (str && sz)
+      memcpy(ting->str, str, sz)
+   ;  *(ting->str+sz) = '\0'
+   ;  ting->len = sz
    ;  return ting
 ;  }
 
 
 mcxTing* mcxTingEmpty
-(  mcxTing*          ting
-,  int               len
+(  mcxTing*    ting
+,  dim         len
 )
    {  if (!(ting = mcxTingEnsure(ting, len)))
       return NULL
@@ -543,15 +557,15 @@ mcxTing* mcxTingWrite
 mcxTing* mcxTingNWrite
 (  mcxTing*          ting
 ,  const char*       str
-,  int               n
+,  dim               sz
 )
-   {  if (!(ting = mcxTingEnsure(ting, n)))
+   {  if (!(ting = mcxTingEnsure(ting, sz)))
       return NULL
                                     /* strnotice strncpy */
-   ;  memcpy(ting->str, str, n)
+   ;  memcpy(ting->str, str, sz)
 
-   ;  *(ting->str+n) = '\0'
-   ;  ting->len = n
+   ;  *(ting->str+sz) = '\0'
+   ;  ting->len = sz
 
    ;  return ting
 ;  }
@@ -559,22 +573,22 @@ mcxTing* mcxTingNWrite
 
 char* mcxTingSubStr
 (  const mcxTing*    ting
-,  int         offset  
-,  int         length
+,  ofs               offset  
+,  ofs               length
 )
    {  char* str
 
-   ;  if (offset < 0 || offset > ting->len)
+   ;  if (offset < 0 || (dim) offset > ting->len)
       offset = ting->len
 
-   ;  if (length < 0 || offset+length > ting->len)
+   ;  if (length < 0 || (dim) (offset+length) > ting->len)
       length = ting->len - offset
       
-   ;  if (!(str = mcxAlloc(length+1, RETURN_ON_FAIL)))
+   ;  if (!(str = mcxAlloc((dim) (length+1), RETURN_ON_FAIL)))
       return NULL
 
    ;  if (length)
-      memcpy(str, ting->str+offset, length)         
+      memcpy(str, ting->str+offset, (dim) length)
 
    ;  *(str+length) = '\0'
    ;  return str
@@ -604,7 +618,8 @@ char* mcxTinguish
 char* mcxTingStr
 (  const mcxTing*       ting
 )
-   {  return mcxTingSubStr(ting, 0, ting->len)
+   {  ofs slen = ting->len
+   ;  return mcxTingSubStr(ting, 0, slen)
 ;  }
 
 
@@ -635,12 +650,17 @@ mcxTing* mcxTingAppend
 mcxTing* mcxTingKAppend
 (  mcxTing*    ting
 ,  const char* str
-,  int         n
+,  dim         sz
 )
-                                          /* strnotice strlen */
-   {  int len = strlen(str)
+   {  dim len = strlen(str)
 
-   ;  while (n-- >= 0)
+   ;  if (!ting && !sz)
+      return mcxTingEmpty(NULL, 0)
+
+   ;  if (!sz)
+      return ting
+
+   ;  while (sz-- > 0)                    /* careful with unsignedness */
       if (!(ting = mcxTingNAppend(ting, str, len)))
       return NULL
 
@@ -649,12 +669,12 @@ mcxTing* mcxTingKAppend
 
 
 mcxTing* mcxTingNAppend
-(  mcxTing*             ting
-,  const char*          str
-,  int                  n
+(  mcxTing*      ting
+,  const char*   str
+,  dim           sz
 )
    {  if (!ting)
-      return mcxTingNWrite(NULL, str, n)
+      return mcxTingNWrite(NULL, str, sz)
 
    ;  if
       (  mcxTingSplice
@@ -662,7 +682,7 @@ mcxTing* mcxTingNAppend
          ,  str
          , -1                             /*    splice offset     */
          ,  0                             /*    delete nothing    */
-         ,  n                             /*    string length     */
+         ,  sz
          )
       != STATUS_OK
       )
@@ -675,7 +695,7 @@ mcxTing* mcxTingNAppend
 mcxTing* mcxTingInsert
 (  mcxTing*             ting
 ,  const char*          str
-,  int                  offset
+,  ofs                  offset
 )
    {  if (!ting)
       return mcxTingNew(str)
@@ -687,7 +707,7 @@ mcxTing* mcxTingInsert
          ,  str
          ,  offset                        /*    splice offset     */
          ,  0                             /*    delete nothing    */
-         ,  str? strlen(str) : 0          /*    string length     */
+         ,  str ? strlen(str) : 0         /*    string length     */
          )
       != STATUS_OK
       )
@@ -700,8 +720,8 @@ mcxTing* mcxTingInsert
 mcxTing* mcxTingNInsert
 (  mcxTing*          ting
 ,  const char*       str
-,  int               offset
-,  int               length
+,  ofs               offset
+,  dim               length
 )
    {  if (!ting)
       return mcxTingNWrite(NULL, str, length)
@@ -724,10 +744,11 @@ mcxTing* mcxTingNInsert
 
 mcxTing* mcxTingDelete
 (  mcxTing*          ting
-,  int               offset
-,  int               width
+,  ofs               offset
+,  dim               width
 )
-   {  if (!ting)
+   {  ofs swidth =   width
+   ;  if (!ting)
       return NULL
 
    ;  if
@@ -735,7 +756,7 @@ mcxTing* mcxTingDelete
          (  ting
          ,  NULL
          ,  offset                        /*    splice offset     */
-         ,  width                         /*    delete width      */
+         ,  swidth                        /*    delete width      */
          ,  0                             /*    string length     */
          )
       != STATUS_OK

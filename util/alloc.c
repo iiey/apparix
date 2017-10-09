@@ -1,4 +1,5 @@
-/* (c) Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+ *   (C) Copyright 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -6,21 +7,22 @@
  * copy of the GPL along with tingea, in the file COPYING.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
+/* include <stdio.h>
+   include <stdlib.h>
+   include <string.h>
+   include <sys/types.h>
+*/
 
+#include <unistd.h>
+#include <stdlib.h>
 
 #include "alloc.h"
 #include "err.h"
-#include "err.h"
 
 
-static long mcx_alloc_maxchunksize = 1048576;
-static long mcx_alloc_maxtimes     = -1;
-static mcxbool mcx_alloc_limit     = FALSE;
+static dim    mcx_alloc_maxchunksize  =  1048576;
+static long    mcx_alloc_maxtimes      =  -1;
+static mcxbool mcx_alloc_limit         =  FALSE;
 
 
 void mcxAllocLimits
@@ -37,17 +39,13 @@ void mcxAllocLimits
 
 void* mcxRealloc
 (  void*             object
-,  int               new_size
+,  dim               new_size
 ,  mcxOnFail         ON_FAIL
 )
    {  void*          mblock   =  NULL
-   ;  int            status   =  0
-   ;
-      if (new_size < 0)
-      {  mcxErr("mcxRealloc PBD", "negative amount <%d> requested", new_size)
-      ;  status   =  1
-   ;  }
-      else if (!new_size)
+   ;  mcxstatus      status   =  STATUS_OK
+
+   ;  if (!new_size)
       {  if (object)
          mcxFree(object)
    ;  }
@@ -69,7 +67,7 @@ void* mcxRealloc
    ;
       if (status)
       {  if (ON_FAIL == SLEEP_ON_FAIL)
-         {  mcxTell("mcxRealloc", "pid %d, entering sleep mode", (int) getpid())
+         {  mcxTell("mcxRealloc", "pid %ld, entering sleep mode", (long) getpid())
          ;  while(1)
             sleep(1000)
       ;  }
@@ -85,27 +83,24 @@ void* mcxRealloc
 
 void mcxNFree
 (  void*             base
-,  int               n_elem
-,  int               elem_size
+,  dim               n_elem
+,  dim               elem_size
 ,  void            (*obRelease) (void *)
 )
-   {  if (obRelease)
-      {  char *ob  =  base
-
-      ;  while (--n_elem >= 0)
-         {  obRelease(ob)
-         ;  ob += elem_size
-      ;  }
-      }
-
+   {  if (n_elem && obRelease)
+      {  char *ob    =  base
+      ;  while (n_elem-- > 0)
+            obRelease(ob)
+         ,  ob += elem_size
+   ;  }
       mcxFree(base)
 ;  }
 
 
 void* mcxNAlloc
-(  int               n_elem
-,  int               elem_size
-,  void* (*obInit) (void *)
+(  dim               n_elem
+,  dim               elem_size
+,  void*           (*obInit) (void *)
 ,  mcxOnFail         ON_FAIL
 )
    {  return mcxNRealloc(NULL, n_elem, 0, elem_size, obInit, ON_FAIL)
@@ -114,10 +109,10 @@ void* mcxNAlloc
 
 void* mcxNRealloc
 (  void*             mem
-,  int               n_elem
-,  int               n_elem_prev
-,  int               elem_size
-,  void* (*obInit) (void *)
+,  dim               n_elem
+,  dim               n_elem_prev
+,  dim               elem_size
+,  void*           (*obInit) (void *)
 ,  mcxOnFail         ON_FAIL
 )
    {  char*    ob
@@ -128,7 +123,7 @@ void* mcxNRealloc
 
    ;  if (obInit && n_elem > n_elem_prev)
       {  ob  =  ((char*) mem) + (elem_size * n_elem_prev)
-      ;  while (--n_elem >= n_elem_prev)
+      ;  while (n_elem-- > n_elem_prev)      /* careful with unsignedness */
          {  obInit(ob)
          ;  ob += elem_size
       ;  }
@@ -142,12 +137,12 @@ void mcxMemDenied
 (  FILE*             channel
 ,  const char*       requestee
 ,  const char*       unittype
-,  int               n
+,  dim               n
 )
    {  mcxErrf
       (  channel
       ,  requestee
-      ,  "memory shortage: could not alloc [%d] instances of [%s]"
+      ,  "memory shortage: could not alloc [%zu] instances of [%s]"
       ,  n
       ,  unittype
       )
@@ -162,7 +157,7 @@ void mcxFree
 
 
 void* mcxAlloc
-(  int               size
+(  dim               size
 ,  mcxOnFail         ON_FAIL
 )
    {  return mcxRealloc(NULL, size, ON_FAIL)

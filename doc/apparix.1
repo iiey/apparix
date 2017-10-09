@@ -1,5 +1,5 @@
 .\" Copyright (c) 2006 Stijn van Dongen
-.TH "apparix" 1 "5 Jan 2006" "apparix 1\&.002, 06-005" "USER COMMANDS "
+.TH "apparix" 1 "22 May 2006" "apparix 1\&.003, 06-142" "USER COMMANDS "
 .po 2m
 .de ZI
 .\" Zoem Indent/Itemize macro I.
@@ -39,7 +39,8 @@ the target directory\&.
 \fBGETTING STARTED\fP
 .br
 Install apparix\&. This should be as easy as \fI\&./configure
---prefix=$HOME/local && make && make install\fP\&.
+--prefix=$HOME/local && make && make install\fP, or perhaps a pre-packaged
+apparix is available for your system\&.
 Then get hold of the \fBto\fP, \fBbm\fP and \fBportal\fP shell handles\&. These
 are either aliases or functions depending on your shell\&. Currently csh-style
 shells and bash are supported\&.
@@ -47,7 +48,7 @@ Get the ones you need either from the \fBFILES\fP section or by issuing
 \fCapparix --shell-examples\fP\&. Activate them by simply pasting
 them in a shell or adding them to the appropriate resource file, e\&.g\&.
 \fC$HOME/\&.cshrc\fP or \fC$HOME/\&.profile\fP (do not forget to
-source the resource file)\&. The handles \fBto\fP, \fBbm\fP and \fBportal\fP can
+\fIsource\fP the resource file)\&. The handles \fBto\fP, \fBbm\fP and \fBportal\fP can
 of course be changed to any name desired\&. The following is
 a mock-up shell navigation session\&.
 
@@ -74,18 +75,22 @@ aap pyu/ qua tim/ zut/
 > \fBpwd\fP
 /home/eez/another/branch/deep/down/under
 > \fBportal\fP          # bookmark as portal, imports tim zut pyu bookmarks
+added flock of 3 in portal /home/eez/another/branch/deep/down/under
 
 (later)
 > \fBto zut\fP          # cd to /home/eez/another/branch/deep/down/under/zut
 
 (later)
 > \fBapparix\fP         # show all bookmarks
-j pyu    /home/eez/another/branch/deep/down/under/tim
-j tim    /home/eez/another/branch/deep/down/under/pyu
-j zut    /home/eez/another/branch/deep/down/under/zut
----
-e        /home/eez/another/branch/deep/down/under/zut
-j xkr    /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+--- portals
+e              /home/eez/another/branch/deep/down/under
+--- expansions
+j pyu          /home/eez/another/branch/deep/down/under/pyu
+j tim          /home/eez/another/branch/deep/down/under/tim
+j zut          /home/eez/another/branch/deep/down/under/zut
+--- bookmarks
+j xkr          /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
+j foo          /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 .fi \fR
 .in
 .di
@@ -95,8 +100,9 @@ j xkr    /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 .fi \fR
 
 In the last example apparix simply shows all its bookmarks\&.
-The first batch shows secondary bookmarks expanded from portals\&. The second
-batch shows all primary bookmarks and portals\&.
+The first batch shows portals\&. The second batch shows
+secondary bookmarks expanded from portals\&. The third
+batch shows all regular bookmarks\&.
 
 Apparix also allows subdirectory specification\&. If this is combined
 with the bash completion code it yields a powerful way of navigating
@@ -110,8 +116,11 @@ of subdirectories\&. Refer to the \fBsubdirectory specification\fP section\&.
 \fB[--squash-mark\fP (\fIsquash repeated marks\fP)\fB]\fP
 \fB[--squash-dest\fP (\fIsquash repeated destinations\fP)\fB]\fP
 \fB[-favour\fP <list> (\fIduplicate resolution\fP)\fB]\fP
-\fB[-rid\fP pat (\fIdelete bookmarks\fP)\fB]\fP
-\fB[-rid-mark\fP (\fIpat\fP)\fB]\fP
+\fB[-purge\fP pat (\fIdelete bookmarks\fP)\fB]\fP
+\fB[-purge-mark\fP (\fIpat\fP)\fB]\fP
+\fB[-d\fP (\fIdump resource file to STDOUT\fP)\fB]\fP
+\fB[-l\fP (\fIlist available jumps\fP)\fB]\fP
+\fB[-u\fP <num> (\fIremove last <num> additions\fP)\fB]\fP
 \fB[--rehash\fP (\fIre-expand portal bookmarks\fP)\fB]\fP
 \fB[--bu\fP (\fIcreate backup of resource file\fP)\fB]\fP
 \fB[-bu\fP <fname> (\fIcreate backup in <fname>\fP)\fB]\fP
@@ -120,30 +129,30 @@ of subdirectories\&. Refer to the \fBsubdirectory specification\fP section\&.
 .SH DESCRIPTION
 
 Apparix combines the properties of the
-\fIcdargs\fP utility
-and the CDPATH shell mechanism for fast navigation through
-the file system\&. It is especially useful for visiting and documenting
-both often- and rarely-used locations\&. Apparix enables you to attach marks
-to locations and jump to those locations by loading the mark\&. Marking,
-unmarking and jumping are simple operations that are performed in the
-current shell\&. By setting up convenient aliases for marking and jumping the
-file system can be navigated in a fast and intuitive manner\&.
-The \fBFILES\fP section lists aliases for csh-type shells and
-functions for bash, including the setup to equip the \fBto\fP function
-with argument completion in bash\&.
+\fIcdargs\fP utility and the
+CDPATH shell mechanism for fast navigation through the file system\&. It is
+especially useful for visiting and documenting both often- and rarely-used
+locations\&. Apparix enables you to attach marks to locations and jump to
+those locations by loading the mark\&. Marking, unmarking and jumping are
+simple operations that are performed in the shell\&. All actions take effect
+immediately in all shells running\&. By setting up convenient aliases for
+marking and jumping the file system can be navigated in a fast and intuitive
+manner\&. The \fBFILES\fP section lists aliases for csh-type shells and
+functions for bash, including the setup to equip the \fBto\fP function with
+argument completion in bash\&.
 
 This section contains some examples of the most common uses
 of apparix\&.
 \fBOPTIONS\fP contains a list of additional options available
-for pruning and squashing bookmarks\&.
+for listing, pruning, and squashing bookmarks\&.
 
 \fBNOTES\fP features a brief discussion of the advantages
 of apparix over other approaches such as setting up aliases for
 often visited directories, using symlinks, CDPATH, or a combination
 of these\&. \fBHISTORY\fP explains the difference between
 cdargs and apparix\&.
-The sections \fBduplicate resolution\fP, \fBsubdirectory specification\fP, \fBtab completion\fP and
-\fBcopying and moving files\fP
+The sections \fBduplicate resolution\fP, \fBsubdirectory specification\fP, \fBtab completion\fP,
+\fBcopying and moving files\fP, and \fBlisting bookmarks\fP
 further below are also recommended reading\&.
 
 Apparix works in a manner similar to cdargs\&. One usually invokes
@@ -267,16 +276,22 @@ apparix --rehash
 This is useful to reflect a change in the directory naming structure
 underneath a portal\&.
 .SH duplicate resolution
+
 Apparix allows identical bookmarks to point to different locations\&.
 When asked to visit such a bookmark it will by default
 present a list of options\&.
 
-The \fB-favour\fP\ \fI<list>\fP option can be used to automate
+The \fB-favour\fP\ \&\fI<list>\fP option can be used to automate
 resolution\&. \fB<list>\fP is a sequence of single characters\&.
 The order in which they are given denote the order in which
 resolution rules are applied\&. This option is typically used
 in the definition of the \fBto\fP function/alias or
 in the bash completion code\&.
+
+Duplicates are allowed because it can be useful to overwrite
+a bookmark with a new location\&. The old bookmark is kept
+as a matter of policy\&. Use \fB--squash-mark\fP to explicitly
+squash duplicates\&.
 
 .ZI 3m "l"
 \fIlevel\fP; prefer paths with fewer components\&.
@@ -315,13 +330,39 @@ completion code\&. Otherwise completion will fail (for a duplicated bookmark)
 while apparix is waiting for input\&. Refer to the tab completion description
 below\&.
 .SH subdirectory specification
+
 When jumping (apparating) you can specify an additional subdirectory
 after the bookmark\&. Apparix will append the subdirectory to
 the destination\&.
 
+This is useful for projects with directory nodes corresponding
+with versions\&. Assume you have a directory structure such as this:
+
+.di ZV
+.in 0
+.nf \fC
+   /x/y/z/OpusMagnum/v1/
+   /x/y/z/OpusMagnum/v2/
+   /x/y/z/OpusMagnum/v3/
+.fi \fR
+.in
+.di
+.ne \n(dnu
+.nf \fC
+.ZV
+.fi \fR
+
+It is probably easiest to simply bookmark the OpusMagnum directory
+in some way (say with bookmark \fCom\fP)\&. You can then issue
+\&'\fCto om v2\fP\&' to jump to \fCOpusMagnum/v2\fP\&. This is more flexible
+and maintainable then creating bookmarks \fCom1\fP, \fCom2\fP, \fCom3\fP\&.
+One could add OpusMagnum as a portal, but with generic names such
+as \fCv1\fP this is not a very extendible approach\&.
+
 See also the tab completion description below - it is possible
 to tab-complete on subdirectories of the apparix jump directory\&.
 .SH tab completion
+
 The bash tab completion code does two things\&. First, it is possible to
 tab-complete on apparix bookmarks themselves, showing a listing of all
 available bookmarks (or iterating through them in cyclic mode, depending on
@@ -331,19 +372,18 @@ with that bookmark\&. Specifying a string after the bookmark will limit
 tab-completion to directories matching the shell-pattern in string\&.
 \fIVery\fP useful\&.
 
-Be careful to not remove the \fB-favour\fP\ \fIlist\fP option
+Be careful to not remove the \fB-favour\fP\ \&\fIlist\fP option
 from the bash completion code\&. It is necessary to resolve
 duplicate bookmarks\&.
 .SH editing bookmarks
-Apparix appends new bookmarks to the end of the \&.apparixrc
-file\&. Nothing stops you however from editing the file, and
-this is in fact recommended if for example you need to get
-rid of a bookmark and neither of \fB-rid\fP,
-\fB-rid-mark\fP, \fB--squash-dest\fP,
-\fB--squash-mark\fP fulfills your needs\&.
-It was an easy design choice \fInot\fP to equip
-apparix with editor capabilities\&.
+Apparix appends new bookmarks to the end of the \&.apparixrc file\&. Nothing
+stops you from editing the file, and this is in fact recommended if for
+example you need to get rid of a bookmark and neither of \fB-purge\fP,
+\fB-purge-mark\fP, \fB--squash-dest\fP,
+\fB--squash-mark\fP fulfills your needs\&. It was an easy design choice
+not to equip apparix with editor capabilities\&.
 .SH copying and moving files
+
 It is straightforward to copy or move files to locations known
 by apparix\&. Examples:
 
@@ -353,10 +393,11 @@ by apparix\&. Examples:
 BASH and variants
    cp FOO $(apparix zoem)
    mv BAR $(apparix zoem doc)
+   mv BAR $(apparix zoem doc)/test
    
 CSH and variants
    cp FOO \&`apparix zoem\&`
-   mv BAR \&`apparix zoem doc\&`
+   mv BAR \&`apparix zoem doc\&`/test
 .fi \fR
 .in
 .di
@@ -365,6 +406,17 @@ CSH and variants
 .ZV
 .fi \fR
 
+.SH listing bookmarks
+
+Simply issuing apparix gives you a list of bookmarks grouped into three
+categories, portals, expansions, and bookmarks\&. Use the \fB-d\fP option
+to dump the resource file to STDOUT exactly as it is\&. This can be useful
+when you intend to use the \fB-u\fP\ \&\fInum\fP option to remove bookmarks or
+portals that were most recently added\&.
+
+Use \fB-l\fP two list all available jumps without their destinations\&.
+The jumps are grouped into expansions resulting from portals and
+regular bookmarks\&.
 .SH OPTIONS
 For bookmarking and jumping apparix is best invoked by using the aliases
 (tcsh-variants) or functions (sh/bash) listed in \fBFILES\fP\&.
@@ -375,11 +427,10 @@ If you are intested in marks or destinations matching a certain pattern,
 simply issue apparix without arguments and pipe it through
 your program of choice\&.
 
-Options that take an argument always start with a single hyphen\&.
 Unary options (those without arguments) usually start with two hyphens
 except for standardized options such as \fB-h\fP\&.
 Options that take an argument can be converted to a unary key=value notation,
-e\&.g\&. \fB-rid-mark\fP\ \fBfoo\fP is equivalent to \fB--rid-mark\fP=\fBfoo\fP\&.
+e\&.g\&. \fB-purge-mark\fP\ \&\fBfoo\fP is equivalent to \fB--purge-mark\fP=\fBfoo\fP\&.
 
 When invoked without arguments apparix will simply dump its bookmarks\&.
 
@@ -405,9 +456,25 @@ instead be interpreted as the portal location\&.
 .ZI 3m "\fB--squash-mark\fP (\fIsquash repeated marks\fP)"
 \&
 .br
-Apparix will squash identical marks\&.
-It does not consider the corresponding destinations and will
-simply keep the last one occurring in the resource file\&.
+Apparix will squash identical marks, keeping the first (\fIunder the employed
+sorting\fP) it encounters\&.
+It does not consider the corresponding destinations and will by default keep
+the last one occurring in the resource file (corresponding with
+\fB-favour\fP\ \&\fBO\fP)\&. This option respects the \fB-favour\fP option if
+given\&. Duplicating an already existing mark can be useful when it
+identifies a project for which the underlying directory changes every once
+in a while (e\&.g\&. the project is downloaded from external sources and comes
+with version information)\&. It is not strictly necessary to squash bookmarks
+since \fBto\fP functions/macros that are equipped with the \fB-favour\fP
+option will generally resolve duplicate matches\&. This option supplies an
+easy way to declutter the apparix resource file every once in a while\&.
+Portal specifications are never affected\&.
+.in -3m
+
+.ZI 3m "\fB-sm\fP (\fIsquash repeated marks\fP)"
+\&
+.br
+Same as above\&.
 .in -3m
 
 .ZI 3m "\fB--squash-dest\fP (\fIsquash repeated destinations\fP)"
@@ -416,20 +483,44 @@ simply keep the last one occurring in the resource file\&.
 Apparix will squash identical destinations\&.
 It does not consider the corresponding marks and will
 simply keep the last one occurring in the resource file\&.
+Portal specifications are never affected\&.
 .in -3m
 
-.ZI 3m "\fB-rid\fP pat (\fIdelete bookmarks\fP)"
+.ZI 3m "\fB-purge\fP pat (\fIdelete bookmarks\fP)"
 \&
 .br
 This deletes bookmarks where destination matches \fIpat\fP\&.
 All deleted bookmarks are printed to STDOUT\&. Thus if you regret
-deleting a bookmark it is easy to add it back\&.
+deleting a bookmark it is easy to add it back\&. Portal specifications
+are never affected\&.
 .in -3m
 
-.ZI 3m "\fB-rid-mark\fP (\fIpat\fP)"
+.ZI 3m "\fB-purge-mark\fP (\fIpat\fP)"
 \&
 .br
 This deletes bookmarks where mark matches \fIpat\fP\&.
+Portal specifications are never affected\&.
+.in -3m
+
+.ZI 3m "\fB-d\fP (\fIdump resource file to STDOUT\fP)"
+\&
+.br
+Dump resource file to STDOUT\&.
+.in -3m
+
+.ZI 3m "\fB-l\fP (\fIlist available jumps\fP)"
+\&
+.br
+List available jumps paragraph-style\&. Portal specifications themselves
+are excluded, and regular jumps and jumps resulting from portal expansions
+are listed under different headers\&.
+.in -3m
+
+.ZI 3m "\fB-u\fP <num> (\fIremove last <num> additions\fP)"
+\&
+.br
+Remove last <num> additions\&. Portal specifications and regular
+jumps are treated alike\&.
 .in -3m
 
 .ZI 3m "\fB--rehash\fP (\fIre-expand portal bookmarks\fP)"
@@ -466,13 +557,14 @@ This outputs example macros\&. They are also listed in the
 .ZI 3m "\fB--bu\fP (\fIcreate backup of the resource file\fP)"
 \&
 .br
-This creates the backup file in \&.apparixrc\&.bu
+This creates the backup file in \&.apparixrc\&.bu\&.
 .in -3m
 
 .ZI 3m "\fB-bu\fP fname (\fIcreate backup of the resource file\fP)"
 \&
 .br
-This creates the backup file in \fIfname\fP\&.
+This creates the backup file in \fIfname\fP\&. Use
+\fB-d\fP or \fB-bu\fP\ \&\fB-\fP to dump to STDOUT\&.
 .in -3m
 
 .ZI 3m "\fB-h\fP (\fIshow synopsis\fP)"
@@ -508,7 +600,7 @@ Apparix creates a back-up file whenever it is asked to
 remove entries from it\&. Refer
 to \fBediting bookmarks\fP for options inducing removal\&.
 You can explicitly require a backup to be made by
-either of \fB--bu\fP or \fB-bu\fP\ \fIfname\fP\&.
+either of \fB--bu\fP or \fB-bu\fP\ \&\fIfname\fP\&.
 .in -3m
 
 .ZI 3m "$HOME/\&.apparixexpand"
@@ -588,7 +680,7 @@ function _apparix_aliases ()
         COMPREPLY=( $( cat $HOME/\&.apparix{rc,expand} | \e
                        grep "j,\&.*$cur\&.*," | cut -f2 -d, ) )
     else
-        dir=\&`apparix -favour lro $dir 2>/dev/null\&` || return 0
+        dir=\&`apparix -favour rOl $dir 2>/dev/null\&` || return 0
         eval_compreply="COMPREPLY=( $(
             cd "$dir"
             \els -d *$cur* | while read r
@@ -608,7 +700,7 @@ complete -F _apparix_aliases to
 ---
 CSH-style aliases
 ---
-alias to    \&'cd \&`(apparix \e!* || echo -n \&.)\&` && pwd\&'
+alias to    \&'cd \&`(apparix -favour rOl \e!* || echo -n \&.)\&` && pwd\&'
 alias bm   \&'apparix --add-mark \e!*\&'
 alias portal \&'apparix --add-portal \e!*\&'
 ---
@@ -620,6 +712,21 @@ alias portal \&'apparix --add-portal \e!*\&'
 .ZV
 .fi \fR
 
+More elaborate setups are possible\&. This CSH-style alias:
+
+.di ZV
+.in 0
+.nf \fC
+alias to \&'(test "x" !=  "x\e!*") && cd \&`(apparix -favour rOl \e!* || echo -n \&.)\&` || apparix -l\&'
+.fi \fR
+.in
+.di
+.ne \n(dnu
+.nf \fC
+.ZV
+.fi \fR
+
+lists all available jumps if invoked without arguments\&.
 .SH NOTES
 
 Below follow some comments on other approaches to file system navigation\&.
@@ -708,9 +815,8 @@ source some resource file, as the applications do this everytime
 they are invoked\&. It is fast, do not worry\&.
 .SH BUGS
 The resource file parsing code thinks that parentheses are special\&.
-Also records are currently separated by commas\&.
-Accordingly, apparix will hitch if a path name contains an opening parenthesis
-or a comma\&.
+Also records are currently separated by commas\&. Accordingly, apparix will
+hitch if a path name contains a parenthesis or a comma\&.
 .SH AUTHOR
 Stijn van Dongen\&.
 .SH THANKS

@@ -1,4 +1,5 @@
-/* (c) Copyright 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+ *   (C) Copyright 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -117,15 +118,15 @@ typedef struct
 {  mcxTing*       fn
 ;  char*          mode
 ;  FILE*          fp
-;  size_t         lc       /*    line count        */
-;  size_t         lo       /*    line offset       */
-;  size_t         lo_      /*    line offset backup, only valid when lo == 0 */
-;  size_t         bc       /*    byte count        */
+;  dim            lc       /*    line count        */
+;  dim            lo       /*    line offset       */
+;  dim            lo_      /*    line offset backup, only valid when lo == 0 */
+;  dim            bc       /*    byte count        */
 ;  int            ateof
 ;  int            stdio
 ;  long           pos      /*    handle for fseek  */
 ;  void*          usr      /*    user object       */
-;  void         (*usr_reset)(void*)    /*  function to reset user object */
+;  mcxstatus    (*usr_reset)(void*)    /*  function to reset user object */
 ;  void         (*usr_free)(void*)     /*  function to free user object  */
 ;
 }  mcxIO    ;
@@ -187,8 +188,15 @@ void mcxIOerr
 
 /* Currently, for stdin/stdout/stderr clearerr is issued if necessary.
  * This makes e.g. repeated reads from STDIN possible.
+ *
+ * usr_reset is called if present.
 */
-void mcxIOclose
+mcxstatus mcxIOclose
+(  mcxIO       *xf
+)  ;
+
+
+mcxstatus mcxIOreset
 (  mcxIO       *xf
 )  ;
 
@@ -213,10 +221,10 @@ mcxstatus  mcxIOreadLine
 )  ;
 
 
-ssize_t mcxIOappendChunk
+ofs mcxIOappendChunk
 (  mcxIO        *xf
 ,  mcxTing      *dst
-,  ssize_t      sz
+,  dim          sz
 ,  mcxbits      flags
 )  ;
 
@@ -224,7 +232,7 @@ ssize_t mcxIOappendChunk
 /*    returns count of discarded characters.
 */
 
-int mcxIOdiscardLine
+dim mcxIOdiscardLine
 (  mcxIO       *xf
 )  ;
 

@@ -36,16 +36,20 @@
 enum
 {  MY_OPT_ADD_JUMP
 ,  MY_OPT_ADD_PORTAL
-,  MY_OPT_SQUASH_MARK
-,  MY_OPT_SQUASH_DEST
-,  MY_OPT_UNGREP
-,  MY_OPT_UNGREP_MARK
-,  MY_OPT_FAVOUR
 ,  MY_OPT_REHASH
-,  MY_OPT_CWD
-,  MY_OPT_SHELL
+,  MY_OPT_DUMP
+,  MY_OPT_LIST
+,  MY_OPT_UNDO
+,  MY_OPT_FAVOUR
+,  MY_OPT_SQUASH_MARK
+,  MY_OPT_SQUASH_MARK2
+,  MY_OPT_SQUASH_DEST
+,  MY_OPT_PURGE
+,  MY_OPT_PURGE_MARK
 ,  MY_OPT_BACKUP
 ,  MY_OPT_BACKUP_NAMED
+,  MY_OPT_CWD
+,  MY_OPT_SHELL
 ,  MY_OPT_VERSION
 ,  MY_OPT_HELP
 ,  MY_OPT_APROPOS
@@ -53,7 +57,7 @@ enum
 
 
 
-static const char* me    =  "apparix";
+static const char* us    =  "apparix";
 
 static mcxbool use_cwd  =  FALSE;
 
@@ -96,7 +100,7 @@ const char* shell_examples[] =
 ,  "        COMPREPLY=( $( cat $HOME/.apparix{rc,expand} | \\"
 ,  "                       grep \"j,.*$cur.*,\" | cut -f2 -d, ) )"
 ,  "    else"
-,  "        dir=`apparix -favour lro $dir 2>/dev/null` || return 0"
+,  "        dir=`apparix -favour rOl $dir 2>/dev/null` || return 0"
 ,  "        eval_compreply=\"COMPREPLY=( $("
 ,  "            cd \"$dir\""
 ,  "            \\ls -d *$cur* | while read r"
@@ -114,7 +118,7 @@ const char* shell_examples[] =
 ,  "# being expanded"
 ,  "complete -F _apparix_aliases to"
 ,  "---\nCSH-style aliases\n---"
-,  "alias to    'cd `(apparix \\!* || echo -n .)` && pwd'"
+,  "alias to    'cd `(apparix -favour rOl \\!* || echo -n .)` && pwd'"
 ,  "alias bm   'apparix --add-mark \\!*'"
 ,  "alias portal 'apparix --add-portal \\!*'"
 ,  "---"
@@ -141,6 +145,24 @@ mcxOptAnchor options[] =
    ,  MY_OPT_BACKUP
    ,  NULL
    ,  "copy .apparixrc to .apparixrc.bu"
+   }
+,  {  "-l"
+   ,  MCX_OPT_DEFAULT
+   ,  MY_OPT_LIST
+   ,  NULL
+   ,  "list all bookmarks"
+   }
+,  {  "-d"
+   ,  MCX_OPT_DEFAULT
+   ,  MY_OPT_DUMP
+   ,  NULL
+   ,  "dump resource file to STDOUT"
+   }
+,  {  "-u"
+   ,  MCX_OPT_HASARG
+   ,  MY_OPT_UNDO
+   ,  "<num>"
+   ,  "undo last <num> additions"
    }
 ,  {  "-bu"
    ,  MCX_OPT_HASARG
@@ -176,31 +198,37 @@ mcxOptAnchor options[] =
    ,  MCX_OPT_DEFAULT
    ,  MY_OPT_SQUASH_MARK
    ,  NULL
-   ,  "for repeated marks take the last occurring destination"
+   ,  "for repeated marks take the first occurring destination (cf -favour)"
+   }
+,  {  "-sm"
+   ,  MCX_OPT_DEFAULT
+   ,  MY_OPT_SQUASH_MARK2
+   ,  NULL
+   ,  "same as above"
    }
 ,  {  "--squash-dest"
    ,  MCX_OPT_DEFAULT
    ,  MY_OPT_SQUASH_DEST
    ,  NULL
-   ,  "for repeated destinations take the last occurring mark"
+   ,  "for repeated destinations take the first occurring mark (cf -favour)"
    }
-,  {  "-rid"
+,  {  "-purge"
    ,  MCX_OPT_HASARG
-   ,  MY_OPT_UNGREP
+   ,  MY_OPT_PURGE
    ,  "<pat>"
    ,  "delete bookmarks where destination matches <pat>"
    }
-,  {  "-rid-mark"
+,  {  "-purge-mark"
    ,  MCX_OPT_HASARG
-   ,  MY_OPT_UNGREP_MARK
+   ,  MY_OPT_PURGE_MARK
    ,  "<pat>"
    ,  "delete bookmarks where mark matches <pat>"
    }
 ,  {  "-favour"
    ,  MCX_OPT_HASARG
    ,  MY_OPT_FAVOUR
-   ,  "[lroLRO]* (level, order, regular)"
-   ,  "duplicate resolution"
+   ,  "[lroLRO]*"
+   ,  "(level, order, regular) duplicate resolution"
    }
 ,  {  "--rehash"
    ,  MCX_OPT_DEFAULT
@@ -236,7 +264,7 @@ void show_version
       (  stdout
       ,
 "apparix %s, %s\n"
-"(c) Copyright 2005, Stijn van Dongen. apparix comes with NO WARRANTY\n"
+"(c) Copyright 2005, 2006 Stijn van Dongen. apparix comes with NO WARRANTY\n"
 "to the extent permitted by law. You may redistribute copies of apparix under\n"
 "the terms of the GNU General Public License.\n"
       ,  apxNumTag
@@ -274,19 +302,7 @@ int bookmark_cmp_j_over_J
 )
    {  const bookmark* b1 = bm1
    ;  const bookmark* b2 = bm2
-   ;  return   b1->type == 'j'
-            ?     -1
-            :  b2->type == 'j'
-            ?     1
-            :     0
-;  }
-
-
-int bookmark_cmp_J_over_j
-(  const void* bm1
-,  const void* bm2
-)
-   {  return bookmark_cmp_j_over_J(bm2, bm1)
+   ;  return   b2->type - b1->type
 ;  }
 
 
@@ -295,14 +311,6 @@ int bookmark_cmp_ord
 ,  const void* bm2
 )
    {  return ((bookmark*)bm1)->ord - ((bookmark*)bm2)->ord
-;  }
-
-
-int bookmark_cmp_ord_rev
-(  const void* bm1
-,  const void* bm2
-)
-   {  return ((bookmark*)bm2)->ord - ((bookmark*)bm1)->ord
 ;  }
 
 
@@ -319,13 +327,7 @@ int bookmark_cmp_level
 ;  }
 
 
-int bookmark_cmp_level_rev
-(  const void* bm1
-,  const void* bm2
-)
-   {  return bookmark_cmp_level(bm2, bm1)
-;  }
-
+   /* SORTS ON MARK FIRST (do not use for dest) */
 
 int bookmark_cmp_favour
 (  const void* bm1
@@ -333,6 +335,11 @@ int bookmark_cmp_favour
 )
    {  int i=0
    ;  int cmp_result = 0
+
+   ;  int c = strcmp(((bookmark*) bm1)->mark->str, ((bookmark*) bm2)->mark->str)
+
+   ;  if (c)
+      return c
 
    ;  for (i=0;i<favour->len;i++)
       {  int mode = (unsigned char) favour->str[i]
@@ -343,7 +350,7 @@ int bookmark_cmp_favour
          ;
 
             case 'L'
-         :  cmp_result = bookmark_cmp_level_rev(bm1, bm2)
+         :  cmp_result = bookmark_cmp_level(bm2, bm1)
          ;  break
          ;
 
@@ -353,7 +360,7 @@ int bookmark_cmp_favour
          ;
 
             case 'O'
-         :  cmp_result = bookmark_cmp_ord_rev(bm1, bm2)
+         :  cmp_result = bookmark_cmp_ord(bm2, bm1)
          ;  break
          ;
 
@@ -363,7 +370,7 @@ int bookmark_cmp_favour
          ;
 
             case 'R'
-         :  cmp_result = bookmark_cmp_J_over_j(bm1, bm2)
+         :  cmp_result = bookmark_cmp_j_over_J(bm2, bm1)
          ;  break
       ;  }
          if (cmp_result)
@@ -389,210 +396,6 @@ int bookmark_cmp_dest
 ;  }
 
 
-int expand_portal
-(  mcxIO* xfport
-,  const char* dest
-)
-   {  DIR * dir = opendir(dest)
-   ;  struct dirent *de
-   ;  mcxstatus status = STATUS_FAIL
-   ;  mcxTing* fqname = mcxTingEmpty(NULL, 512)
-   ;  int ct = 0
-
-   ;  while (1)
-      {  if (!dir)
-         {  mcxErr(me, "cannot open directory %s", dest)
-         ;  break
-      ;  }
-         while ((de = readdir(dir)))
-         {  struct stat fstat
-         ;  const char* dname = de->d_name
-         ;  mcxTingPrint(fqname, "%s/%s", dest, dname)
-         ;  if ((unsigned char) dname[0] == '.')
-            continue
-         ;  if (!strncmp(dname, "CVS", 3))
-            continue
-         ;  if (lstat(fqname->str, &fstat) < 0)
-            {  mcxErr(me, "error accessing node %s", fqname->str)
-            ;  break
-         ;  }
-            if (!S_ISDIR(fstat.st_mode))
-            continue
-         ;  fprintf(xfport->fp, "j,%s,%s\n", dname, fqname->str)
-         ;  ct++
-      ;  }
-         closedir(dir)
-
-      ;  if (de)
-         break
-      ;  status = STATUS_OK
-      ;  break
-   ;  }
-      mcxTingFree(&fqname)
-   ;  return status ? -1 : ct
-;  }
-
-
-
-mcxstatus bookmark_resync_portal
-(  folder*     fl
-,  mcxIO*      xfport
-)
-   {  int i, n_fail = 0
-   ;  const char* portname = xfport->fn->str
-   ;  int ct_expansion = 0
-   ;  int ct_portal = 0
-
-   ;  mcxIOclose(xfport)
-   ;  {  struct stat fstat
-      ;  if (lstat(portname, &fstat) < 0)
-         {  if (errno == ENOENT)
-            mcxTell(me, "portal file %s will be newly created", portname)
-         ;  else
-            mcxErr(me, "cannot access %s, fingers crossed", portname)
-      ;  }
-      }
-
-      mcxIOrenew(xfport, NULL, "w")
-   ;  if (mcxIOopen(xfport, EXIT_ON_FAIL))
-      {  mcxErr(me, "panic - portal file is gone, try --rehash")
-      ;  return STATUS_FAIL
-   ;  }
-
-      for (i=0;i<fl->bm_n;i++)
-      {  bookmark* bm = fl->bms+i
-      ;  int ct
-      ;  if (bm->type == 'e')
-         {  if ((ct = expand_portal(xfport, bm->dest->str)) < 0)
-            n_fail++
-         ;  else
-               ct_expansion += ct
-            ,  ct_portal++
-      ;  }
-      }
-
-   ;  if (n_fail)
-      mcxErr(me, "portal expansion yielded %d errors", n_fail)
-
-   ;  mcxTell
-      (me, "expanded %d portals to %d destinations", ct_portal, ct_expansion)
-   ;  return n_fail ? STATUS_FAIL : STATUS_OK
-;  }
-
-
-mcxstatus bookmark_backup_rcfile
-(  const char* name
-,  const char* dest
-)
-   {  mcxTing* target  =      dest
-                           ?  mcxTingPrint(NULL, "%s", dest)
-                           :  mcxTingPrint(NULL, "%s.bu", name)
-   ;  mcxTing* cmd = mcxTingPrint(NULL, "cp %s %s", name, target->str)
-   ;  int cpstat = system(cmd->str)
-   ;  if (cpstat)
-      {  mcxErr(me, "panic cannot write file %s", target->str)
-      ;  return STATUS_FAIL
-   ;  }
-      return STATUS_OK
-;  }
-
-
-mcxstatus bookmark_resync_rc
-(  folder*     fl
-,  mcxIO*      xfrc
-)
-   {  int i
-   ;  const char* rcname = xfrc->fn->str
-   ;  int n_purged = 0
-
-   ;  mcxIOclose(xfrc)
-
-   ;  if (bookmark_backup_rcfile(xfrc->fn->str, NULL))
-      return STATUS_FAIL
-
-   ;  mcxIOrenew(xfrc, NULL, "w")
-
-   ;  if (mcxIOopen(xfrc, EXIT_ON_FAIL))
-      {  mcxErr(me, "panic - rc file is gone, backup in %s.bu", rcname)
-      ;  return STATUS_FAIL
-   ;  }
-
-      for (i=0;i<fl->bm_n;i++)
-      {  bookmark* bm   =  fl->bms+i
-      ;  FILE* fp       =  bm->info & BIT_PURGE ? stdout : xfrc->fp
-      ;  int type       =  bm->type
-
-      ;  if (type == 'j' || type == 'J')
-         fprintf(fp, "j,%s,%s\n", bm->mark->str, bm->dest->str)
-      ;  else if (bm->type == 'e')
-         fprintf(fp, "%c,%s\n", bm->type, bm->dest->str)
-
-      ;  if (bm->info & BIT_PURGE)
-         n_purged++
-   ;  }
-      fprintf(stdout, "purged a flock of %d\n", n_purged)
-   ;  return STATUS_OK
-;  }
-
-
-enum
-{  SQUASH_DEST = 1444
-,  SQUASH_MARK
-}  ;
-
-mcxstatus bookmark_squash
-(  folder*      fl
-,  mcxIO*       xfrc
-,  int          mode
-)
-   {  int j
-   ;  mcxbool dest = mode == SQUASH_DEST
-   ;  int (*cmp)(const void*, const void*)
-      =     dest
-         ?  bookmark_cmp_dest
-         :  bookmark_cmp_mark
-
-   ;  if (!fl->bm_n)
-      return STATUS_OK
-   ;  qsort(fl->bms, fl->bm_n, sizeof fl->bms[0], cmp)
-
-   ;  for (j=1;j<fl->bm_n;j++)
-      {  bookmark* bmj = fl->bms+j
-      ;  bookmark* bmi = bmj - 1
-                                       /* fixme convoluted logic */
-      ;  if (!dest && bmi->type == 'e' && bmj->type == 'e')
-         continue
-      ;  if
-         (  ( dest && !strcmp(bmi->dest->str, bmj->dest->str))
-         || (!dest && !strcmp(bmi->mark->str, bmj->mark->str) )
-         )
-         bmi->info |= BIT_PURGE
-   ;  }
-
-      qsort(fl->bms, fl->bm_n, sizeof fl->bms[0], bookmark_cmp_ord)
-   ;  return bookmark_resync_rc(fl, xfrc)
-;  }
-
-
-mcxstatus bookmark_ungrep
-(  folder*      fl
-,  mcxIO*       xfrc
-,  const char*  destpat
-,  const char*  markpat
-)
-   {  int i
-   ;  for (i=0;i<fl->bm_n;i++)
-      {  bookmark* bm = fl->bms+i
-      ;  if
-         (  (destpat && strstr(bm->dest->str, destpat))
-         || (markpat && strstr(bm->mark->str, markpat))
-         )
-         bm->info |= BIT_PURGE
-   ;  }
-      return bookmark_resync_rc(fl, xfrc)
-;  }
-
-
 void* bookmark_init
 (  void* bm_v
 )
@@ -603,64 +406,6 @@ void* bookmark_init
    ;  bm->info =  0
    ;  bm->ord  =  0
    ;  return bm
-;  }
-
-
-mcxstatus bookmark_show
-(  folder*   fl
-)
-   {  int i
-   ;  qsort(fl->bms, fl->bm_n, sizeof fl->bms[0], bookmark_cmp_dest)
-   ;  for (i=0;i<fl->bm_n;i++)
-      {  bookmark* bm = fl->bms+i
-      ;  if (bm->type == 'j' || bm->type == 'J')
-         fprintf
-         (  stdout
-         ,  "j %-12s %s\n"
-         ,  bm->mark->str
-         ,  bm->dest->str
-         )
-      ;  else if (bm->type == 'e')
-         fprintf
-         (  stdout
-         ,  "%c %-12s %s\n"
-         ,  bm->type
-         ,  ""
-         ,  bm->dest->str
-         )  
-   ;  }
-      return STATUS_OK
-;  }
-
-
-mcxstatus bookmark_add_portal
-(  mcxIO* xfrc
-,  mcxIO* xfport
-,  const char* dest
-)
-   {  int ct = expand_portal(xfport, dest)
-   ;  if (ct < 0)
-      mcxErr(me, "some error occurred")
-   ;  else if (ct)
-      {  fprintf(xfrc->fp, "e,%s\n", dest)
-      ;  fprintf(stdout, "added flock of %d in portal %s\n", ct, dest)
-   ;  }
-      else if (!ct)
-      mcxTell(me, "nothing to expand from %s", dest)
-      
-   ;  return STATUS_OK
-;  }
-
-
-
-mcxstatus bookmark_add_jump
-(  mcxIO* xfrc
-,  const char* mark
-,  const char* dest
-)
-   {  fprintf(xfrc->fp, "j,%s,%s\n", mark, dest)
-   ;  fprintf(stdout, "added: %s -> %s\n", mark, dest)
-   ;  return STATUS_OK
 ;  }
 
 
@@ -680,6 +425,7 @@ folder* folder_new
 void folder_add
 (  folder*  fl
 ,  int      type
+,  mcxbits  info
 ,  const mcxTing* mark
 ,  const mcxTing* dest
 ,  int      ord
@@ -703,6 +449,7 @@ void folder_add
 
       bm       =  fl->bms+bm_n++
    ;  bm->type =  type
+   ;  bm->info =  info
 
    ;  mcxTingWrite(bm->dest, dest->str)
    ;  if (mark)
@@ -714,43 +461,420 @@ void folder_add
 ;  }
 
 
-folder* folder_merge
-(  folder* fl1
-,  folder* fl2
+
+#if 0                               /* not used */
+int folder_dups
+(  folder* fl_any
 )
-   {  folder* fl        =  folder_new(100)
-   ;  bookmark* bm      =  NULL
-   ;  int ord           =  0
+   {  bookmark* bm = fl_any->bms+1
+   ;  int n_dup = 0
 
-   ;  bm = fl1->bms
-   ;  while (bm<fl1->bms+fl1->bm_n)
-      {  folder_add(fl, bm->type, bm->mark, bm->dest, ord++)
+   ;  while (bm<fl_any->bms + fl_any->bm_n)
+      {  if (!strcmp(bm[0].mark->str, bm[-1].mark->str))
+         n_dup++
       ;  bm++
    ;  }
 
-      bm = fl2->bms
-   ;  while (bm<fl2->bms+fl2->bm_n)
-      {  folder_add(fl, bm->type, bm->mark, bm->dest, ord++)
-      ;  bm++
-   ;  }
-
-      return fl
+      return n_dup
 ;  }
 
 
-folder*  bookmark_parse
+/* this is broken when both contain same mark multiple times */
+
+int folder_dups2
+(  folder* fl_uniq      /* assume/pretend uniq */
+,  folder* fl_any
+)
+   {  bookmark* bmu = fl_uniq->bms
+   ;  bookmark* bma = fl_any->bms
+   ;  int n_dup = 0
+
+   ;  while (bmu<fl_uniq->bms+fl_uniq->bm_n && bma<fl_any->bms+fl_any->bm_n)
+      {  int c = strcmp(bmu->mark->str, bma->mark->str)
+      ;  if (!c)
+         {  n_dup++
+         ;  bma++
+      ;  }
+         else if (c < 0)
+         bmu++
+      ;  else
+         bma++
+   ;  }
+
+      return n_dup
+;  }
+#endif
+
+
+void folder_addto
+(  folder*  flall
+,  folder*  fl
+,  mcxbool  reuse_ord
+)
+   {  bookmark* bm = fl->bms
+   ;  int ord = 0
+   ;  while (bm<fl->bms+fl->bm_n)
+      {  folder_add(flall, bm->type, bm->info, bm->mark, bm->dest, reuse_ord ? bm->ord : ord++)
+      ;  bm++
+   ;  }
+   }
+
+
+/* warning: does not merge in the sense of preserving sort. */
+
+folder* folder_merge
+(  folder* fl1
+,  folder* fl2
+,  mcxbool reuse_ord
+)
+   {  folder* fl3       =  folder_new(fl1->bm_n+fl2->bm_n)
+   ;  bookmark* bm      =  NULL
+
+   ;  folder_addto(fl3, fl1, reuse_ord)
+   ;  folder_addto(fl3, fl2, reuse_ord)
+
+   ;  return fl3
+;  }
+
+
+folder* expand_portal
+(  mcxIO* xfport
+,  const char* dest
+)
+   {  DIR * dir = opendir(dest)
+   ;  struct dirent *de
+   ;  mcxstatus status = STATUS_FAIL
+   ;  mcxTing* fqname = mcxTingEmpty(NULL, 512)
+   ;  mcxTing* dname = mcxTingEmpty(NULL, 512)
+   ;  folder* fl = folder_new(20)
+   ;  int ct = 0
+
+   ;  while (1)
+      {  if (!dir)
+         {  mcxErr(us, "cannot open directory %s", dest)
+         ;  break
+      ;  }
+         while ((de = readdir(dir)))
+         {  struct stat fstat
+         ;  mcxTingWrite(dname, de->d_name)
+         ;  mcxTingPrint(fqname, "%s/%s", dest, de->d_name)
+         ;  if ((unsigned char) dname->str[0] == '.')
+            continue
+         ;  if (!strncmp(dname->str, "CVS", 3))      /* fixme: env variable */
+            continue
+         ;  if (lstat(fqname->str, &fstat) < 0)
+            {  mcxErr(us, "error accessing node %s", fqname->str)
+            ;  break
+         ;  }
+            if (!S_ISDIR(fstat.st_mode))
+            continue
+         ;  fprintf(xfport->fp, "j,%s,%s\n", dname->str, fqname->str)
+         ;  folder_add(fl, 'J', 0, dname, fqname, ct++)
+      ;  }
+         closedir(dir)
+
+      ;  if (de)
+         break
+      ;  status = STATUS_OK
+      ;  break
+   ;  }
+      mcxTingFree(&fqname)
+   ;  mcxTingFree(&dname)
+   ;  return fl
+;  }
+
+
+
+mcxstatus bookmark_resync_portal
+(  folder*     flport
+,  mcxIO*      xfport
+)
+   {  int i
+   ;  const char* portname = xfport->fn->str
+   ;  int ct_expansion = 0
+   ;  int ct_portal = 0
+
+   ;  mcxIOclose(xfport)
+   ;  {  struct stat fstat
+      ;  if (lstat(portname, &fstat) < 0)
+         {  if (errno == ENOENT)
+            mcxTell(us, "portal file %s will be newly created", portname)
+         ;  else
+            mcxErr(us, "cannot access %s, fingers crossed", portname)
+      ;  }
+      }
+
+      mcxIOrenew(xfport, NULL, "w")
+   ;  if (mcxIOopen(xfport, EXIT_ON_FAIL))
+      {  mcxErr(us, "panic - portal file is gone, try --rehash")
+      ;  return STATUS_FAIL
+   ;  }
+
+      for (i=0;i<flport->bm_n;i++)
+      {  folder* fl = expand_portal(xfport, flport->bms[i].dest->str)
+      ;  if (fl)
+            ct_expansion += fl->bm_n
+         ,  ct_portal++
+   ;  }                          /* fixme fl memleak */
+
+      mcxTell
+      (us, "expanded %d portals to %d destinations", ct_portal, ct_expansion)
+   ;  return STATUS_OK
+;  }
+
+
+mcxstatus bookmark_backup_rcfile
+(  const char* name
+,  const char* dest
+)
+   {  mcxTing* target  =      dest
+                           ?  mcxTingPrint(NULL, "%s", dest)
+                           :  mcxTingPrint(NULL, "%s.bu", name)
+   ;  mcxTing* cmd
+      =     !strcmp(target->str, "-")
+         ?  mcxTingPrint(NULL, "cat %s", name)
+         :  mcxTingPrint(NULL, "cp %s %s", name, target->str)
+
+   ;  int cpstat = system(cmd->str)
+   ;  if (cpstat)
+      {  mcxErr(us, "panic cannot write file %s", target->str)
+      ;  return STATUS_FAIL
+   ;  }
+      return STATUS_OK
+;  }
+
+
+void bookmark_report
+(  const char* kind
+,  folder* fl
+,  const char* mark
+)
+   {  int i
+   ;  for (i=0;i<fl->bm_n;i++)
+      {  bookmark* bm = fl->bms+i
+      ;  if (!strcmp(bm->mark->str, mark))
+         fprintf(stderr, "%s %s exists -> %s\n", kind, mark, bm->dest->str)
+   ;  }
+   }
+
+
+mcxstatus bookmark_resync_rc
+(  folder*     flreg
+,  folder*     flport
+,  mcxIO*      xfrc
+)
+   {  int i
+   ;  const char* rcname = xfrc->fn->str
+   ;  folder* flmerge
+   ;  int n_purged = 0
+
+   ;  mcxIOclose(xfrc)
+
+   ;  if (bookmark_backup_rcfile(xfrc->fn->str, NULL))
+      return STATUS_FAIL
+
+   ;  mcxIOrenew(xfrc, NULL, "w")
+
+   ;  if (mcxIOopen(xfrc, EXIT_ON_FAIL))
+      {  mcxErr(us, "panic - rc file is gone, backup in %s.bu", rcname)
+      ;  return STATUS_FAIL
+   ;  }
+
+      flmerge =      flport
+                  ?  folder_merge(flreg, flport, TRUE)
+                  :  flreg
+
+   ;  qsort(flmerge->bms, flmerge->bm_n, sizeof flmerge->bms[0], bookmark_cmp_ord)
+
+   ;  for (i=0;i<flmerge->bm_n;i++)
+      {  bookmark* bm   =  flmerge->bms+i
+      ;  FILE* fp       =  bm->info & BIT_PURGE ? stdout : xfrc->fp
+      ;  int type       =  bm->type
+
+      ;  if (type == 'j' || type == 'J')
+         fprintf(fp, "j,%s,%s\n", bm->mark->str, bm->dest->str)
+      ;  else if (bm->type == 'e')
+         fprintf(fp, "%c,%s\n", bm->type, bm->dest->str)
+
+      ;  if (bm->info & BIT_PURGE)
+         n_purged++
+   ;  }
+      fprintf(stderr, "purged a flock of %d\n", n_purged)
+   ;  return STATUS_OK
+;  }
+
+
+enum
+{  SQUASH_DEST = 1444
+,  SQUASH_MARK
+}  ;
+
+
+void bookmark_squash
+(  folder*      flreg
+,  mcxIO*       xfrc
+,  int          mode
+)
+   {  int j
+   ;  mcxbool dest = mode == SQUASH_DEST
+   ;  int (*cmp)(const void*, const void*)
+      =     dest
+         ?  bookmark_cmp_dest
+         :  bookmark_cmp_mark
+
+   ;  if (!flreg->bm_n)
+      return
+
+   ;  if (!favour)
+      favour = mcxTingNew("OLr")
+            /* younger entries before older entries (keep latest & greatest)
+             * deeper levels over shallower levels (irrelevant due to o)
+             * regular before expansions (irrelevant due to o)
+            */
+
+   ;  qsort(flreg->bms, flreg->bm_n, sizeof flreg->bms[0], bookmark_cmp_favour)
+
+   ;  for (j=1;j<flreg->bm_n;j++)
+      {  bookmark* bmj = flreg->bms+j
+      ;  bookmark* bmi = bmj - 1
+
+      ;  if (bmj->type == 'e')
+         mcxErr(us, "internal error e-in-rc-folder")
+
+      ;  if
+         (  ( dest && !strcmp(bmi->dest->str, bmj->dest->str))
+         || (!dest && !strcmp(bmi->mark->str, bmj->mark->str) )
+         )
+         bmj->info |= BIT_PURGE
+   ;  }
+
+      qsort(flreg->bms, flreg->bm_n, sizeof flreg->bms[0], bookmark_cmp_ord)
+;  }
+
+
+folder* bookmark_undo
+(  folder*      flreg
+,  folder*      flport
+,  int          num
+)
+   {  folder* flall = folder_merge(flreg, flport, TRUE)
+   ;  int i = flall->bm_n
+   ;  qsort(flall->bms, flall->bm_n, sizeof flall->bms[0], bookmark_cmp_ord)
+
+   ;  while (--num >= 0 && --i >= 0)
+      flall->bms[i].info |= BIT_PURGE
+
+   ;  return flall
+;  }
+
+
+void bookmark_ungrep
+(  folder*      flreg
+,  mcxIO*       xfrc
+,  const char*  destpat
+,  const char*  markpat
+)
+   {  int i
+   ;  for (i=0;i<flreg->bm_n;i++)
+      {  bookmark* bm = flreg->bms+i
+      ;  if
+         (  (destpat && strstr(bm->dest->str, destpat))
+         || (markpat && strstr(bm->mark->str, markpat))
+         )
+         bm->info |= BIT_PURGE
+   ;  }
+   }
+
+
+void bookmark_list
+(  const char* what
+,  folder*   fl
+)
+   {  int i
+   ;  int n_mark, n_char
+
+   ;  fprintf(stdout, "--- %s\n", what)
+   ;  if (!fl->bm_n)
+      return
+
+   ;  fputs(fl->bms[0].mark->str, stdout)
+   ;  n_mark = 1
+   ;  n_char = fl->bms[0].mark->len
+
+   ;  for (i=1;i<fl->bm_n;i++)
+      {  bookmark* bm = fl->bms+i
+      ;  int len = strlen(bm->mark->str)
+
+      ;  if (n_char + 1 + len <= 80)
+            fputc(' ', stdout)
+         ,  n_char += 1 + len
+      ;  else
+            fputc('\n', stdout)
+         ,  n_char = 0
+
+      ;  fputs(bm->mark->str, stdout)
+   ;  }
+      fputc('\n', stdout)
+;  }
+
+
+mcxstatus bookmark_show
+(  folder*   fl
+)
+   {  int i
+   ;  for (i=0;i<fl->bm_n;i++)
+      {  bookmark* bm = fl->bms+i
+      ;  if (bm->type == 'j' || bm->type == 'J')
+         fprintf
+         (  stdout
+         ,  "j %-12s %s\n"
+         ,  bm->mark->str
+         ,  bm->dest->str
+         )
+      ;  else if (bm->type == 'e')
+         fprintf
+         (  stdout
+         ,  "%c %-12s %s\n"
+         ,  bm->type
+         ,  ""
+         ,  bm->dest->str
+         )  
+   ;  }
+      return STATUS_OK
+;  }
+
+
+
+mcxstatus bookmark_write_jump
 (  mcxIO* xfrc
+,  const char* mark
+,  const char* dest
+)
+   {  fprintf(xfrc->fp, "j,%s,%s\n", mark, dest)
+   ;  fprintf(stderr, "added: %s -> %s\n", mark, dest)
+   ;  return STATUS_OK
+;  }
+
+
+
+folder*  bookmark_parse
+(  mcxIO* xf
 ,  mcxbool expansion
+,  folder** flportpp
 )
    {  mcxTing* line     =  mcxTingEmpty(NULL, 512)
-   ;  folder* fl        =  folder_new(100)
+   ;  folder* flreg     =  folder_new(100)
+   ;  folder* flport    =  NULL
    ;  mcxstatus status  =  STATUS_OK
    ;  int lct           =  0
    ;  int ord           =  0
 
+   ;  if (flportpp)
+      flport = folder_new(10)
+
    ;  while
       (  STATUS_OK
-      == (status = mcxIOreadLine(xfrc, line, MCX_READLINE_CHOMP))
+      == (status = mcxIOreadLine(xf, line, MCX_READLINE_CHOMP))
       )
       {  mcxTing* typeting = NULL, *mark = NULL, *dest = NULL
       ;  int n_args = 0
@@ -767,7 +891,7 @@ folder*  bookmark_parse
 
       ;  if
          (!(root = mcxTokArgs(line->str, line->len, &n_args, MCX_TOK_DEL_WS)))
-         {  mcxErr(me, "parse error at line %d (empty line?)\n", lct)
+         {  mcxErr(us, "parse error at line %d (empty line?)\n", lct)
          ;  break
       ;  }
 
@@ -775,7 +899,7 @@ folder*  bookmark_parse
       ;  typeting =  lk->val
 
       ;  if (typeting->len != 1)
-         {  mcxErr(me, "syntax error at line %d token %s", lct, typeting->str)
+         {  mcxErr(us, "syntax error at line %d token %s", lct, typeting->str)
          ;  continue
       ;  }
 
@@ -792,13 +916,17 @@ folder*  bookmark_parse
          ;  dest  =  lk->val
       ;  }
          else
-         {  mcxErr(me, "syntax error at line %d token %s", lct, typeting->str)
+         {  mcxErr(us, "syntax error at line %d token %s", lct, typeting->str)
          ;  continue
       ;  }
 
          if (type == 'j' && expansion)
          type = 'J'
-      ;  folder_add(fl, type, mark, dest, ord++)
+
+      ;  if (type == 'e' && flport)
+         folder_add(flport, type, 0, mark, dest, ord++)
+      ;  else
+         folder_add(flreg, type, 0, mark, dest, ord++)
 
       ;  mcxTingFree(&typeting)
       ;  root->val = NULL
@@ -806,7 +934,10 @@ folder*  bookmark_parse
       ;  mcxLinkFree(&root, mcxTingFree_v)
    ;  }
 
-      return fl
+      if (flportpp)
+      *flportpp = flport
+
+   ;  return flreg
 ;  }
 
 
@@ -817,18 +948,20 @@ folder*  bookmark_parse
 
 folder* resource_prepare
 (  mcxIO* xf
-,  mcxbool expansion
+,  folder** flportpp
 )
-   {  const char* type = expansion ? "expansion" : "bookmark"
+   {  mcxbool expansion =  flportpp ? FALSE : TRUE
+   ;  const char* type  =  expansion ? "expansion" : "bookmark"
    ;  folder* fl = NULL
+
    ;  if (STATUS_OK == mcxIOopen(xf, RETURN_ON_FAIL))
-      fl = bookmark_parse(xf, expansion)    /* xf now positioned at EOF */
+      fl = bookmark_parse(xf, expansion, flportpp)    /* xf now positioned at EOF */
    ;  else
       {  mcxIOrenew(xf, NULL, "w")
       ;  if (mcxIOopen(xf, RETURN_ON_FAIL))
-         mcxErr(me, "cannot create %s file %s", type, xf->fn->str)
+         mcxErr(us, "cannot create %s file %s", type, xf->fn->str)
       ;  else
-            mcxTell(me, "created %s file %s", type, xf->fn->str)
+            mcxTell(us, "created %s file %s", type, xf->fn->str)
          ,  fl = folder_new(0)
    ;  }
       return fl
@@ -877,19 +1010,19 @@ int resolve_user
 
 
 mcxstatus attempt_jump
-(  folder*  flrc
-,  folder*  flport
+(  folder*  flreg
+,  folder*  flexp
 ,  mcxTing* mark
 ,  mcxTing* sub
 )
    {  mcxTing* dest     =  NULL
-   ;  folder* fl        =  folder_merge(flrc, flport)
+   ;  folder* flall     =  folder_merge(flreg, flexp, FALSE)
    ;  bookmark* bmx     =  NULL
-   ;  bookmark* bmz     =  fl->bms+fl->bm_n
-   ;  bookmark* bm      =  fl->bms
+   ;  bookmark* bmz     =  flall->bms+flall->bm_n
+   ;  bookmark* bm      =  flall->bms
    ;  mcxstatus status  =  STATUS_FAIL
 
-   ;  qsort(fl->bms, fl->bm_n, sizeof fl->bms[0], bookmark_cmp_mark)
+   ;  qsort(flall->bms, flall->bm_n, sizeof flall->bms[0], bookmark_cmp_mark)
 
    ;  while (bm < bmz)
       {  if
@@ -944,81 +1077,101 @@ mcxstatus attempt_jump
       ;  break
    ;  }
 
-      /* qsort(fl->bms, fl->bm_n, sizeof fl->bms[0], bookmark_cmp_ord) */
-      /* ^ only needed if fl is ever reused */
-
+   /* noteme: flall memleak */
       return status
+;  }
+      
+
+mcxTing* get_cwd
+(  void
+)
+   {  char buf[MY_PATH_MAX+1]
+   ;  mcxTing* ret = NULL
+   ;  if (use_cwd)
+      {  if (!getcwd(buf, MY_PATH_MAX + 1))
+         mcxErr(us, "cannot get current directory")
+      ;  else
+         ret = mcxTingNew(buf)
+   ;  }
+      else
+      {  mcxIO* xfpipe = mcxIOnew("dummy-file-name", "r")
+      ;  FILE*  p =  popen("pwd", "r")
+      ;  if (p)
+         {  mcxTing *pwd = mcxTingEmpty(NULL, 256)
+         ;  xfpipe->fp = p       /* its a hack */
+         ;  mcxIOreadLine(xfpipe, pwd, MCX_READLINE_CHOMP)
+               /* xfpipe: (donot) fixme (yet) warning danger sign todo */
+               /* readline: fixme check status */
+         ;  if (!ferror(p))
+            {  pclose(p)
+            ;  xfpipe->fp = NULL
+            ;  mcxIOfree(&xfpipe)
+            ;  ret = pwd
+         ;  }
+            else
+            mcxErr(us, "pwd does not want to play")
+      ;  }
+         else
+         mcxErr(us, "cannot execute pwd")
+   ;  }
+      return ret
 ;  }
 
 
-mcxstatus bookmark_wrap_add_jump
-(  mcxIO* xfrc
+mcxstatus bookmark_add_jump
+(  folder* flreg
+,  folder* flexp
+,  mcxIO* xfrc
 ,  const char* argv[]
 ,  int argc
 ,  int n_arg_trailing
 )
-   {  const char* dest, *newmark
-   ;  mcxTing* pwd
-   ;  char buf[MY_PATH_MAX+1]
+   {  mcxTing* pwd
+   ;  const char* newmark
+   ;  const char* dest
    ;  mcxstatus status = STATUS_FAIL
    
    ;  dest = n_arg_trailing >= 2 ? argv[argc-1] : NULL
 
    ;  if (n_arg_trailing > 2)
-      mcxErr(me, "ignoring trailing arguments")
+      mcxErr(us, "ignoring trailing arguments")
 
    ;  newmark =   dest
                   ?  argv[argc-2]
                   :     n_arg_trailing == 1
                      ?  argv[argc-1]
                      :  NULL
-   ;  pwd  =  mcxTingEmpty(NULL, 256)
 
    ;  if (!dest)
-      {  if (use_cwd)
-         {  if (!getcwd(buf, MY_PATH_MAX + 1))
-            {  mcxErr(me, "cannot get current directory")
-            ;  return STATUS_FAIL
-         ;  }
-            else
-            dest = buf
+      {  if (!(pwd = get_cwd()))
+         {  mcxErr(us, "cannot get current directory")
+         ;  return STATUS_FAIL
       ;  }
-         else
-         {  mcxIO* xfpipe = mcxIOnew("dummy-file-name", "r")
-         ;  FILE*  p =  popen("pwd", "r")
-         ;  if (p)
-            {  xfpipe->fp = p       /* its a hack */
-            ;  mcxIOreadLine(xfpipe, pwd, MCX_READLINE_CHOMP)
-                  /* xfpipe: (donot) fixme (yet) warning danger sign todo */
-                  /* readline: fixme check status */
-            ;  pclose(p)
-            ;  xfpipe->fp = NULL
-            ;  dest = pwd->str
-         ;  }
-            else
-            {  mcxErr(me, "cannot execute pwd")
-            ;  return STATUS_FAIL
-         ;  }
-            mcxIOfree(&xfpipe)
-      ;  }
-      }
+         dest = pwd->str
+   ;  }
 
       if (!newmark)
       {  const char* sep = strrchr(dest, '/')
       ;  if (!sep)
-            mcxErr(me, "strange - no separator in %s", dest)
+            mcxErr(us, "strange - no separator in %s", dest)
          ,  newmark = dest
       ;  else
          newmark = sep+1
    ;  }
 
-      status = bookmark_add_jump(xfrc, newmark, dest)
-   ;  mcxTingFree(&pwd)    /* not earlier, dest might be pwd->str */
+      status = bookmark_write_jump(xfrc, newmark, dest)
+
+   ;  if (!status)
+      {  bookmark_report("bookmark", flreg, newmark)
+      ;  bookmark_report("expansion", flexp, newmark)
+   ;  }
+
+      mcxTingFree(&pwd)
    ;  return status
 ;  }
 
 
-mcxstatus bookmark_wrap_add_portal
+mcxstatus bookmark_add_portal
 (  mcxIO* xfrc
 ,  mcxIO* xfport
 ,  const char* argv[]
@@ -1027,26 +1180,38 @@ mcxstatus bookmark_wrap_add_portal
 )
    {  const char* dest= n_arg_trailing == 1 ? argv[argc-1] : NULL
    ;  char buf[MY_PATH_MAX+1]
+   ;  folder* fl = NULL
+   ;  mcxTing* pwd = NULL
 
    ;  if (n_arg_trailing > 1)
-      {  mcxErr(me, "expecting [dest] trailing argument")
+      {  mcxErr(us, "expecting [dest] trailing argument")
       ;  return STATUS_FAIL
    ;  }
 
       if (!dest)
-      {  if (!getcwd(buf, MY_PATH_MAX + 1))
-         {  mcxErr(me, "cannot get current directory")
+      {  if (!(pwd = get_cwd()))
+         {  mcxErr(us, "cannot get current directory")
          ;  return STATUS_FAIL
       ;  }
-         dest = buf
+         dest = pwd->str
    ;  }
-      return bookmark_add_portal(xfrc, xfport, dest)
+
+      if ((fl = expand_portal(xfport, dest)))
+      {  fprintf(xfrc->fp, "e,%s\n", dest)
+      ;  fprintf(stderr, "added flock of %d in portal %s\n", fl->bm_n, dest)
+   ;  }
+      else
+      return STATUS_FAIL
+
+   ;  return STATUS_OK
 ;  }
 
 
+
 mcxstatus show_or_jump
-(  folder* flrc
+(  folder* flreg
 ,  folder* flport
+,  folder* flexp
 ,  const char* argv[]
 ,  int argc
 ,  int n_arg_trailing
@@ -1057,16 +1222,24 @@ mcxstatus show_or_jump
    ;  mcxstatus status = STATUS_FAIL
 
    ;  if (!mark)
-      {  status = bookmark_show(flport)
-      ;  fprintf(stdout, "---\n");
-      ;  return bookmark_show(flrc)
+      {  qsort(flport->bms, flport->bm_n, sizeof flport->bms[0], bookmark_cmp_dest)
+      ;  fprintf(stdout, "--- portals\n");
+      ;  bookmark_show(flport)
+
+      ;  qsort(flexp->bms, flexp->bm_n, sizeof flexp->bms[0], bookmark_cmp_dest)
+      ;  fprintf(stdout, "--- expansions\n");
+      ;  bookmark_show(flexp)
+
+      ;  qsort(flreg->bms, flreg->bm_n, sizeof flreg->bms[0], bookmark_cmp_dest)
+      ;  fprintf(stdout, "--- bookmarks\n");
+      ;  return bookmark_show(flreg)
    ;  }
 
       if
       (  STATUS_FAIL
-      == (status = attempt_jump(flrc, flport, mark, sub))
+      == (status = attempt_jump(flreg, flexp, mark, sub))
       )
-      mcxErr(me, "I don't know how to go to %s", mark->str)
+      mcxErr(us, "I don't know how to go to %s", mark->str)
    ;  return status
 ;  }
 
@@ -1083,15 +1256,18 @@ int main
    ;  mcxIO*   xfport   =  mcxIOnew(fnport->str, "r+")
    ;  mcxstatus status  =  STATUS_FAIL
 
-   ;  folder*  flrc     =  NULL
+   ;  folder*  flreg     =  NULL
+   ;  folder*  flexp    =  NULL
    ;  folder*  flport   =  NULL
 
                   /* only allow one of these modes */
    ;  enum
       {  MODE_DEFAULT
+      ,  MODE_LIST
       ,  MODE_SHOWARG
-      ,  MODE_UNGREP
-      ,  MODE_UNGREP_MARK
+      ,  MODE_PURGE
+      ,  MODE_UNDO
+      ,  MODE_PURGE_MARK
       ,  MODE_SQUASH_MARK
       ,  MODE_SQUASH_DEST
       ,  MODE_REHASH
@@ -1104,6 +1280,7 @@ int main
    ;  int n_mode        =  0
    ;  int mode          =  MODE_DEFAULT
    ;  const char* mode_arg =  NULL
+   ;  int num           =  0
 
    ;  mcxstatus parseStatus = STATUS_OK
    ;  mcxOption* opts, *opt
@@ -1125,7 +1302,7 @@ int main
       ;  switch(anch->id)
          {  case MY_OPT_HELP
          :  case MY_OPT_APROPOS
-         :  mcxOptApropos(stdout, me, syntax, 20, MCX_OPT_DISPLAY_SKIP, options)
+         :  mcxOptApropos(stdout, us, syntax, 20, MCX_OPT_DISPLAY_SKIP, options)
          ;  return 0
          ;
 
@@ -1141,6 +1318,11 @@ int main
 
             case  MY_OPT_ADD_PORTAL
          :  mode = MODE_ADD_PORTAL; n_mode++
+         ;  break
+         ;
+
+            case  MY_OPT_SQUASH_MARK2
+         :  mode = MODE_SQUASH_MARK; n_mode++
          ;  break
          ;
 
@@ -1160,6 +1342,17 @@ int main
          ;  break
          ;
 
+            case  MY_OPT_LIST
+         :  mode = MODE_LIST; n_mode++
+         ;  break
+         ;
+
+            case  MY_OPT_DUMP
+         :  mode = MODE_BACKUP; n_mode++
+         ;  mode_arg = "-"
+         ;  break
+         ;
+
             case  MY_OPT_BACKUP
          :  mode = MODE_BACKUP; n_mode++
          ;  break
@@ -1170,14 +1363,20 @@ int main
          ;  break
          ;
 
-            case  MY_OPT_UNGREP
-         :  mode = MODE_UNGREP; n_mode++
+            case  MY_OPT_UNDO
+         :  mode = MODE_UNDO; n_mode++
+         ;  num = atoi(opt->val)
+         ;  break
+         ;
+
+            case  MY_OPT_PURGE
+         :  mode = MODE_PURGE; n_mode++
          ;  mode_arg = opt->val
          ;  break
          ;
 
-            case  MY_OPT_UNGREP_MARK
-         :  mode = MODE_UNGREP_MARK; n_mode++
+            case  MY_OPT_PURGE_MARK
+         :  mode = MODE_PURGE_MARK; n_mode++
          ;  mode_arg = opt->val
          ;  break
          ;
@@ -1200,7 +1399,7 @@ int main
       }
 
       if (n_mode > 1)
-      mcxDie(1, me, "arguments specify multiple modes")
+      mcxDie(1, us, "arguments specify multiple modes")
 
    ;  if (mode == MODE_SHELL)
       {  const char** exline = shell_examples
@@ -1212,13 +1411,13 @@ int main
       else if (mode == MODE_BACKUP)
       return bookmark_backup_rcfile(xfrc->fn->str, mode_arg)
 
-   ;  if (!(flrc = resource_prepare(xfrc, FALSE)))
+   ;  if (!(flreg = resource_prepare(xfrc, &flport)))
       return STATUS_FAIL
 
    ;  if (mode == MODE_REHASH)
-      return bookmark_resync_portal(flrc, xfport)
+      return bookmark_resync_portal(flport, xfport)
 
-   ;  if (!(flport = resource_prepare(xfport, TRUE)))
+   ;  if (!(flexp = resource_prepare(xfport, NULL)))
       return STATUS_FAIL
 
    ;  n_arg_trailing = argc - n_arg_read - 1
@@ -1226,38 +1425,47 @@ int main
 /* ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** */
 
    ;  switch(mode)
-      {  case MODE_SHOWARG
-      :  status = bookmark_show(flport)         /* yesh,  ignore */
-      ;  fprintf(stdout, "---\n");
-      ;  status = bookmark_show(flrc)
+      {  case MODE_PURGE
+      :  bookmark_ungrep(flreg, xfrc, mode_arg, NULL)
+      ;  status = bookmark_resync_rc(flreg, flport, xfrc)
       ;  break
       ;
-         case MODE_UNGREP
-      :  status = bookmark_ungrep(flrc, xfrc, mode_arg, NULL)
+         case MODE_UNDO
+      :  {  folder* flall = bookmark_undo(flreg, flport, num)
+         ;  status = bookmark_resync_rc(flall, NULL, xfrc)
+      ;  }
+         break
+      ;
+         case MODE_LIST
+      :  bookmark_list("expansions", flexp)
+      ;  bookmark_list("bookmarks", flreg)
       ;  break
       ;
-         case MODE_UNGREP_MARK
-      :  status = bookmark_ungrep(flrc, xfrc, NULL, mode_arg)
+         case MODE_PURGE_MARK
+      :  bookmark_ungrep(flreg, xfrc, NULL, mode_arg)
+      ;  status = bookmark_resync_rc(flreg, flport, xfrc)
       ;  break
       ;
          case MODE_SQUASH_DEST
-      :  status = bookmark_squash(flrc, xfrc, SQUASH_DEST)
+      :  bookmark_squash(flreg, xfrc, SQUASH_DEST)
+      ;  status = bookmark_resync_rc(flreg, flport, xfrc)
       ;  break
       ;
          case MODE_SQUASH_MARK
-      :  status = bookmark_squash(flrc, xfrc, SQUASH_MARK)
+      :  bookmark_squash(flreg, xfrc, SQUASH_MARK)
+      ;  status = bookmark_resync_rc(flreg, flport, xfrc)
       ;  break
       ;
          case MODE_ADD_JUMP
-      :  status = bookmark_wrap_add_jump(xfrc, argv, argc, n_arg_trailing)
+      :  status = bookmark_add_jump(flreg, flexp, xfrc, argv, argc, n_arg_trailing)
       ;  break
       ;
          case MODE_ADD_PORTAL
-      :  status = bookmark_wrap_add_portal(xfrc, xfport, argv, argc, n_arg_trailing)
+      :  status = bookmark_add_portal(xfrc, xfport, argv, argc, n_arg_trailing)
       ;  break
       ;
          case MODE_DEFAULT
-      :  status = show_or_jump(flrc, flport, argv, argc, n_arg_trailing)
+      :  status = show_or_jump(flreg, flport, flexp, argv, argc, n_arg_trailing)
       ;  break
    ;  }
 

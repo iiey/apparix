@@ -1,4 +1,5 @@
-/* (c) Copyright 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+ *   (C) Copyright 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -9,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 #include "array.h"
 #include "alloc.h"
@@ -20,40 +22,46 @@
 mcxstatus mcxSplice
 (  void*           base1pptr
 ,  const void*     base2ptr
-,  int             size      /*  size of base1 and base2 members          */
-,  int         *pn_base1     /*  # base1 elements currently in use        */
-,  int         *pN_base1     /*  # base1 elements for which is malloced   */
-,  int           O_base1     /*  splice relative to this element          */
-,  int           d_base1     /*  delete this number of elements           */
-,  int           c_base2     /*  number of elements to copy               */
+,  dim             size      /*  size of base1 and base2 members          */
+,  dim         *pn_base1     /*  # base1 elements currently in use        */
+,  dim         *pN_base1     /*  # base1 elements for which is malloced   */
+,  ofs           O_base1     /*  splice relative to this element          */
+,  dim           d_base1     /*  delete this number of elements           */
+,  dim           c_base2     /*  number of elements to copy               */
 )  
    {  char **ppr1          =  (char **)   base1pptr
    ;  char* dummy
    ;  const char *ptr2     =  (const char *)   base2ptr
 
-   ;  int   n_base1        =  *pn_base1
-   ;  int   N_base1        =  *pN_base1
-   ;  int   m_base1        =  n_base1 - d_base1 + c_base2
-
-   ;  int   o_base1        =  O_base1 >= 0
-                              ?  O_base1
-                              :  n_base1 + O_base1 + 1
+   ;  dim   n_base1        =  *pn_base1
+   ;  dim   N_base1        =  *pN_base1
+   ;  dim   m_base1, o_base1
 
    ;  const char  *errMsg  =  ""
    ;  mcxstatus   stat     =  STATUS_FAIL
 
    ;  while (1)
-      {  if (   n_base1    <  0
-            ||  N_base1    <  0
-            ||  n_base1    >  N_base1
-            ||  d_base1    <  0
-            ||  c_base2    <  0
-            )
+      {  if (n_base1 > N_base1)
          {  errMsg = "integer arguments not consistent"
          ;  break
       ;  }
+         if (n_base1 + c_base2 < d_base1)
+         {  errMsg = "overly deleterious"
+         ;  break
+      ;  }
+         m_base1 =  (n_base1 + c_base2) - d_base1   /* new size */
 
-         if (o_base1 < 0 || o_base1 > n_base1)
+      ;  if (O_base1 >= 0)
+         o_base1 = O_base1
+      ;  else
+         {  if ((dim) -O_base1 > n_base1 + 1)
+            {  errMsg = "offset specification out of bounds"
+            ;  break
+         ;  }
+            o_base1 = (n_base1 + 1) + O_base1
+      ;  }
+
+         if (o_base1 > n_base1)
          {  errMsg = "computed splice offset not in bounds"
          ;  break
       ;  }
@@ -75,9 +83,9 @@ mcxstatus mcxSplice
       {  mcxErr("[mcxSplice PBD]", "%s", errMsg)
       ;  mcxErr
          (  "[mcxSplice PBD]"
-         ,  "[n1, %ld] [N1, %ld] [o1, %ld] [d1, %ld] [c2, %ld]"
-         ,     (long) n_base1, (long) N_base1, (long) O_base1
-             , (long) d_base1, (long) c_base2
+         ,  "[n1, %zu] [N1, %zu] [o1, %zd] [d1, %zu] [c2, %zu]"
+         ,     (size_t) n_base1, (size_t) N_base1, (ssize_t) O_base1
+             , (size_t) d_base1, (size_t) c_base2
          )
       ;  return STATUS_FAIL
    ;  }
@@ -109,19 +117,18 @@ mcxstatus mcxSplice
 ;  }
 
 
-int mcxDedup
-(  void*                base
-,  int                  nmemb
-,  int                  size
-,  int                  (*cmp)(const void *, const void *)
-,  void                 (*merge)(void *, const void *)
+dim mcxDedup
+(  void*    base
+,  dim      nmemb
+,  dim      size
+,  int      (*cmp)(const void *, const void *)
+,  void     (*merge)(void *, const void *)
 )  
-   {  int   k  =  0
-   ;  int   l  =  0 
+   {  dim   k  =  0
+   ;  dim   l  =  0 
       
    ;  while (l < nmemb)
-      {  
-         if (k != l)
+      {  if (k != l)
          memcpy(((char*)base) + k * size, ((char*)base) + l * size, size)
 
       ;  while
@@ -143,9 +150,9 @@ int mcxDedup
 
 mcxstatus mcxResize
 (  void*          mempp
-,  int            size
-,  int*           ct
-,  int            newct
+,  dim            size
+,  dim*           ct
+,  dim            newct
 ,  mcxOnFail      ON_FAIL
 )
    {  char **pp   =  (char **) mempp
@@ -164,8 +171,8 @@ mcxstatus mcxResize
 mcxstatus mcxBufInit
 (  mcxBuf*  buf
 ,  void*    mempptr
-,  int      size
-,  int      n_alloc
+,  dim      size
+,  dim      n_alloc
 )
    {  char **usrpptr    =     (char **) mempptr
    ;  char* dummy
@@ -196,10 +203,10 @@ mcxstatus mcxBufInit
 
 void* mcxBufExtend
 (  mcxBuf*     buf
-,  int         n_request
+,  dim         n_request
 ,  mcxOnFail   ON_FAIL
 )
-   {  int   oldsize     =     buf->n
+   {  dim   oldsize     =     buf->n
    ;  char **usrpptr    =     (char **) buf->mempptr
    ;  char* dummy
 
@@ -207,10 +214,10 @@ void* mcxBufExtend
       mcxErr("mcxBufExtend PBD", "extending finalized buffer")
 
    ;  if (buf->n_alloc < buf->n + n_request)
-      {  int n_new    
+      {  dim n_new    
          =  MAX
-            (  (int) (buf->n_alloc * buf->factor + 8)
-            ,  (int) (buf->n + n_request)
+            (  (dim) (buf->n_alloc * buf->factor + 8)
+            ,  (dim) (buf->n + n_request)
             )
 
       ;  dummy = mcxRealloc(*usrpptr, n_new * buf->size, ON_FAIL)
@@ -229,7 +236,7 @@ void* mcxBufExtend
 ;  }
 
 
-int mcxBufFinalize
+dim mcxBufFinalize
 (  mcxBuf*    buf
 )
    {  char **usrpptr    =  (char **) buf->mempptr
@@ -248,7 +255,8 @@ int mcxBufFinalize
 
    ;  if (buf->n && !dummy)
       {  mcxMemDenied(stderr, "mcxBufFinalize", "char", buf->n * buf->size)
-      ;  return -1
+      ;  errno = ENOMEM
+      ;  return buf->n
    ;  }
 
       *usrpptr = dummy
@@ -276,11 +284,12 @@ void mcxBufReset
 void* mcxBsearchCeil
 (  const void *key
 ,  const void *base
-,  int nmemb
-,  int size
+,  dim nmemb
+,  dim size
 ,  int (*cmp)(const void *, const void *)
 )
-   {  long bar, lft, rgt
+   {  ofs lft                 /* fixme (consider -1 initialization) */
+   ;  dim bar, rgt
    ;  if (!nmemb || cmp(key, ((char*)base) + (nmemb-1) * size) > 0)
       return NULL
 
@@ -288,7 +297,7 @@ void* mcxBsearchCeil
    ;  rgt = nmemb
    ;  bar = nmemb / 2
 
-   ;  while (bar < rgt)
+   ;  while (lft < 0 || bar < (dim) rgt)
       {  if (cmp(key, ((char*) base) + bar*size) > 0)
          lft = bar
       ;  else
@@ -303,11 +312,12 @@ void* mcxBsearchCeil
 void* mcxBsearchFloor
 (  const void *key
 ,  const void *base
-,  int nmemb
-,  int size
+,  dim nmemb
+,  dim size
 ,  int (*cmp)(const void *, const void *)
 )
-   {  long bar, lft, rgt
+   {  ofs lft
+   ;  dim bar, rgt
    ;  if (!nmemb || cmp(key, base) < 0)
       return NULL
 
@@ -315,7 +325,7 @@ void* mcxBsearchFloor
    ;  rgt = nmemb
    ;  bar = nmemb / 2
 
-   ;  while (bar > lft)
+   ;  while (lft < 0 || bar > (dim) lft)
       {  if (cmp(key, ((char*) base) + bar*size) < 0)
          rgt = bar
       ;  else

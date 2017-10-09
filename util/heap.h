@@ -1,4 +1,5 @@
-/* (c) Copyright 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+/*   (C) Copyright 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+ *   (C) Copyright 2006 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -19,11 +20,11 @@ enum
 
 typedef struct
 {  void     *base
-;  int      heapSize
-;  int      elemSize
+;  dim      heapSize
+;  dim      elemSize
 ;  int      (*cmp)(const void* lft, const void* rgt)
-;  int      type
-;  int      n_inserted
+;  mcxenum  type
+;  dim      n_inserted
 ;
 }  mcxHeap  ;
 
@@ -35,10 +36,10 @@ mcxHeap* mcxHeapInit
 
 mcxHeap* mcxHeapNew
 (  mcxHeap* heap
-,  int      heapSize
-,  int      elemSize
+,  dim      heapSize
+,  dim      elemSize
 ,  int      (*cmp)(const void* lft, const void* rgt)
-,  int      HEAPTYPE          /* MCX_MIN_HEAP or MCX_MAX_HEAP */
+,  mcxenum  HEAPTYPE          /* MCX_MIN_HEAP or MCX_MAX_HEAP */
 )  ;
 
 
