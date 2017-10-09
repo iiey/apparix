@@ -1,4 +1,53 @@
 
+Thu, 10 Nov 2005
+
+   *  apparix-05-314 released - major new features.
+
+   *  NOTE
+      It is necessary to update your functions or aliases; issue apparix
+      --shell-examples to find the up-to-date default versions.
+
+   *  Integrated bash completion code contributed by Sitaram Chamarty.
+      It is now possible to tab-complete on subdirectories of the directory
+      identified by a mark. Thus
+
+         to myfoo <TAB>
+
+      will give you a menu of or cycle through the subdirectories of
+      the myfoo target directory, depending on your completion settings.
+      It is also possible to do
+
+         to myfoo PAT<TAB>
+
+      This will only select those subdirectories that match the shell-pattern
+      PAT. As a reminder,
+
+         to <TAB>
+         to PAT<TAB>
+
+      do the same but then on apparix bookmarks.
+
+   *  The to() function/alias reads its input directly from apparix without
+      requiring an intermediate file. So .apparixresult is no longer created.
+
+   *  Fixed stupid copy-code bug in bash bm() and portal(). They would initiate
+      a jump.
+
+   *  The -quo / --quo options were dropped. Simply use apparix without
+      arguments to get the list of bookmarks.
+
+   *  added -favour <list> option to resolve duplicate bookmarks.
+      It is needed in the bash completion code.
+      Typical usage (in the wrapper functions): -favour lro
+         l  level (shorter paths prefered)
+         r  regular bookmarks prefered (not expansions)
+         o  older bookmarks prefered
+      LRO do the opposite.
+
+   *  Added --bu and -bu <fname> backup options.
+
+   *  Significant documentation updates.
+
 Wed, 2 Nov 2005
 
    *  apparix-05-306 released.

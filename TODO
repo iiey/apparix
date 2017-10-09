@@ -1,32 +1,25 @@
 
--  warn when a new bm is a duplicate.
 
-=  change to tab separated resource files.
-
-=  when a subdirectory is given it could be used to resolve
+$$ when a subdirectory is given it could be used to resolve
    multiple hits.
+-> with duplicates completion works due to -favour, but then apparix 
+   asks which directory you want anyway.
+
+-  warn when a new bm is a duplicate, either in mark or in dest.
 
 ?  exclusion line in apparix.rc; specify certain names not
-   to bookmark; eg src CVS etc.
+   to expand; eg src CVS etc.
 
-?  additional clues for resolution: longest path or sth.
-   to mcl -d   deepest path   
-   to mcl -s   shortest path
-   to mcl -c   closest path (to current directory)
-   to mcl -1    option 1
-   to mcl +foobar  to option matching foobar
+
+
+?  change to tab separated resource files.
 
 ?  option --rename-tag foo bar
    |
 -  make separate routine that lists a number of choices and
    returns a number.
 
-?  automatic affixing option for deduplication?
-
--  Joost pointed out that $HOME/apparix/{rc,expand,result} would be
-   neater.
-
--  for a portal, optionally add a bookmark for the portal itself?
+?  for a portal, optionally add a bookmark for the portal itself?
    could do this with a two-argument invocation.
 
 #  make a mode (maybe -a) to simply list all matching occurrences
@@ -35,23 +28,11 @@
 
    note that simply 'apparix' lists all the bookmarks.
 
-?  if no exact match, make menu for strstr occurrences.
+#  if no exact match, make menu for strstr occurrences.
       (e.g. strcmp/strstr callback to attempt_jump)
+   bash tab completion does this nicely.
 
 ?  do not write trailing '\n' if stdout is not a terminal.
    enable vi `apparix foo`/Makefile.am
-   except that this does not work with multiple matches.
-   could kludge by checking for isatty(fileno(stdout)) ..
-
--  clean up all the bookmark_* that don't return (close IO)
-
-   clean up all the dies to close IO etc.
-<?
-   add xf to fl as a member, so routines can close it.
-   provide CLOSE_XF argument to bookmark routines.
-
-#  -quo t  (show all marks)
-   -quo e  (show all portals)
-   -quo a  (show all marks + expansions)
-   again, use grep.
+   via function/alias using -favour.
 

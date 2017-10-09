@@ -1,2 +1,2 @@
-const char *apxDateTag = "05-306";
-const char *apxNumTag = "1.001";
+const char *apxDateTag = "05-314";
+const char *apxNumTag = "1.002";
