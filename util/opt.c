@@ -7,6 +7,10 @@
  * copy of the GPL along with tingea, in the file COPYING.
 */
 
+/* TODO
+ *    does display skip account for hidden options?
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

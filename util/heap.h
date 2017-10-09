@@ -8,13 +8,30 @@
 */
 
 
+/* TODO
+ *    interface that copies old element someplace.
+ *    interface that copies new element destination someplace.
+ *    heap merges (for mcxdiameter application [binomial heaps])
+ *    removal by key.
+ *    key lookup/increment.
+*/
+
 #ifndef tingea_heap_h
 #define tingea_heap_h
 
 
+/*    With a min-heap the parents are smaller than the children.
+ *    Use a min-heap to compute the K largest elements.
+ *    (notice that a new element only has to be compared with the root (when
+ *    the heap is at full capacity) to know whether it should enter the heap
+ *    and evict the root.
+ *
+ *    Vice versa, compute K smallest elements with a max-heap.
+*/
+
 enum
-{  MCX_MIN_HEAP = 10000           /*    find large elements                 */
-,  MCX_MAX_HEAP                   /*    find small elements                 */
+{  MCX_MIN_HEAP = 10000   /*    find large elements                 */
+,  MCX_MAX_HEAP           /*    find small elements                 */
 }  ;
 
 

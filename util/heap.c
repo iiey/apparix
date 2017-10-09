@@ -121,8 +121,8 @@ void mcxHeapInsert
 (  mcxHeap* heap
 ,  void*    elem
 )  
-   {  char* heapRoot =  (char *) (heap->base)+0
-   ;  char* elemch   =  (char *) elem
+   {  char* heapRoot =  (heap->base)+0
+   ;  char* elemch   =  elem
    ;  dim   elsz     =  heap->elemSize
    ;  dim   hpsz     =  heap->heapSize
 

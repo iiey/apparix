@@ -1,5 +1,12 @@
 
 
+Wed  8 Nov 2006
+
+	*	apparix-06-312 released.
+
+	*	Fix dumb realloc-related apparix crash (n_old and n_new were in
+		the wrong order) that manifests itself with bookmark nr 100.
+
 Fri 20 Oct 2006
 
 	*	apparix-06-293 released.

@@ -434,13 +434,13 @@ void folder_add
    {  int bm_n = fl->bm_n
    ;  int bm_N = fl->bm_N
    ;  bookmark* bm = NULL
-   
+
    ;  if (bm_n >= bm_N)
       {  fl->bms
       =  mcxNRealloc
          (  fl->bms
-         ,  bm_N
          ,  2*bm_N
+         ,  bm_N
          ,  sizeof fl->bms[0]
          ,  bookmark_init
          ,  EXIT_ON_FAIL

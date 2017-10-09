@@ -6,10 +6,16 @@
  * copy of the GPL along with tingea, in the file COPYING.
 */
 
-#ifndef tingea_duck_h
-#define tingea_duck_h
+#ifndef tingea_rand_h
+#define tingea_rand_h
 
-#define RANDOM_MAX (2*((1<<30)-1)+1)
+#include <stdlib.h>
+
+
+#define MCX_RAND_MAX RAND_MAX
+
+#define mcxUniform0 ((1.0 * random()) / ((double) RAND_MAX + 1.0))
+#define mcxUniform1 (1.0 - ((1.0 * random()) / ((double) RAND_MAX + 1.0)))
 
 
 /*   This is for weak seeding, to obtain fresh seeds which will definitely
@@ -18,6 +24,35 @@
 
 unsigned long mcxSeed
 (  unsigned long seedlet
+)  ;
+
+
+double mcxNormal
+(  void
+)  ;
+
+double mcxNormalCut
+(  double radius
+,  double stddev
+)  ;
+
+double mcxNormalZiggurat
+(  void
+)  ;
+
+double mcxNormalBoxMuller
+(  void
+)  ;
+
+
+/*    Generate numbers in the interval [-outer, outer] according
+ *    to the normal distribution with standard deviation sigma.
+ *    Use e.g. outer = 2.0 sigma = 0.5
+*/
+
+double mcxNormalSample
+(  double radius
+,  double stddev
 )  ;
 
 
