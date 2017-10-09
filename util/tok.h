@@ -1,4 +1,4 @@
-/*   Copyright (C) 2005 Stijn van Dongen
+/* (c) Copyright 2005 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -28,6 +28,7 @@
  *    unify with mcxIOExpect, possibly stuff from ding.h
  *    wide chars?
 */
+
 
 #define MCX_TOK_MODE_UNIX     1  /* Unix escapes, including esc newlines */
 #define MCX_TOK_MODE_QUOTED   2  /* Quotes delimit tokens, hide brackets */ 

@@ -7,7 +7,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 
-AC_INIT(apparix, 05-314, mcx-devel@lists.micans.org)
+AC_INIT(apparix, 06-005, mcx-devel@lists.micans.org)
 AM_CONFIG_HEADER(config.h)
 
 PACKAGE=$PACKAGE_NAME

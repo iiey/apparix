@@ -1,9 +1,14 @@
 
+$$ squashing dest seems to lump portals and boommarks together.
 
 $$ when a subdirectory is given it could be used to resolve
    multiple hits.
 -> with duplicates completion works due to -favour, but then apparix 
    asks which directory you want anyway.
+-> and/or, allow some specification of index.
+
+?  portal: option to prepend prefix to all bookmarks.
+   This would require change of rc format (because of rehashing)
 
 -  warn when a new bm is a duplicate, either in mark or in dest.
 

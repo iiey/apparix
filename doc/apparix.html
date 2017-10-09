@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
-<!-- Copyright (c) 2005 Stijn van Dongen -->
+<!-- Copyright (c) 2006 Stijn van Dongen -->
 <head>
 <META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <style type="text/css">
@@ -68,9 +68,9 @@ margin-right: 0%;
 </head>
 <body>
 <p style="text-align:right">
-10 Nov 2005&nbsp;&nbsp;&nbsp;
+5 Jan 2006&nbsp;&nbsp;&nbsp;
 <a class="local" href="apparix.ps"><b>apparix</b></a>
-1.002, 05-314
+1.002, 06-005
 </p>
 <div style="margin-top:1em">
 <table
@@ -118,12 +118,25 @@ apparix - bookmark directories and apparate inside them</p>
 
 <a name="synopsis"></a>
 <h2>SYNOPSIS</h2>
-<p class="default L50" style="margin-bottom:0">Apparix allows you to bookmark directories and later jump to
+<p class="default L50" style="margin-bottom:0">
+Apparix allows you to bookmark directories and later jump to
 them using the mark. When jumping, the contributed bash completion code
 allows one to complete on bookmarks and on subdirectories of
 the target directory.</p>
-<p class="default L50" style="margin-bottom:0">Below, <b>to</b>, <b>bm</b> and <b>portal</b> are shell aliases or
-functions that can be changed to have any name the user desires.</p>
+<p class="default L50" style="margin-bottom:0"><b>GETTING STARTED</b><br>
+Install apparix. This should be as easy as <i>./configure
+--prefix=$HOME/local &amp;&amp; make &amp;&amp; make install</i>.
+Then get hold of the <b>to</b>, <b>bm</b> and <b>portal</b> shell handles. These
+are either aliases or functions depending on your shell. Currently csh-style
+shells and bash are supported.
+Get the ones you need either from the <a class="intern" href="#files">FILES</a> section or by issuing
+<tt>apparix --shell-examples</tt>. Activate them by simply pasting
+them in a shell or adding them to the appropriate resource file, e.g.
+<tt>$HOME/.cshrc</tt> or <tt>$HOME/.profile</tt> (do not forget to
+source the resource file). The handles <b>to</b>, <b>bm</b> and <b>portal</b> can
+of course be changed to any name desired. The following is
+a mock-up shell navigation session.
+</p>
 <pre>&gt; <b>pwd</b>
 /home/eez/cvs/xyz/tfa/faq/zut/bar/foo
 &gt; <b>ls</b>
@@ -183,7 +196,7 @@ of subdirectories. Refer to the <a class="intern" href="#sub">subdirectory speci
 <p class="default L50" style="margin-bottom:0">
 Apparix combines the properties of the
 <a class="extern" href="http://www.skamphausen.de/software/cdargs/">cdargs</a> utility
-and the <b>CDPATH</b> shell mechanism for fast navigation through
+and the CDPATH shell mechanism for fast navigation through
 the file system. It is especially useful for visiting and documenting
 both often- and rarely-used locations. Apparix enables you to attach marks
 to locations and jump to those locations by loading the mark. Marking,
@@ -360,16 +373,21 @@ this is in fact recommended if for example you need to get
 rid of a bookmark and neither of <a class="intern" href="#opt-rid"><b>-rid</b></a>,
 <a class="intern" href="#opt-rid-mark"><b>-rid-mark</b></a>, <a class="intern" href="#opt--squash-dest"><b>--squash-dest</b></a>,
 <a class="intern" href="#opt--squash-mark"><b>--squash-mark</b></a> fulfills your needs.
-It was a deliberate and easy design choice <i>not</i> to equip
+It was an easy design choice <i>not</i> to equip
 apparix with editor capabilities.</p>
 
 <a name="mov"></a>
 <h2>copying and moving files</h2>
 <p class="default L50" style="margin-top:0em; margin-bottom:0em">
-In bash it is very straightforward to copy or move files to locations known
+It is straightforward to copy or move files to locations known
 by apparix. Examples:</p>
-<pre>   cp FOO $(apparix zoem)
-   mv BAR $(apparix zoem doc)</pre>
+<pre>BASH and variants
+   cp FOO $(apparix zoem)
+   mv BAR $(apparix zoem doc)
+   
+CSH and variants
+   cp FOO `apparix zoem`
+   mv BAR `apparix zoem doc`</pre>
 
 <a name="options"></a>
 <h2>OPTIONS</h2>
@@ -585,9 +603,9 @@ Some people use aliases to jump to often visited directories.
 I was one of them for a period of ten years. The fact is,
 those aliases are cumbersome to create and remove and they
 clutter up the alias namespace. They can clash with
-executables when the alias includes the <i>cd</i> part. This sometimes
+executable names when the alias includes the <i>cd</i> part. This sometimes
 prohibits one from assigning the logical bookmark to a given
-location, especially when one has a lot of source code locations
+location, especially when one has a lot of source code locations.
 They can clash with directory names when
 the aliases just expand to the location. This again means that
 sometimes a location cannot be assigned its logical bookmark.

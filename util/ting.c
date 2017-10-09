@@ -1,4 +1,4 @@
-/*   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
+/* (c) Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005 Stijn van Dongen
  *
  * This file is part of tingea.  You can redistribute and/or modify tingea
  * under the terms of the GNU General Public License; either version 2 of the
@@ -109,7 +109,7 @@ mcxTing* mcxTingEnsure
 ;  }
 
 
-mcxTing*  mcxTing_print_
+static mcxTing*  mcx_ting_print
 (  mcxTing*    dst
 ,  const char* fmt
 ,  va_list     *args
@@ -159,7 +159,7 @@ mcxTing*  mcxTingPrintSplice
    ;  mcxTing *infix = NULL
 
    ;  va_start(args, fmt)
-   ;  infix = mcxTing_print_(NULL, fmt, &args)
+   ;  infix = mcx_ting_print(NULL, fmt, &args)
    ;  va_end(args)
 
    ;  if (!infix)
@@ -189,7 +189,7 @@ mcxTing*  mcxTingPrint
    {  va_list  args
 
    ;  va_start(args, fmt)
-   ;  dst = mcxTing_print_(dst, fmt, &args)
+   ;  dst = mcx_ting_print(dst, fmt, &args)
    ;  va_end(args)
    ;  return dst
 ;  }
@@ -204,7 +204,7 @@ mcxTing*  mcxTingPrintAfter
    ;  mcxTing *affix = NULL
 
    ;  va_start(args, fmt)
-   ;  affix = mcxTing_print_(affix, fmt, &args)
+   ;  affix = mcx_ting_print(affix, fmt, &args)
    ;  va_end(args)
 
    ;  if (!dst)
@@ -313,7 +313,7 @@ mcxTing*  mcxTingInteger
 void* mcxTingInit
 (  void *  tingv
 )
-   {  mcxTing *ting  =  (mcxTing*) tingv
+   {  mcxTing *ting = tingv
 
    ;  if (!ting)
       {  if (!(ting =  mcxAlloc(sizeof(mcxTing), RETURN_ON_FAIL)))
@@ -339,13 +339,14 @@ mcxTing* mcxTingInstantiate
 (  mcxTing*          ting
 ,  const char*       string
 )
+                                    /* strnotice strlen */
    {  int length =   string ? strlen(string) : 0
 
                      /* ensure handles ting==NULL and/or length==0  cases */
 
    ;  if (!(ting = mcxTingEnsure(ting, length)))
       return NULL
-
+                                    /* strnotice strncpy */
 	;  if (string)
       {  strncpy(ting->str, string, length)
       ;  *(ting->str+length)  =  '\0'
@@ -509,9 +510,9 @@ mcxTing* mcxTingNNew
 
    ;  if (!ting)
       return NULL
-
+                                    /* strnotice memcpy */
    ;  if (str && n)
-      strncpy(ting->str, str, n)
+      memcpy(ting->str, str, n)
    ;  *(ting->str+n) = '\0'
    ;  ting->len = n
    ;  return ting
@@ -546,8 +547,8 @@ mcxTing* mcxTingNWrite
 )
    {  if (!(ting = mcxTingEnsure(ting, n)))
       return NULL
-
-   ;  strncpy(ting->str, str, n)
+                                    /* strnotice strncpy */
+   ;  memcpy(ting->str, str, n)
 
    ;  *(ting->str+n) = '\0'
    ;  ting->len = n
@@ -585,6 +586,7 @@ mcxTing* mcxTingify
 )
    {  mcxTing* ting = mcxAlloc(sizeof(mcxTing), RETURN_ON_FAIL)
    ;  ting->str = str
+                                    /* strnotice strlen; ? tingify2 */
    ;  ting->len = strlen(str)
    ;  return ting
 ;  }
@@ -613,7 +615,7 @@ mcxTing* mcxTingAppend
 )
    {  if (!ting)
       return mcxTingNew(str)
-
+                                          /* strnotice strlen */
    ;  if
       (  mcxTingSplice
          (  ting
@@ -635,9 +637,10 @@ mcxTing* mcxTingKAppend
 ,  const char* str
 ,  int         n
 )
+                                          /* strnotice strlen */
    {  int len = strlen(str)
 
-   ;  while (n--)
+   ;  while (n-- >= 0)
       if (!(ting = mcxTingNAppend(ting, str, len)))
       return NULL
 
@@ -677,6 +680,7 @@ mcxTing* mcxTingInsert
    {  if (!ting)
       return mcxTingNew(str)
 
+                                          /* strnotice strlen */
    ;  if
       (  mcxTingSplice
          (  ting

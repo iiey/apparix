@@ -1,5 +1,5 @@
-.\" Copyright (c) 2005 Stijn van Dongen
-.TH "apparix" 1 "10 Nov 2005" "apparix 1\&.002, 05-314" "USER COMMANDS "
+.\" Copyright (c) 2006 Stijn van Dongen
+.TH "apparix" 1 "5 Jan 2006" "apparix 1\&.002, 06-005" "USER COMMANDS "
 .po 2m
 .de ZI
 .\" Zoem Indent/Itemize macro I.
@@ -36,8 +36,20 @@ them using the mark\&. When jumping, the contributed bash completion code
 allows one to complete on bookmarks and on subdirectories of
 the target directory\&.
 
-Below, \fBto\fP, \fBbm\fP and \fBportal\fP are shell aliases or
-functions that can be changed to have any name the user desires\&.
+\fBGETTING STARTED\fP
+.br
+Install apparix\&. This should be as easy as \fI\&./configure
+--prefix=$HOME/local && make && make install\fP\&.
+Then get hold of the \fBto\fP, \fBbm\fP and \fBportal\fP shell handles\&. These
+are either aliases or functions depending on your shell\&. Currently csh-style
+shells and bash are supported\&.
+Get the ones you need either from the \fBFILES\fP section or by issuing
+\fCapparix --shell-examples\fP\&. Activate them by simply pasting
+them in a shell or adding them to the appropriate resource file, e\&.g\&.
+\fC$HOME/\&.cshrc\fP or \fC$HOME/\&.profile\fP (do not forget to
+source the resource file)\&. The handles \fBto\fP, \fBbm\fP and \fBportal\fP can
+of course be changed to any name desired\&. The following is
+a mock-up shell navigation session\&.
 
 .di ZV
 .in 0
@@ -109,7 +121,7 @@ of subdirectories\&. Refer to the \fBsubdirectory specification\fP section\&.
 
 Apparix combines the properties of the
 \fIcdargs\fP utility
-and the \fBCDPATH\fP shell mechanism for fast navigation through
+and the CDPATH shell mechanism for fast navigation through
 the file system\&. It is especially useful for visiting and documenting
 both often- and rarely-used locations\&. Apparix enables you to attach marks
 to locations and jump to those locations by loading the mark\&. Marking,
@@ -329,17 +341,22 @@ this is in fact recommended if for example you need to get
 rid of a bookmark and neither of \fB-rid\fP,
 \fB-rid-mark\fP, \fB--squash-dest\fP,
 \fB--squash-mark\fP fulfills your needs\&.
-It was a deliberate and easy design choice \fInot\fP to equip
+It was an easy design choice \fInot\fP to equip
 apparix with editor capabilities\&.
 .SH copying and moving files
-In bash it is very straightforward to copy or move files to locations known
+It is straightforward to copy or move files to locations known
 by apparix\&. Examples:
 
 .di ZV
 .in 0
 .nf \fC
+BASH and variants
    cp FOO $(apparix zoem)
    mv BAR $(apparix zoem doc)
+   
+CSH and variants
+   cp FOO \&`apparix zoem\&`
+   mv BAR \&`apparix zoem doc\&`
 .fi \fR
 .in
 .di
@@ -617,9 +634,9 @@ Some people use aliases to jump to often visited directories\&.
 I was one of them for a period of ten years\&. The fact is,
 those aliases are cumbersome to create and remove and they
 clutter up the alias namespace\&. They can clash with
-executables when the alias includes the \fIcd\fP part\&. This sometimes
+executable names when the alias includes the \fIcd\fP part\&. This sometimes
 prohibits one from assigning the logical bookmark to a given
-location, especially when one has a lot of source code locations
+location, especially when one has a lot of source code locations\&.
 They can clash with directory names when
 the aliases just expand to the location\&. This again means that
 sometimes a location cannot be assigned its logical bookmark\&.

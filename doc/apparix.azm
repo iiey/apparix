@@ -33,13 +33,28 @@
 
 \sec{synopsis}{SYNOPSIS}
 
-\par{Apparix allows you to bookmark directories and later jump to
-them using the mark. When jumping, the contributed bash completion code
-allows one to complete on bookmarks and on subdirectories of
-the target directory.}
+\par{
+   Apparix allows you to bookmark directories and later jump to
+   them using the mark. When jumping, the contributed bash completion code
+   allows one to complete on bookmarks and on subdirectories of
+   the target directory.}
 
-\par{Below, \bf{to}, \bf{bm} and \bf{portal} are shell aliases or
-functions that can be changed to have any name the user desires.}
+\cpar{GETTING STARTED}{
+   Install apparix. This should be as easy as \it{./configure
+   --prefix=$HOME/local && make && make install}.
+
+   Then get hold of the \bf{to}, \bf{bm} and \bf{portal} shell handles. These
+   are either aliases or functions depending on your shell. Currently csh-style
+   shells and bash are supported.
+
+   Get the ones you need either from the \secref{files} section or by issuing
+   \v{apparix --shell-examples}. Activate them by simply pasting
+   them in a shell or adding them to the appropriate resource file, e.g.
+   \v{$HOME/.cshrc} or \v{$HOME/.profile} (do not forget to
+   source the resource file). The handles \bf{to}, \bf{bm} and \bf{portal} can
+   of course be changed to any name desired. The following is
+   a mock-up shell navigation session.
+}
 
 \verbatim{\:/
 > \bf{pwd}
@@ -105,7 +120,7 @@ of subdirectories. Refer to the \secref{sub} section.}
 \par{
    Apparix combines the properties of the
    \aref{http://www.skamphausen.de/software/cdargs/}{cdargs} utility
-   and the \bf{CDPATH} shell mechanism for fast navigation through
+   and the CDPATH shell mechanism for fast navigation through
    the file system. It is especially useful for visiting and documenting
    both often- and rarely-used locations.  Apparix enables you to attach marks
    to locations and jump to those locations by loading the mark. Marking,
@@ -303,18 +318,22 @@ to tab-complete on subdirectories of the apparix jump directory.}
    rid of a bookmark and neither of \genoptref{-rid},
    \genoptref{-rid-mark}, \genoptref{--squash-dest},
    \genoptref{--squash-mark} fulfills your needs.
-   It was a deliberate and easy design choice \it{not} to equip
+   It was an easy design choice \it{not} to equip
    apparix with editor capabilities.}
 
 \sec{mov}{copying and moving files}
 
 \car{
-   In bash it is very straightforward to copy or move files to locations known
+   It is straightforward to copy or move files to locations known
    by apparix. Examples:}
 
-\verbatim{\:/
+\verbatim{BASH and variants
    cp FOO $(apparix zoem)
-   mv BAR $(apparix zoem doc)}
+   mv BAR $(apparix zoem doc)
+   
+CSH and variants
+   cp FOO `apparix zoem`
+   mv BAR `apparix zoem doc`}
 
 \: \car{
 \:    Apparix currently uses \it{getcwd}(3) to obtain the path name
@@ -506,9 +525,9 @@ by hand to remove an unwanted bookmark; refer to \secref{edit}.}
    I was one of them for a period of ten years. The fact is,
    those aliases are cumbersome to create and remove and they
    clutter up the alias namespace. They can clash with
-   executables when the alias includes the \it{cd} part. This sometimes
+   executable names when the alias includes the \it{cd} part. This sometimes
    prohibits one from assigning the logical bookmark to a given
-   location, especially when one has a lot of source code locations
+   location, especially when one has a lot of source code locations.
    They can clash with directory names when
    the aliases just expand to the location. This again means that
    sometimes a location cannot be assigned its logical bookmark.
