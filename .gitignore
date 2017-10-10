@@ -1,0 +1,8 @@
+.deps/
+config.*
+Makefile
+src/apparix
+src/*.o
+stamp-h1
+util/*.o
+util/libutil.a
