@@ -252,7 +252,7 @@ const char* shell_examples[] =
 ,  ""
 ,  "# command to register the above to expand when the 'to' command's args are"
 ,  "# being expanded"
-,  "complete -o nospace -F _apparix_aliases to"
+,  "complete -o nospace -o dirnames -F _apparix_aliases to"
 ,  "complete -o nospace -F _apparix_aliases ald"
 ,  "complete -o nospace -F _apparix_aliases als"
 ,  "complete -o nospace -F _apparix_aliases ae"
