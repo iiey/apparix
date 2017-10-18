@@ -1,4 +1,10 @@
+Wed 11 Oct 2017
+   *  apparix-17-001 released.
 
+   *  Fixed completion function (SHA: 1266cd67f48bf805973e764a4dcb762422bc50ad)
+		+ Add missing suffix '/' when completing directory with 'to'
+		+ Ignore suffix if target is a filename
+		+ Perform default dirnames completion ('to') in case of no matches found
 
 Thu 3 March 2011
 
