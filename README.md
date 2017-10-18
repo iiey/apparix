@@ -9,6 +9,7 @@ The latest official version 11-062 (2011) is really old but it works fine. So it
 - For more information please visit the official site [micans.org](https://micans.org/apparix/)
 
 ## Instalation
+### Build
 Simply run:
 ```sh
 ./configure && sudo make install
@@ -19,6 +20,7 @@ Or install locally if do not have root access:
 ./configure --prefix=$HOME/.local --exec-prefix=$HOME && make install
 ```
 
+### Configure
 To make it works, the apparix functions need to be created and source from .bashrc (gnu/linux) or .bash_profile (osx)
 ```sh
 apparix --shel-examples > ~/.apparix.bash

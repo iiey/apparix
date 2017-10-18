@@ -1,3 +1,11 @@
+Wed 18 Oct 2017
+   *  apparix-17-002 released.
+
+   *  Support interactive searching bookmarks with fuzzy finder
+		+ Can be trigger with <tab> at first empty argument if fzf is available
+		+ If tree command is installed, a preview-window display
+		subdirectories of current bookmark in tree view-mode
+
 Wed 11 Oct 2017
    *  apparix-17-001 released.
 
